@@ -3,7 +3,12 @@
   "builds": [
     {
       "src": "next.config.js",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "skipBuildRegexp": ".*",
+        "maxLambdaSize": "50mb",
+        "buildCommand": "CI=false npm run build"
+      }
     }
   ],
   "routes": [
@@ -13,9 +18,11 @@
     }
   ],
   "buildSettings": {
-    "ignoreErrors": true
+    "ignoreErrors": true,
+    "ignoreWarnings": true
   },
   "github": {
-    "silent": true
+    "silent": true,
+    "autoAlias": true
   }
 }

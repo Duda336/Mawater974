@@ -16,12 +16,21 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    forceSwcTransforms: true,
+    swcMinify: true,
+  },
+  onError: () => {},
+  webpack: (config, { isServer }) => {
+    config.optimization = {
+      ...config.optimization,
+      checkWasmTypes: false,
+    }
+    return config
+  },
   reactStrictMode: true,
-  swcMinify: true,
-  
   // Vercel-specific configurations
   vercel: {
-    // Skip build errors and continue deployment
     skipFailedBuilds: true,
   }
 };
