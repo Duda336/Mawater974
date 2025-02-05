@@ -17,10 +17,6 @@
       "dest": "/"
     }
   ],
-  "buildSettings": {
-    "ignoreErrors": true,
-    "ignoreWarnings": true
-  },
   "github": {
     "silent": true,
     "autoAlias": true
