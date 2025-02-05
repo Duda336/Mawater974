@@ -18,6 +18,11 @@ interface ExtendedCar extends Car {
     full_name: string;
     email: string;
   };
+  images: {
+    id: number;
+    car_id: number;
+    url: string;
+  }[];
 }
 
 export default function AdminCarsPage() {
@@ -49,12 +54,12 @@ export default function AdminCarsPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from('cars')
-        .select(\`
+        .select(`
           *,
           brand:brands(name),
           model:models(name),
-          user:profiles(full_name, email)
-        \`)
+          images:car_images(*)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -81,8 +86,8 @@ export default function AdminCarsPage() {
       if (car) {
         await supabase.from('notifications').insert({
           user_id: car.user_id,
-          title: \`Car Listing ${newStatus}\`,
-          message: \`Your car listing for ${car.brand.name} ${car.model.name} has been ${newStatus.toLowerCase()}.\`
+          title: `Car Listing ${newStatus}`,
+          message: `Your car listing for ${car.brand.name} ${car.model.name} has been ${newStatus.toLowerCase()}.`
         });
       }
 
@@ -162,9 +167,9 @@ export default function AdminCarsPage() {
                     <tr key={car.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          {car.thumbnail && (
+                          {car.images && car.images.length > 0 && (
                             <img
-                              src={car.thumbnail}
+                              src={car.images[0].url}
                               alt={`${car.brand.name} ${car.model.name}`}
                               className="h-10 w-10 rounded-full object-cover mr-3"
                             />
@@ -184,15 +189,15 @@ export default function AdminCarsPage() {
                         <div className="text-sm text-gray-500 dark:text-gray-400">{car.user.email}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={\`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                          \${
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                          ${
                             car.status === 'Approved'
                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                               : car.status === 'Rejected'
                               ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                               : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
                           }
-                        \`}>
+                        `}>
                           {car.status}
                         </span>
                       </td>
@@ -222,7 +227,7 @@ export default function AdminCarsPage() {
                           </>
                         )}
                         <Link
-                          href={\`/cars/\${car.id}/edit\`}
+                          href={`/cars/${car.id}/edit`}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200"
                           title="Edit"
                         >
