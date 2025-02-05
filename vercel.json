@@ -1,24 +1,9 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "next.config.js",
-      "use": "@vercel/next",
-      "config": {
-        "skipBuildRegexp": ".*",
-        "maxLambdaSize": "50mb",
-        "buildCommand": "CI=false npm run build"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ],
+  "buildCommand": "CI=false npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "github": {
-    "silent": true,
-    "autoAlias": true
+    "silent": true
   }
 }
