@@ -787,15 +787,23 @@ export default function SellPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submission started');
     
     if (!isConfirmed) {
       toast.error('Please confirm that all the information is accurate');
       return;
     }
+
+    if (!user) {
+      toast.error('Please log in to submit a listing');
+      return;
+    }
     
     setIsSubmitting(true);
+    setError(null);
 
     try {
+      console.log('Preparing car data...');
       // Prepare the car data with correct field names
       const carSubmitData = {
         brand_id: parseInt(formData.brand),
@@ -810,9 +818,11 @@ export default function SellPage() {
         color: formData.color,
         cylinders: formData.cylinders || null,
         description: formData.description,
-        user_id: user?.id,
-        status: 'Pending' as const // Using the correct enum value
+        user_id: user.id,
+        status: 'Pending'
       };
+
+      console.log('Submitting car data:', carSubmitData);
 
       // Insert the car data
       const { data: carData, error: carError } = await supabase
@@ -821,26 +831,39 @@ export default function SellPage() {
         .select()
         .single();
 
-      if (carError) throw carError;
+      if (carError) {
+        console.error('Error inserting car data:', carError);
+        throw carError;
+      }
+
+      console.log('Car data inserted successfully:', carData);
 
       // Handle image uploads
       if (newImages.length > 0) {
+        console.log('Starting image uploads...');
         for (const file of newImages) {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
-          const filePath = `${user?.id}/${carData.id}/${fileName}`;
+          const filePath = `${user.id}/${carData.id}/${fileName}`;
+
+          console.log('Uploading image:', filePath);
 
           const { error: uploadError } = await supabase.storage
             .from('car-images')
             .upload(filePath, file);
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            throw uploadError;
+          }
 
           const { data: imageData } = await supabase.storage
             .from('car-images')
             .getPublicUrl(filePath);
 
-          // Insert image record - this will trigger the automatic update of car image/thumbnail
+          console.log('Image uploaded, getting public URL:', imageData);
+
+          // Insert image record
           const { error: imageInsertError } = await supabase
             .from('car_images')
             .insert([{
@@ -848,14 +871,21 @@ export default function SellPage() {
               url: imageData.publicUrl,
             }]);
 
-          if (imageInsertError) throw imageInsertError;
+          if (imageInsertError) {
+            console.error('Error inserting image record:', imageInsertError);
+            throw imageInsertError;
+          }
         }
       }
 
       setIsSubmitted(true);
       toast.success('Your car listing has been submitted for review!');
+      
+      // Redirect to the listings page after successful submission
+      router.push('/cars');
     } catch (error: any) {
-      console.error('Error:', error);
+      console.error('Error in form submission:', error);
+      setError(error.message || 'Failed to submit listing');
       toast.error(error.message || 'Failed to submit listing. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -1023,108 +1053,109 @@ export default function SellPage() {
 
         {/* Main Form Container */}
         <div className="bg-gray-900 rounded-xl shadow-lg overflow-hidden p-8">
-          
-          {/* Progress Steps */}
-          <div className="mb-12 relative">
-            {/* Progress Bar Background */}
-            <div className="absolute top-4 left-0 w-full h-0.5 bg-gray-800" />
-            
-            {/* Active Progress Bar */}
-            <div 
-              className="absolute top-4 left-0 h-0.5 bg-qatar-maroon transition-all duration-300"
-              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-            />
+          <form onSubmit={handleSubmit} className="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
+            {/* Progress Steps */}
+            <div className="space-y-8 divide-y divide-gray-200 dark:divide-gray-700">
+              {/* Progress Bar Background */}
+              <div className="absolute top-4 left-0 w-full h-0.5 bg-gray-800" />
+              
+              {/* Active Progress Bar */}
+              <div 
+                className="absolute top-4 left-0 h-0.5 bg-qatar-maroon transition-all duration-300"
+                style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+              />
 
-            {/* Steps */}
-            <div className="relative flex justify-between">
-              {steps.map((step) => (
-                <div key={step.id} className="flex flex-col items-center">
-                  {/* Step Circle */}
-                  <div 
-                    className={`
-                      w-8 h-8 rounded-full flex items-center justify-center mb-2
+              {/* Steps */}
+              <div className="relative flex justify-between">
+                {steps.map((step) => (
+                  <div key={step.id} className="flex flex-col items-center">
+                    {/* Step Circle */}
+                    <div 
+                      className={`
+                        w-8 h-8 rounded-full flex items-center justify-center mb-2
+                        ${currentStep === step.id 
+                          ? 'bg-qatar-maroon text-white' 
+                          : currentStep > step.id
+                            ? 'bg-qatar-maroon text-white'
+                            : 'bg-gray-800 text-gray-400'
+                        }
+                      `}
+                    >
+                      {step.id}
+                    </div>
+
+                    {/* Step Label */}
+                    <span className={`
+                      text-sm font-medium mb-1
                       ${currentStep === step.id 
-                        ? 'bg-qatar-maroon text-white' 
+                        ? 'text-qatar-maroon' 
                         : currentStep > step.id
-                          ? 'bg-qatar-maroon text-white'
-                          : 'bg-gray-800 text-gray-400'
+                          ? 'text-qatar-maroon'
+                          : 'text-gray-400'
                       }
-                    `}
-                  >
-                    {step.id}
+                    `}>
+                      {step.name}
+                    </span>
+
+                    {/* Step Description */}
+                    <span className="text-xs text-gray-500 text-center max-w-[120px]">
+                      {step.description}
+                    </span>
                   </div>
-
-                  {/* Step Label */}
-                  <span className={`
-                    text-sm font-medium mb-1
-                    ${currentStep === step.id 
-                      ? 'text-qatar-maroon' 
-                      : currentStep > step.id
-                        ? 'text-qatar-maroon'
-                        : 'text-gray-400'
-                    }
-                  `}>
-                    {step.name}
-                  </span>
-
-                  {/* Step Description */}
-                  <span className="text-xs text-gray-500 text-center max-w-[120px]">
-                    {step.description}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Form Content */}
-          <div className="space-y-8">
-            {currentStep === 1 && renderBasicInfo()}
-            {currentStep === 2 && renderCarDetails()}
-            {currentStep === 3 && renderImageUpload()}
-            {currentStep === 4 && renderPreview()}
-          </div>
+            {/* Form Content */}
+            <div className="space-y-8">
+              {currentStep === 1 && renderBasicInfo()}
+              {currentStep === 2 && renderCarDetails()}
+              {currentStep === 3 && renderImageUpload()}
+              {currentStep === 4 && renderPreview()}
+            </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(currentStep - 1)}
-              disabled={currentStep === 1}
-              className={`
-                px-6 py-3 rounded-lg text-sm font-medium
-                ${currentStep === 1 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
-                }
-              `}
-            >
-              Previous
-            </button>
-
-            {currentStep < totalSteps ? (
+            {/* Navigation Buttons */}
+            <div className="flex justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
-                onClick={() => setCurrentStep(currentStep + 1)}
-                className="px-6 py-3 bg-qatar-maroon text-white rounded-lg text-sm font-medium hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={isSubmitting || !isConfirmed}
+                onClick={() => setCurrentStep(currentStep - 1)}
+                disabled={currentStep === 1}
                 className={`
                   px-6 py-3 rounded-lg text-sm font-medium
-                  ${isSubmitting || !isConfirmed
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                    : 'bg-qatar-maroon text-white hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon'
+                  ${currentStep === 1 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600'
                   }
                 `}
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Listing'}
+                Previous
               </button>
-            )}
-          </div>
+
+              {currentStep < totalSteps ? (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(currentStep + 1)}
+                  className="px-6 py-3 bg-qatar-maroon text-white rounded-lg text-sm font-medium hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !isConfirmed}
+                  className={`
+                    px-6 py-3 rounded-lg text-sm font-medium
+                    ${isSubmitting || !isConfirmed
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+                      : 'bg-qatar-maroon text-white hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon'
+                    }
+                  `}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Listing'}
+                </button>
+              )}
+            </div>
+          </form>
         </div>
       </div>
     </div>
