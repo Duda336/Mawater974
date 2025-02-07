@@ -116,8 +116,8 @@ export default function SellPage() {
     },
     { 
       id: 4, 
-      name: 'Contact', 
-      description: 'Add your contact information for buyers' 
+      name: 'Review & Submit', 
+      description: 'Review your listing and submit for approval' 
     }
   ];
 

@@ -1,108 +1,145 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { HeartIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { useState } from 'react';
+import Image from 'next/image';
+import { Car } from '../types/supabase';
+import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
+import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
-import { Car, Brand } from '../types/supabase';
-
-interface ExtendedCar extends Omit<Car, 'brand_id' | 'model_id'> {
-  brand: Brand;
-  model: {
-    id: number;
-    name: string;
-  };
-  images: {
-    id: number;
-    url: string;
-  }[];
-}
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 interface CarCardProps {
-  car: ExtendedCar;
+  car: Car;
+  compareMode?: boolean;
+  isSelected?: boolean;
+  onSelect?: (car: Car) => void;
   isFavorited?: boolean;
-  showFavoriteButton?: boolean;
-  onFavoriteChange?: (carId: number, isFavorited: boolean) => void;
+  onFavoriteChange?: (carId: number) => void;
 }
 
 export default function CarCard({ 
   car, 
-  isFavorited = false, 
-  showFavoriteButton = true,
-  onFavoriteChange 
+  compareMode, 
+  isSelected, 
+  onSelect,
+  isFavorited = false,
+  onFavoriteChange
 }: CarCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(isFavorited);
   const { user } = useAuth();
+  const router = useRouter();
 
-  const handleFavoriteClick = async (e: React.MouseEvent) => {
-    e.preventDefault(); 
-    if (!user) return; 
-
-    try {
-      setIsFavorite(!isFavorite);
-      if (onFavoriteChange) {
-        onFavoriteChange(car.id, !isFavorite);
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      setIsFavorite(isFavorite); 
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Please sign in to add cars to your favorites');
+      router.push('/login?redirect=/cars');
+      return;
     }
-  };
 
-  const imageUrl = car.images && car.images.length > 0 
-    ? car.images[0].url 
-    : '/placeholder-car.svg';
+    onFavoriteChange?.(car.id);
+  };
 
   return (
     <Link href={`/cars/${car.id}`}>
-      <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-1 relative"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+      <div 
+        className="group bg-white dark:bg-gray-900/95 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 
+        hover:border-qatar-maroon/50 transition-all duration-200 transform hover:scale-[1.01] 
+        shadow-sm hover:shadow-xl dark:hover:shadow-qatar-maroon/5 hover:shadow-gray-200/80"
       >
-        <div className="relative h-48 w-full">
+        <div className="relative aspect-[16/9]">
           <Image
-            src={imageUrl}
+            src={car.images?.[0]?.url || '/placeholder-car.jpg'}
             alt={`${car.brand.name} ${car.model.name}`}
             fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            priority
+            className="object-cover transition-transform duration-200 group-hover:scale-[1.0]"
           />
-          {user && showFavoriteButton && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          
+          {/* View Details Button */}
+          <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button
-              onClick={handleFavoriteClick}
-              className="absolute top-2 right-2 p-2 rounded-full bg-white/80 dark:bg-gray-800/80 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = `/cars/${car.id}`;
+              }}
+              className="w-full bg-white/95 dark:bg-white/10 backdrop-blur-md text-gray-900 dark:text-white px-5 py-2.5 rounded-lg text-sm 
+                hover:bg-qatar-maroon hover:text-white hover:shadow-lg
+                transition-all duration-200 flex items-center justify-between
+                border border-gray-100 dark:border-white/20 hover:border-qatar-maroon shadow-sm group/btn"
             >
-              {isFavorite ? (
-                <HeartIconSolid className="h-6 w-6 text-qatar-maroon" />
-              ) : (
-                <HeartIcon className="h-6 w-6 text-qatar-maroon" />
-              )}
+              <span className="font-medium tracking-wide">View Details</span>
+              <ArrowRightIcon className="h-4 w-4 transform transition-transform duration-200 group-hover/btn:translate-x-1" />
             </button>
-          )}
-          <div className="absolute bottom-2 right-2">
-            <span className="px-2 py-1 text-sm font-semibold bg-white/80 dark:bg-gray-800/80 rounded text-qatar-maroon">
-              {car.condition}
-            </span>
           </div>
         </div>
+
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {car.brand.name} {car.model.name}
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300">{car.year}</p>
-          <p className="mt-2 text-xl font-bold text-qatar-maroon">
-            {new Intl.NumberFormat('en-US', {
-              style: 'currency',
-              currency: 'QAR',
-              maximumFractionDigits: 0,
-            }).format(car.price)}
-          </p>
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <h3 className="text-xl text-gray-800 dark:text-white">
+                <span className="font-medium">{car.brand.name}</span>{' '}
+                <span className="font-light">{car.model.name}</span>
+              </h3>
+              <div className="text-base font-light text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                <span>{car.year}</span>
+                <span>•</span>
+                <span>{car.condition}</span>
+              </div>
+            </div>
+
+            {/* Favorite Button */}
+            <button
+              onClick={handleFavoriteClick}
+              className={`flex-shrink-0 p-1.5 rounded-lg transition-all duration-200 border 
+                ${isFavorited
+                  ? 'bg-qatar-maroon/10 text-qatar-maroon border-qatar-maroon hover:bg-qatar-maroon hover:text-white'
+                  : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-qatar-maroon hover:text-qatar-maroon dark:hover:text-qatar-maroon'
+                }
+                transform active:scale-95 hover:scale-105`}
+              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              {isFavorited ? (
+                <HeartSolid className="h-4 w-4" />
+              ) : (
+                <HeartOutline className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+
+          <div className="mt-1">
+            <div className="text-2xl font-bold text-qatar-maroon">
+              {car.price?.toLocaleString()} QAR
+            </div>
+            <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 space-x-2">
+              <span>{car.mileage?.toLocaleString()} km</span>
+              <span>•</span>
+              <span>{car.fuel_type}</span>
+              <span>•</span>
+              <span>{car.gearbox_type}</span>
+            </div>
+          </div>
+
+          {compareMode && (
+            <div className="mt-3">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onSelect?.(car);
+                }}
+                className={`w-full px-3 py-1.5 text-xs font-normal rounded-lg transition-all duration-200 ${
+                  isSelected
+                    ? 'bg-qatar-maroon/10 text-qatar-maroon hover:bg-qatar-maroon/20'
+                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {isSelected ? 'Selected' : 'Compare'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </Link>

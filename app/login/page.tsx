@@ -45,26 +45,32 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
             Welcome back
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Or{' '}
+            Don't have an account?{' '}
             <Link
               href="/signup"
               className="font-medium text-qatar-maroon hover:text-qatar-maroon/80 transition-colors duration-200"
             >
-              create a new account
+              Create a new account
             </Link>
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/50 p-4 rounded-md animate-shake">
+              <p className="text-sm text-red-600 dark:text-red-200">{error}</p>
+            </div>
+          )}
+
+          <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="email-address" className="sr-only">
+              <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email address
               </label>
               <input
@@ -75,12 +81,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon focus:z-10 sm:text-sm bg-white dark:bg-gray-800 transition-colors duration-200"
-                placeholder="Email address"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
+                placeholder="john@example.com"
               />
             </div>
+
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
               </label>
               <input
@@ -91,17 +98,11 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon focus:z-10 sm:text-sm bg-white dark:bg-gray-800 transition-colors duration-200"
-                placeholder="Password"
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
+                placeholder="••••••••"
               />
             </div>
           </div>
-
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-200 p-4 rounded-md text-sm animate-shake">
-              {error}
-            </div>
-          )}
 
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -115,7 +116,7 @@ export default function LoginPage() {
               />
               <label
                 htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
+                className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
               >
                 Remember me
               </label>
@@ -126,7 +127,7 @@ export default function LoginPage() {
                 href="/forgot-password"
                 className="font-medium text-qatar-maroon hover:text-qatar-maroon/80 transition-colors duration-200"
               >
-                Forgot your password?
+                Forgot password?
               </Link>
             </div>
           </div>
@@ -135,7 +136,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon disabled:opacity-50 transition-all duration-200 transform active:scale-95"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon disabled:opacity-50 transition-all duration-200 transform active:scale-95"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
