@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +12,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  setSignOutMessage: (message: string) => void;
+  signOutMessage: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,11 +22,15 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signUp: async () => {},
   signOut: async () => {},
+  setSignOutMessage: () => {},
+  signOutMessage: null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [signOutMessage, setSignOutMessage] = useState<string | null>(null);
+  const router = useRouter();
 
   // Function to ensure user profile exists
   const ensureProfile = async (user: User) => {
@@ -100,6 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
       }
       setIsLoading(false);
+
+      // Handle sign out
+      if (event === 'SIGNED_OUT') {
+        // Clear any stored redirect paths
+        localStorage.removeItem('redirectAfterLogin');
+        
+        // Redirect to home page
+        router.push('/');
+      }
     });
 
     return () => {
@@ -152,10 +169,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        toast.error('Error signing out');
+        return;
+      }
+
+      // Optional: set a sign-out message that can be displayed on home page
+      setSignOutMessage('You have been successfully signed out.');
+      
+      // Redirect to home page
+      router.push('/');
     } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
+      console.error('Sign out error:', error);
+      toast.error('Failed to sign out');
     } finally {
       setIsLoading(false);
     }
@@ -169,12 +196,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        setSignOutMessage,
+        signOutMessage,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

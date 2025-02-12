@@ -6,12 +6,25 @@ import { supabase } from '../lib/supabase';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide, faTag, faSearch } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from '../components/SearchBar';
+import { useAuth } from '@/contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 export default function Home() {
+  const { signOutMessage, setSignOutMessage } = useAuth();
+
+  useEffect(() => {
+    // Clear sign-out message after it's been shown
+    if (signOutMessage) {
+      // Show as toast and then clear
+      toast.success(signOutMessage);
+      setSignOutMessage(null);
+    }
+  }, [signOutMessage, setSignOutMessage]);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="relative min-h-screen pt-20">
+      <div className="relative bg-gray-900">
         {/* Premium Background with Overlay */}
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/qatar-skyline.jpg')" }}>
           {/* Gradient Overlay */}

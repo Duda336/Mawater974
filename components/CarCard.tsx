@@ -1,31 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Car } from '../types/supabase';
 import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
+import { SparklesIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import ImageCarousel from './ImageCarousel';
 
 interface CarCardProps {
-  car: Car;
-  compareMode?: boolean;
+  car: any;
+  onFavoriteToggle?: (carId: number) => void;
+  isFavorite?: boolean;
+  onSelect?: (car: any) => void;
   isSelected?: boolean;
-  onSelect?: (car: Car) => void;
-  isFavorited?: boolean;
-  onFavoriteChange?: (carId: number) => void;
+  featured?: boolean;
 }
 
-export default function CarCard({ 
-  car, 
-  compareMode, 
-  isSelected, 
+export default function CarCard({
+  car,
+  onFavoriteToggle,
+  isFavorite = false,
   onSelect,
-  isFavorited = false,
-  onFavoriteChange
+  isSelected = false,
+  featured = false,
 }: CarCardProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -33,113 +35,102 @@ export default function CarCard({
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
     if (!user) {
-      toast.error('Please sign in to add cars to your favorites');
-      router.push('/login?redirect=/cars');
+      toast.error('Please login to add favorites');
+      router.push('/login');
       return;
     }
-
-    onFavoriteChange?.(car.id);
+    if (onFavoriteToggle) {
+      onFavoriteToggle(car.id);
+    }
   };
 
   return (
     <Link href={`/cars/${car.id}`}>
       <div 
-        className="group bg-white dark:bg-gray-900/95 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 
-        hover:border-qatar-maroon/50 transition-all duration-200 transform hover:scale-[1.01] 
-        shadow-sm hover:shadow-xl dark:hover:shadow-qatar-maroon/5 hover:shadow-gray-200/80"
+        className={`relative group bg-white dark:bg-gray-900/95 rounded-xl overflow-hidden border 
+          ${featured 
+            ? 'border-qatar-maroon shadow-lg shadow-qatar-maroon/20' 
+            : 'border-gray-200 dark:border-gray-700'} 
+          hover:border-qatar-maroon/100 transition-all duration-200 transform hover:scale-[1.01] 
+          ${isSelected ? 'border-qatar-maroon/100 shadow-lg shadow-qatar-maroon/50' : ''}`}
       >
+        {featured && (
+          <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-qatar-maroon text-white text-xs font-medium rounded-full">
+            Featured
+          </div>
+        )}
+        
         <div className="relative aspect-[16/9]">
-          <Image
-            src={car.images?.[0]?.url || '/placeholder-car.jpg'}
-            alt={`${car.brand.name} ${car.model.name}`}
-            fill
-            className="object-cover transition-transform duration-200 group-hover:scale-[1.0]"
+          <ImageCarousel
+            images={car.images || [{ url: '/placeholder-car.jpg' }]}
+            alt={`${car.brand?.name || 'Car'} ${car.model?.name || ''}`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          
-          {/* View Details Button */}
+
+          {/* View Details Button - Currently Hidden
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = `/cars/${car.id}`;
-              }}
-              className="w-full bg-white/95 dark:bg-white/10 backdrop-blur-md text-gray-900 dark:text-white px-5 py-2.5 rounded-lg text-sm 
-                hover:bg-qatar-maroon hover:text-white hover:shadow-lg
-                transition-all duration-200 flex items-center justify-between
-                border border-gray-100 dark:border-white/20 hover:border-qatar-maroon shadow-sm group/btn"
+              className="w-full px-4 py-2 bg-qatar-maroon text-white rounded-lg font-medium transform transition-all duration-200
+                hover:bg-qatar-maroon/90 active:scale-95"
             >
-              <span className="font-medium tracking-wide">View Details</span>
-              <ArrowRightIcon className="h-4 w-4 transform transition-transform duration-200 group-hover/btn:translate-x-1" />
+              View Details
             </button>
           </div>
+          */}
         </div>
 
-        <div className="p-4">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="text-xl text-gray-800 dark:text-white">
-                <span className="font-medium">{car.brand.name}</span>{' '}
-                <span className="font-light">{car.model.name}</span>
-              </h3>
-              <div className="text-base font-light text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                <span>{car.year}</span>
-                <span>•</span>
-                <span>{car.condition}</span>
+        <div className="p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between">
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {car.brand?.name}
+                </h3>
+                <span className="text-lg text-gray-500 dark:text-gray-400">{car.model?.name}</span>
               </div>
-            </div>
-
-            {/* Favorite Button */}
-            <button
-              onClick={handleFavoriteClick}
-              className={`flex-shrink-0 p-1.5 rounded-lg transition-all duration-200 border 
-                ${isFavorited
-                  ? 'bg-qatar-maroon/10 text-qatar-maroon border-qatar-maroon hover:bg-qatar-maroon hover:text-white'
-                  : 'bg-transparent border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:border-qatar-maroon hover:text-qatar-maroon dark:hover:text-qatar-maroon'
-                }
-                transform active:scale-95 hover:scale-105`}
-              aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-            >
-              {isFavorited ? (
-                <HeartSolid className="h-4 w-4" />
-              ) : (
-                <HeartOutline className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-
-          <div className="mt-1">
-            <div className="text-2xl font-bold text-qatar-maroon">
-              {car.price?.toLocaleString()} QAR
-            </div>
-            <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 space-x-2">
-              <span>{car.mileage?.toLocaleString()} km</span>
-              <span>•</span>
-              <span>{car.fuel_type}</span>
-              <span>•</span>
-              <span>{car.gearbox_type}</span>
-            </div>
-          </div>
-
-          {compareMode && (
-            <div className="mt-3">
+              
+              {/* Favorite Button */}
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  onSelect?.(car);
-                }}
-                className={`w-full px-3 py-1.5 text-xs font-normal rounded-lg transition-all duration-200 ${
-                  isSelected
-                    ? 'bg-qatar-maroon/10 text-qatar-maroon hover:bg-qatar-maroon/20'
-                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
+                onClick={handleFavoriteClick}
+                className={`flex-shrink-0 p-1.5 rounded-lg transition-all duration-200 border 
+                  ${isFavorite
+                    ? 'bg-qatar-maroon/10 text-qatar-maroon border-qatar-maroon hover:bg-qatar-maroon hover:text-white'
+                    : 'bg-transparent border-gray-200 dark:border-gray-600 text-gray-400 hover:border-qatar-maroon hover:text-qatar-maroon'
+                  }
+                  transform active:scale-95 hover:scale-105`}
+                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
-                {isSelected ? 'Selected' : 'Compare'}
+                {isFavorite ? (
+                  <HeartSolid className="h-4 w-4" />
+                ) : (
+                  <HeartOutline className="h-4 w-4" />
+                )}
               </button>
             </div>
-          )}
+
+            <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <span>{car.year}</span>
+              <span>•</span>
+              <span>{car.condition}</span>
+            </div>
+
+            <div className="mt-3">
+              <span className="text-2xl font-semibold text-qatar-maroon">
+                {car.price?.toLocaleString()} QAR
+              </span>
+            </div>
+
+            <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2 flex-1">
+                <span>{car.mileage?.toLocaleString() || '0'} km</span>
+                <span>•</span>
+                <span>{car.fuel_type}</span>
+                <span>•</span>
+                <span>{car.gearbox_type}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </Link>

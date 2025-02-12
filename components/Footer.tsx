@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export default function Footer() {
   const quickLinks = [
@@ -22,11 +23,36 @@ export default function Footer() {
               alt="Mawater974 Logo"
               width={180}
               height={60}
+              style={{ width: 'auto', height: 'auto' }}
               className="mb-4"
             />
-            <p className="text-sm mb-4">
-              Your premium destination for cars in Qatar.
+            <p className="text-white text-lg font-semibold mb-4">
+              Ride In Style.
             </p>
+            <div className="flex flex-col space-y-2">
+              <div className="flex space-x-4">
+                <Link
+                  href="/terms"
+                  className="text-sm hover:text-qatar-maroon transition-colors"
+                >
+                  Terms & Conditions
+                </Link>
+                <Link
+                  href="/privacy"
+                  className="text-sm hover:text-qatar-maroon transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </div>
+              <div className="flex space-x-4">
+                <Link
+                  href="/contact"
+                  className="text-sm hover:text-qatar-maroon transition-colors"
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
           </div>
 
           {/* Quick Links */}
@@ -46,9 +72,48 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Follow Us */}
+          <div>
+            <h3 className="text-white text-lg font-semibold mb-4">Follow Us</h3>
+            <div className="flex space-x-4">
+              <a
+                href="https://instagram.com/mawater.974"
+                className="text-gray-300 hover:text-qatar-maroon transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i className="fab fa-instagram text-2xl"></i>
+              </a>
+              <a
+                href="https://twitter.com/mawater974"
+                className="text-gray-300 hover:text-qatar-maroon transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i className="fab fa-twitter text-2xl"></i>
+              </a>
+              <a
+                href="https://facebook.com/mawater.974"
+                className="text-gray-300 hover:text-qatar-maroon transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i className="fab fa-facebook text-2xl"></i>
+              </a>
+              <a
+                href="https://linkedin.com"
+                className="text-gray-300 hover:text-qatar-maroon transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i className="fab fa-linkedin text-2xl"></i>
+              </a>
+            </div>
+          </div>
+
           {/* Contact */}
           <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Contact</h3>
+            <h3 className="text-white text-lg font-semibold mb-4">Contact Us</h3>
             <ul className="space-y-2">
               <li>
                 <a
@@ -68,45 +133,6 @@ export default function Footer() {
               </li>
               <li>Doha, Qatar</li>
             </ul>
-          </div>
-
-          {/* Follow Us */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Follow Us</h3>
-            <div className="flex space-x-4">
-              <a
-                href="https://facebook.com"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-facebook text-2xl"></i>
-              </a>
-              <a
-                href="https://twitter.com"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-twitter text-2xl"></i>
-              </a>
-              <a
-                href="https://instagram.com"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-instagram text-2xl"></i>
-              </a>
-              <a
-                href="https://linkedin.com"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-linkedin text-2xl"></i>
-              </a>
-            </div>
           </div>
         </div>
 

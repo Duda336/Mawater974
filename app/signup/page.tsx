@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import SocialLogin from '../../components/auth/SocialLogin';
 import PasswordStrengthIndicator from '../../components/auth/PasswordStrengthIndicator';
@@ -29,8 +30,8 @@ export default function SignUp() {
       setError('Password must be at least 8 characters long');
       return false;
     }
-    if (!phoneNumber.match(/^\+?[1-9]\d{1,14}$/)) {
-      setError('Please enter a valid phone number');
+    if (!phoneNumber.match(/^\d{8}$/)) {
+      setError('Please enter a valid 8-digit phone number');
       return false;
     }
     return true;
@@ -51,7 +52,7 @@ export default function SignUp() {
         options: {
           data: {
             full_name: fullName,
-            phone_number: phoneNumber,
+            phone_number: '+974' + phoneNumber,
           },
         },
       });
@@ -70,7 +71,9 @@ export default function SignUp() {
         return;
       }
 
-      router.push('/login?message=Please check your email to verify your account');
+      // Show success toast and redirect
+      toast.success('Account created successfully! Welcome to Mawater974.com');
+      router.push('/');
     } catch (error: any) {
       console.error('Signup error:', error);
       setError('An unexpected error occurred. Please try again.');
@@ -115,7 +118,7 @@ export default function SignUp() {
                 type="text"
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                placeholder="John Doe"
+                placeholder="Hamad Khlaifa"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
@@ -131,7 +134,7 @@ export default function SignUp() {
                 type="email"
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                placeholder="john@example.com"
+                placeholder="hamad@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -141,16 +144,27 @@ export default function SignUp() {
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Phone Number
               </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                placeholder="+1234567890"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-              />
+              <div className="relative flex">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm">
+                  +974
+                </span>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  maxLength={8}
+                  pattern="\d{8}"
+                  className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
+                  placeholder="12345678"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    setPhoneNumber(value);
+                  }}
+                />
+              </div>
             </div>
 
             <div>

@@ -1,16 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { Database, Car, Brand } from '../../types/supabase';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { 
+  HeartIcon,
+  FunnelIcon, 
+  MagnifyingGlassIcon, 
+  XMarkIcon, 
+  AdjustmentsHorizontalIcon, 
+  ChevronLeftIcon 
+} from '@heroicons/react/24/outline';
 import CarCard from '../../components/CarCard';
 import CarCompareModal from '../../components/CarCompareModal';
-import { FunnelIcon, MagnifyingGlassIcon, XMarkIcon, AdjustmentsHorizontalIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
-import { useAuth } from '../../contexts/AuthContext';
-import { Car, Brand } from '../../types/supabase';
 import { Slider } from '../../components/ui/slider';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 import toast from 'react-hot-toast';
 import YearRangeInput from '@/components/YearRangeInput';
 import PriceRangeInput from '@/components/PriceRangeInput';
@@ -32,16 +41,15 @@ interface Filters {
   brand_id?: number;
   minPrice?: number;
   maxPrice?: number;
+  minMileage?: number;
+  maxMileage?: number;
   minYear?: number;
   maxYear?: number;
   condition?: string[];
-  fuel_type?: string[];
   body_type?: string[];
-  gearbox_type?: string;
-  sort?: 'price_asc' | 'price_desc' | 'year_desc' | 'year_asc' | 'newest' | 'oldest';
-  search?: string;
-  minMileage?: number;
-  maxMileage?: number;
+  fuel_type?: string[];
+  gearbox_type?: string[];
+  sort?: 'price_asc' | 'price_desc' | 'year_asc' | 'year_desc' | 'newest' | 'oldest';
 }
 
 const sortOptions = [
@@ -54,12 +62,13 @@ const sortOptions = [
 ];
 
 export default function CarsPage() {
-  const [cars, setCars] = useState<ExtendedCar[]>([]);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<Filters>({ sort: 'newest' });
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [selectedCars, setSelectedCars] = useState<ExtendedCar[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -73,12 +82,13 @@ export default function CarsPage() {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { user } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     fetchBrands();
     fetchCars();
     if (user) {
-      fetchFavorites();
+      fetchUserFavorites();
     }
   }, [user, filters]);
 
@@ -101,13 +111,16 @@ export default function CarsPage() {
   const fetchCars = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       let query = supabase
         .from('cars')
         .select(`
           *,
           brand:brands(*),
           model:models(*),
-          images:car_images(*)
+          seller:profiles!user_id(*),
+          images:car_images(url)
         `)
         .eq('status', 'Approved');
 
@@ -115,147 +128,148 @@ export default function CarsPage() {
       if (filters.brand_id) {
         query = query.eq('brand_id', filters.brand_id);
       }
-      if (filters.minPrice) {
+
+      if (filters.minPrice !== undefined) {
         query = query.gte('price', filters.minPrice);
       }
-      if (filters.maxPrice) {
+
+      if (filters.maxPrice !== undefined) {
         query = query.lte('price', filters.maxPrice);
       }
-      if (filters.minYear) {
-        query = query.gte('year', filters.minYear);
-      }
-      if (filters.maxYear) {
-        query = query.lte('year', filters.maxYear);
-      }
-      if (filters.condition && Array.isArray(filters.condition)) {
-        query = query.in('condition', filters.condition);
-      }
-      if (filters.fuel_type && Array.isArray(filters.fuel_type)) {
-        query = query.in('fuel_type', filters.fuel_type);
-      }
-      if (filters.body_type && Array.isArray(filters.body_type)) {
-        query = query.in('body_type', filters.body_type);
-      }
-      if (filters.gearbox_type) {
-        query = query.eq('gearbox_type', filters.gearbox_type);
-      }
-      if (filters.minMileage) {
+
+      if (filters.minMileage !== undefined) {
         query = query.gte('mileage', filters.minMileage);
       }
-      if (filters.maxMileage) {
+
+      if (filters.maxMileage !== undefined) {
         query = query.lte('mileage', filters.maxMileage);
       }
 
-      // Apply search term
-      if (filters.search) {
-        query = query.or(`brand.name.ilike.%${filters.search}%,model.name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      if (filters.minYear !== undefined) {
+        query = query.gte('year', filters.minYear);
+      }
+
+      if (filters.maxYear !== undefined) {
+        query = query.lte('year', filters.maxYear);
+      }
+
+      if (selectedConditions.length > 0) {
+        query = query.in('condition', selectedConditions);
+      }
+
+      if (selectedBodyTypes.length > 0) {
+        query = query.in('body_type', selectedBodyTypes);
+      }
+
+      if (selectedFuelTypes.length > 0) {
+        query = query.in('fuel_type', selectedFuelTypes);
+      }
+
+      if (filters.gearbox_type && filters.gearbox_type.length > 0) {
+        query = query.in('gearbox_type', filters.gearbox_type);
       }
 
       // Apply sorting
       switch (filters.sort) {
         case 'price_asc':
-          query = query.order('price', { ascending: true });
+          query = query.order('is_featured', { ascending: false }).order('price', { ascending: true });
           break;
         case 'price_desc':
-          query = query.order('price', { ascending: false });
-          break;
-        case 'year_desc':
-          query = query.order('year', { ascending: false });
+          query = query.order('is_featured', { ascending: false }).order('price', { ascending: false });
           break;
         case 'year_asc':
-          query = query.order('year', { ascending: true });
+          query = query.order('is_featured', { ascending: false }).order('year', { ascending: true });
           break;
-        case 'oldest':
-          query = query.order('created_at', { ascending: true });
+        case 'year_desc':
+          query = query.order('is_featured', { ascending: false }).order('year', { ascending: false });
           break;
         case 'newest':
+          query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+          break;
+        case 'oldest':
+          query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: true });
+          break;
         default:
-          query = query.order('created_at', { ascending: false });
+          query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
       }
 
       const { data, error } = await query;
 
-      if (error) throw error;
-      setCars(data);
-    } catch (err) {
-      console.error('Error fetching cars:', err);
+      if (error) {
+        console.error('Error fetching cars:', error);
+        setError('Failed to load cars');
+      } else {
+        setCars(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching cars:', error);
       setError('Failed to load cars');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchFavorites = async () => {
-    const { data } = await supabase
-      .from('favorites')
-      .select('car_id')
-      .eq('user_id', user!.id);
+  const fetchUserFavorites = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('car_id')
+        .eq('user_id', user.id);
 
-    if (data) {
-      setFavorites(new Set(data.map(f => f.car_id)));
+      if (error) throw error;
+      
+      setFavorites(data.map(fav => fav.car_id));
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
     }
   };
 
-  const handleFavoriteChange = async (carId: number) => {
-    if (!user) return;
+  const handleFavoriteToggle = async (carId: number) => {
+    if (!user) {
+      toast.error('Please login to add favorites');
+      router.push('/login');
+      return;
+    }
 
     try {
-      const isFavorited = favorites.has(carId);
+      const isFavorited = favorites.includes(carId);
       
-      if (!isFavorited) {
-        // First update local state optimistically
-        setFavorites(prev => new Set([...prev, carId]));
-        
-        // Then update the database
-        const { error } = await supabase
-          .from('favorites')
-          .insert({ user_id: user.id, car_id: carId });
-          
-        if (error) {
-          // Revert on error
-          setFavorites(prev => {
-            const next = new Set(prev);
-            next.delete(carId);
-            return next;
-          });
-          toast.error('Failed to add to favorites');
-          throw error;
-        }
-        
-        toast.success('Added to favorites', {
-          icon: '❤️',
-          duration: 1500,
-          position: 'bottom-right'
-        });
-      } else {
-        // First update local state optimistically
-        setFavorites(prev => {
-          const next = new Set(prev);
-          next.delete(carId);
-          return next;
-        });
-        
-        // Then update the database
+      if (isFavorited) {
+        // Remove from favorites
         const { error } = await supabase
           .from('favorites')
           .delete()
-          .match({ user_id: user.id, car_id: carId });
-          
-        if (error) {
-          // Revert on error
-          setFavorites(prev => new Set([...prev, carId]));
-          toast.error('Failed to remove from favorites');
-          throw error;
-        }
-        
+          .eq('user_id', user.id)
+          .eq('car_id', carId);
+
+        if (error) throw error;
+
+        setFavorites(prev => prev.filter(id => id !== carId));
         toast.success('Removed from favorites', {
           icon: '💔',
-          duration: 1500,
-          position: 'bottom-right'
+          position: 'bottom-right',
+        });
+      } else {
+        // Add to favorites
+        const { error } = await supabase
+          .from('favorites')
+          .insert([
+            { user_id: user.id, car_id: carId }
+          ]);
+
+        if (error) throw error;
+
+        setFavorites(prev => [...prev, carId]);
+        toast.success('Added to favorites', {
+          icon: '❤️',
+          position: 'bottom-right',
         });
       }
     } catch (error) {
-      console.error('Error updating favorite:', error);
+      console.error('Error toggling favorite:', error);
+      toast.error('Failed to update favorites');
     }
   };
 
@@ -350,6 +364,10 @@ export default function CarsPage() {
     });
   };
 
+  const handleGearboxChange = (types: string[]) => {
+    setFilters(prev => ({ ...prev, gearbox_type: types }));
+  };
+
   const handleSearch = () => {
     setFilters(prev => ({ ...prev, search: searchInput }));
   };
@@ -409,19 +427,18 @@ export default function CarsPage() {
   const getActiveFilterCount = () => {
     let count = 0;
     if (filters.brand_id) count++;
-    if (filters.minPrice || filters.maxPrice) count++;
-    if (filters.minYear || filters.maxYear) count++;
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) count++;
+    if (filters.minMileage !== undefined || filters.maxMileage !== undefined) count++;
     if (selectedBodyTypes.length) count++;
     if (selectedFuelTypes.length) count++;
     if (selectedConditions.length) count++;
-    if (filters.minMileage || filters.maxMileage) count++;
+    if (filters.minYear !== undefined || filters.maxYear !== undefined) count++;
+    if (filters.gearbox_type && filters.gearbox_type.length > 0) count++;
     return count;
   };
 
   const clearAllFilters = () => {
-    setFilters({
-      sort: filters.sort // Preserve sort order
-    });
+    setFilters({});
     setSelectedBodyTypes([]);
     setSelectedFuelTypes([]);
     setSelectedConditions([]);
@@ -434,20 +451,61 @@ export default function CarsPage() {
       const brand = brands.find(b => b.id === filters.brand_id);
       if (brand) newActiveFilters.push(`Brand: ${brand.name}`);
     }
-    if (filters.minPrice || filters.maxPrice) {
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
       newActiveFilters.push('Price Range');
     }
-    if (filters.minYear || filters.maxYear) {
-      newActiveFilters.push('Year Range');
+    if (filters.minMileage !== undefined || filters.maxMileage !== undefined) {
+      newActiveFilters.push('Mileage Range');
     }
     selectedBodyTypes.forEach(type => newActiveFilters.push(`Body: ${type}`));
     selectedFuelTypes.forEach(type => newActiveFilters.push(`Fuel: ${type}`));
     selectedConditions.forEach(condition => newActiveFilters.push(`Condition: ${condition}`));
-    if (filters.minMileage || filters.maxMileage) {
-      newActiveFilters.push('Mileage Range');
+    if (filters.minYear !== undefined || filters.maxYear !== undefined) {
+      newActiveFilters.push('Year Range');
+    }
+    if (filters.gearbox_type && filters.gearbox_type.length > 0) {
+      newActiveFilters.push('Transmission');
     }
     setActiveFilters(newActiveFilters);
   }, [filters, selectedBodyTypes, selectedFuelTypes, selectedConditions, brands]);
+
+  const handleSortChange = (value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      sort: value as Filters['sort']
+    }));
+  };
+
+  const handlePriceRangeChange = (min: number | undefined, max: number | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      minPrice: min,
+      maxPrice: max
+    }));
+  };
+
+  const handleYearRangeChange = (min: number | undefined, max: number | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      minYear: min,
+      maxYear: max
+    }));
+  };
+
+  const handleMileageRangeChange = (min: number | undefined, max: number | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      minMileage: min,
+      maxMileage: max
+    }));
+  };
+
+  const handleBrandChange = (brandId: number | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      brand_id: brandId
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 pt-5">
@@ -474,6 +532,99 @@ export default function CarsPage() {
             </p>
           </div>
         </div>
+
+        {/* Featured Cars Section */}
+        {featuredCars.length > 0 && (
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Featured Cars</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredCars.map((car) => (
+                <div
+                  key={car.id}
+                  className="relative bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105"
+                >
+                  {/* Featured Badge */}
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                      Featured
+                    </span>
+                  </div>
+                  
+                  {/* Car Image */}
+                  <div className="relative h-48">
+                    {car.thumbnail ? (
+                      <Image
+                        src={car.thumbnail}
+                        alt={`${car.brand?.name} ${car.model?.name}`}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                        <p className="text-gray-500 dark:text-gray-400">No image</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Car Details */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                      {car.brand?.name} {car.model?.name}
+                    </h3>
+                    <div className="flex justify-between items-center mb-4">
+                      <p className="text-lg font-bold text-qatar-maroon">
+                        {car.price.toLocaleString()} QAR
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {car.year}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-gray-400">
+                      <div>
+                        <span className="font-medium">Mileage:</span>
+                        <p>{car.mileage.toLocaleString()} km</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Fuel:</span>
+                        <p>{car.fuel_type}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Transmission:</span>
+                        <p>{car.gearbox_type}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium">Body:</span>
+                        <p>{car.body_type}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                    <div className="flex justify-between items-center">
+                      <Link
+                        href={`/cars/${car.id}`}
+                        className="text-qatar-maroon hover:text-qatar-maroon-dark font-medium"
+                      >
+                        View Details
+                      </Link>
+                      <button
+                        onClick={() => handleFavoriteToggle(car.id)}
+                        className="text-gray-600 dark:text-gray-400 hover:text-qatar-maroon"
+                      >
+                        {favorites.includes(car.id) ? (
+                          <HeartIconSolid className="h-6 w-6 text-qatar-maroon" />
+                        ) : (
+                          <HeartIcon className="h-6 w-6" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <main className="px-4">
           {/* Top Bar */}
@@ -526,17 +677,21 @@ export default function CarsPage() {
                   </button>
 
                   {/* Sort Dropdown */}
-                  <div className="relative">
+                  <div className="relative group">
                     <select
                       value={filters.sort || 'newest'}
                       onChange={(e) => setFilters(prev => ({ 
                         ...prev, 
                         sort: e.target.value as Filters['sort'] 
                       }))}
-                      className="appearance-none w-full px-4 py-2 pr-8 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-qatar-maroon"
+                      className="appearance-none w-full px-4 py-2 pr-8 rounded-xl border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50  hover:border-qatar-maroon hover:shadow-md"
                     >
                       {sortOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
+                        <option 
+                          key={option.value} 
+                          value={option.value}
+                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        >
                           {option.label}
                         </option>
                       ))}
@@ -603,175 +758,140 @@ export default function CarsPage() {
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="w-full md:w-80 sticky top-20"
                 >
-                  <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl p-4 space-y-3 border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-200/50 dark:border-gray-700/50">
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">Filters</h2>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{cars.length} cars</span>
-                        <button
-                          onClick={() => setShowFilters(false)}
-                          className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 md:hidden"
+                  <div className="w-80 bg-white dark:bg-gray-800 p-6 rounded-xl space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Filters</h2>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{cars.length} cars</span>
+                    </div>        
+                  
+                    {/* Brand */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Brand</label>
+                      <div className="relative">
+                        <select
+                          value={filters.brand_id || ''}
+                          onChange={(e) => handleBrandChange(e.target.value ? Number(e.target.value) : undefined)}
+                          className="appearance-none w-full px-4 py-2 pr-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-qatar-maroon hover:shadow-md"
                         >
-                          <XMarkIcon className="h-5 w-5" />
-                        </button>
+                          <option value="">All Brands</option>
+                          {brands.map((brand) => (
+                            <option 
+                              key={brand.id} 
+                              value={brand.id}
+                              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            >
+                              {brand.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                          <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Brand & Model */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Brand
-                      </label>
-                      <select
-                        value={filters.brand_id || ''}
-                        onChange={(e) => {
-                          const brandId = e.target.value ? Number(e.target.value) : undefined;
-                          setFilters(prev => ({ ...prev, brand_id: brandId }));
-                        }}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                      >
-                        <option value="">All Brands</option>
-                        {brands.map((brand) => (
-                          <option key={brand.id} value={brand.id}>
-                            {brand.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
                     {/* Price Range */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Price Range (QAR)
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <input
-                            type="number"
-                            placeholder="Min"
-                            value={filters.minPrice || ''}
-                            onChange={(e) => {
-                              const value = e.target.value ? Number(e.target.value) : undefined;
-                              setFilters(prev => ({
-                                ...prev,
-                                minPrice: value
-                              }));
-                            }}
-                            className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="number"
-                            placeholder="Max"
-                            value={filters.maxPrice || ''}
-                            onChange={(e) => {
-                              const value = e.target.value ? Number(e.target.value) : undefined;
-                              setFilters(prev => ({
-                                ...prev,
-                                maxPrice: value
-                              }));
-                            }}
-                            className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                          />
-                        </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Price Range (QAR)</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={filters.minPrice || ''}
+                          onChange={(e) => handlePriceRangeChange(Number(e.target.value), filters.maxPrice)}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={filters.maxPrice || ''}
+                          onChange={(e) => handlePriceRangeChange(filters.minPrice, Number(e.target.value))}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
+                        />
                       </div>
                     </div>
 
                     {/* Mileage Range */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Mileage Range (KM)
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <input
-                            type="number"
-                            placeholder="Min"
-                            value={filters.minMileage || ''}
-                            onChange={(e) => {
-                              const value = e.target.value ? Number(e.target.value) : undefined;
-                              setFilters(prev => ({
-                                ...prev,
-                                minMileage: value
-                              }));
-                            }}
-                            className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="number"
-                            placeholder="Max"
-                            value={filters.maxMileage || ''}
-                            onChange={(e) => {
-                              const value = e.target.value ? Number(e.target.value) : undefined;
-                              setFilters(prev => ({
-                                ...prev,
-                                maxMileage: value
-                              }));
-                            }}
-                            className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                          />
-                        </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Mileage Range (KM)</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="number"
+                          placeholder="Min"
+                          value={filters.minMileage || ''}
+                          onChange={(e) => handleMileageRangeChange(Number(e.target.value), filters.maxMileage)}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
+                        />
+                        <input
+                          type="number"
+                          placeholder="Max"
+                          value={filters.maxMileage || ''}
+                          onChange={(e) => handleMileageRangeChange(filters.minMileage, Number(e.target.value))}
+                          className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
+                        />
                       </div>
                     </div>
 
-                    {/* Year Range */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Year
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <select
-                          value={filters.minYear || ''}
-                          onChange={(e) => {
-                            const value = e.target.value ? Number(e.target.value) : undefined;
-                            setFilters(prev => ({
-                              ...prev,
-                              minYear: value
-                            }));
-                          }}
-                          className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                        >
-                          <option value="">From Year</option>
-                          {Array.from({ length: new Date().getFullYear() - 1969 }, (_, i) => 1970 + i).reverse().map(year => (
-                            <option key={year} value={year}>{year}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={filters.maxYear || ''}
-                          onChange={(e) => {
-                            const value = e.target.value ? Number(e.target.value) : undefined;
-                            setFilters(prev => ({
-                              ...prev,
-                              maxYear: value
-                            }));
-                          }}
-                          className="w-full px-3 py-1.5 bg-white dark:bg-gray-800/90 border border-gray-200 dark:border-gray-700/50 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon text-sm"
-                        >
-                          <option value="">To Year</option>
-                          {Array.from({ length: new Date().getFullYear() - 1969 }, (_, i) => 1970 + i).reverse().map(year => (
-                            <option key={year} value={year}>{year}</option>
-                          ))}
-                        </select>
+                    {/* Year */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Year</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="relative group">
+                          <select
+                            value={filters.minYear || ''}
+                            onChange={(e) => handleYearRangeChange(Number(e.target.value), filters.maxYear)}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon appearance-none pr-8 hover:border-qatar-maroon hover:shadow-sm transition-all duration-300 ease-in-out"
+                          >
+                            <option value="">From Year</option>
+                            {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-qatar-maroon transition-colors duration-300">
+                            <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="relative group">
+                          <select
+                            value={filters.maxYear || ''}
+                            onChange={(e) => handleYearRangeChange(filters.minYear, Number(e.target.value))}
+                            className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon appearance-none pr-8 hover:border-qatar-maroon hover:shadow-sm transition-all duration-300 ease-in-out"
+                          >
+                            <option value="">To Year</option>
+                            {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400 group-hover:text-qatar-maroon transition-colors duration-300">
+                            <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
                     {/* Condition */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Condition
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Condition</label>
+                      <div className="grid grid-cols-2 gap-2">
                         {['New', 'Excellent', 'Good', 'Not Working'].map((condition) => (
                           <button
                             key={condition}
                             onClick={() => toggleCondition(condition)}
-                            className={`px-2 py-1.5 rounded-lg text-sm border transition-all duration-200 ${
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
+                              ${
                               selectedConditions.includes(condition)
-                                ? 'bg-qatar-maroon text-white border-qatar-maroon'
-                                : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700/50 hover:border-qatar-maroon'
+                                ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
+                                : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
                             {condition}
@@ -780,45 +900,73 @@ export default function CarsPage() {
                       </div>
                     </div>
 
-                    {/* Body Type */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Body Type
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {['Sedan', 'SUV', 'Hatchback', 'Coupe', 'Truck', 'Van', 'Wagon', 'Convertible', 'Other'].map((bodyType) => (
+                    {/* Transmission Type */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Transmission</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Automatic', 'Manual'].map((type) => (
                           <button
-                            key={bodyType}
-                            onClick={() => toggleBodyType(bodyType)}
-                            className={`px-3 py-1.5 rounded-lg text-sm border transition-all duration-200 ${
-                              selectedBodyTypes.includes(bodyType)
-                                ? 'bg-qatar-maroon text-white border-qatar-maroon'
-                                : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700/50 hover:border-qatar-maroon'
+                            key={type}
+                            onClick={() => {
+                              const currentTypes = filters.gearbox_type || [];
+                              if (currentTypes.includes(type)) {
+                                // Remove the type if it's already selected
+                                handleGearboxChange(currentTypes.filter(t => t !== type));
+                              } else {
+                                // Add the type if it's not selected
+                                handleGearboxChange([...currentTypes, type]);
+                              }
+                            }}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
+                              ${
+                              (filters.gearbox_type || []).includes(type)
+                                ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
+                                : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {bodyType}
+                            {type}
                           </button>
                         ))}
                       </div>
                     </div>
 
                     {/* Fuel Type */}
-                    <div className="space-y-1">
-                      <label className="block text-sm font-semibold text-gray-900 dark:text-white">
-                        Fuel Type
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {['Petrol', 'Diesel', 'Hybrid', 'Electric'].map((fuelType) => (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Fuel Type</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Petrol', 'Diesel', 'Hybrid', 'Electric'].map((type) => (
                           <button
-                            key={fuelType}
-                            onClick={() => toggleFuelType(fuelType)}
-                            className={`px-3 py-1.5 rounded-lg text-sm border transition-all duration-200 ${
-                              selectedFuelTypes.includes(fuelType)
-                                ? 'bg-qatar-maroon text-white border-qatar-maroon'
-                                : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white border-gray-200 dark:border-gray-700/50 hover:border-qatar-maroon'
+                            key={type}
+                            onClick={() => toggleFuelType(type)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
+                              ${
+                              selectedFuelTypes.includes(type)
+                                ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
+                                : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {fuelType}
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Body Type */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">Body Type</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Sedan', 'SUV', 'Hatchback', 'Coupe', 'Truck', 'Van', 'Wagon', 'Convertible', 'Other'].map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => toggleBodyType(type)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
+                              ${
+                              selectedBodyTypes.includes(type)
+                                ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
+                                : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
+                            }`}
+                          >
+                            {type}
                           </button>
                         ))}
                       </div>
@@ -827,7 +975,7 @@ export default function CarsPage() {
                     {/* Clear Filters Button */}
                     <button
                       onClick={clearAllFilters}
-                      className="w-full px-4 py-2 bg-qatar-maroon/10 text-qatar-maroon hover:bg-qatar-maroon/20 rounded-xl transition-all duration-200 font-medium text-sm"
+                      className="w-full px-4 py-2 text-sm font-medium text-qatar-maroon hover:text-white border border-qatar-maroon hover:bg-qatar-maroon rounded-lg transition-colors"
                     >
                       Clear All Filters
                     </button>
@@ -899,8 +1047,9 @@ export default function CarsPage() {
                     <div key={car.id} className="relative">
                       <CarCard
                         car={car}
-                        isFavorited={favorites.has(car.id)}
-                        onFavoriteChange={handleFavoriteChange}
+                        onFavoriteToggle={handleFavoriteToggle}
+                        isFavorite={favorites.includes(car.id)}
+                        featured={car.is_featured}
                       />
                       {compareMode && (
                         <button
