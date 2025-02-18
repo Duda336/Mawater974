@@ -99,6 +99,7 @@ export interface Database {
           body_type: BodyType
           condition: CarCondition
           status: CarStatus
+          main_photo_index?: number | null
           image_url: string | null
           created_at: string
           updated_at: string
@@ -117,6 +118,7 @@ export interface Database {
           body_type: BodyType
           condition: CarCondition
           status?: CarStatus
+          main_photo_index?: number | null
           image_url?: string | null
           created_at?: string
           updated_at?: string
@@ -135,9 +137,33 @@ export interface Database {
           body_type?: BodyType
           condition?: CarCondition
           status?: CarStatus
+          main_photo_index?: number | null
           image_url?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      car_images: {
+        Row: {
+          id: number
+          car_id: number
+          url: string
+          is_main_photo?: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          car_id: number
+          url: string
+          is_main_photo?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          car_id?: number
+          url?: string
+          is_main_photo?: boolean
+          created_at?: string
         }
       }
       favorites: {
@@ -225,6 +251,7 @@ export type Profile = TableRow<'profiles'>
 export type Brand = TableRow<'brands'>
 export type Model = TableRow<'models'>
 export type Car = TableRow<'cars'>
+export type CarImage = TableRow<'car_images'>
 export type Favorite = TableRow<'favorites'>
 export type AdminLog = TableRow<'admin_logs'>
 
@@ -235,7 +262,7 @@ export interface ExtendedCar extends Database['public']['Tables']['cars']['Row']
   brand: CarBrand;
   model: CarModel;
   user: Profile;
-  images: string[];
+  images: CarImage[];
   color: string;
   cylinders: string | null;
 }

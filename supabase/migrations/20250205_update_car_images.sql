@@ -71,3 +71,26 @@ USING (
         AND user_id = auth.uid()
     )
 );
+
+-- Set the first image (by created_at) as the main image for each car
+WITH FirstImages AS (
+  SELECT DISTINCT ON (car_id) 
+    id,
+    car_id
+  FROM car_images
+  WHERE car_id IN (
+    SELECT car_id 
+    FROM car_images 
+    GROUP BY car_id 
+    HAVING SUM(CASE WHEN is_main THEN 1 ELSE 0 END) = 0
+  )
+  ORDER BY car_id, created_at ASC
+)
+UPDATE car_images
+SET is_main = true
+WHERE id IN (SELECT id FROM FirstImages);
+
+-- Create a unique partial index to ensure each car has exactly one main image
+CREATE UNIQUE INDEX one_main_image_per_car 
+ON car_images (car_id) 
+WHERE is_main = true;
