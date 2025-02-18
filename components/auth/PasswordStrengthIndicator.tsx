@@ -1,16 +1,20 @@
 'use client';
 
+import { useLanguage } from '../../contexts/LanguageContext';
+
 interface PasswordStrengthIndicatorProps {
   password: string;
 }
 
 export default function PasswordStrengthIndicator({ password }: PasswordStrengthIndicatorProps) {
+  const { t } = useLanguage();
+
   const requirements = [
-    { regex: /.{8,}/, text: 'At least 8 characters' },
-    { regex: /[A-Z]/, text: 'At least one uppercase letter' },
-    { regex: /[a-z]/, text: 'At least one lowercase letter' },
-    { regex: /[0-9]/, text: 'At least one number' },
-    { regex: /[^A-Za-z0-9]/, text: 'At least one special character' },
+    { regex: /.{8,}/, text: t('password.requirements.length') },
+    { regex: /[A-Z]/, text: t('password.requirements.uppercase') },
+    { regex: /[a-z]/, text: t('password.requirements.lowercase') },
+    { regex: /[0-9]/, text: t('password.requirements.number') },
+    { regex: /[^A-Za-z0-9]/, text: t('password.requirements.special') },
   ];
 
   const strength = requirements.reduce((count, requirement) => 
@@ -18,9 +22,9 @@ export default function PasswordStrengthIndicator({ password }: PasswordStrength
 
   const getStrengthText = () => {
     if (strength === 0) return '';
-    if (strength < 3) return 'Weak';
-    if (strength < 5) return 'Medium';
-    return 'Strong';
+    if (strength < 3) return t('password.weak');
+    if (strength < 5) return t('password.medium');
+    return t('password.strong');
   };
 
   const getStrengthColor = () => {
@@ -40,7 +44,7 @@ export default function PasswordStrengthIndicator({ password }: PasswordStrength
       {password && (
         <div className="space-y-1">
           <p className={`text-xs ${getStrengthColor().replace('bg-', 'text-')}`}>
-            Password Strength: {getStrengthText()}
+            {t('password.strength')}: {getStrengthText()}
           </p>
           <ul className="text-xs space-y-1 text-gray-500 dark:text-gray-400">
             {requirements.map((requirement, index) => (

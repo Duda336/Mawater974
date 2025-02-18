@@ -8,53 +8,57 @@ import CarCard from '@/components/CarCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function FavoritesPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   const fetchFavorites = async () => {
     try {
       setLoading(true);
       
-      // Get current session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        localStorage.setItem('redirectAfterLogin', '/favorites');
+      if (!user) {
         router.push('/login');
         return;
       }
 
-      // Fetch favorites with car details
-      const { data: favoritesData, error: favoritesError } = await supabase
+      // First get the favorite car IDs
+      const { data: favData, error: favError } = await supabase
         .from('favorites')
+        .select('car_id')
+        .eq('user_id', user.id);
+
+      if (favError) throw favError;
+
+      if (favData.length === 0) {
+        setFavorites([]);
+        setLoading(false);
+        return;
+      }
+
+      // Then fetch the car details including brand and model
+      const carIds = favData.map(fav => fav.car_id);
+      const { data: cars, error: carsError } = await supabase
+        .from('cars')
         .select(`
-          car_id,
-          cars (
-            *,
-            brand:brands(*),
-            images:car_images(*)
-          )
+          *,
+          brand:brands(id, name),
+          model:models(id, name),
+          user:profiles(id, full_name),
+          images:car_images(url, is_main)
         `)
-        .eq('user_id', session.user.id);
+        .in('id', carIds);
 
-      if (favoritesError) throw favoritesError;
+      if (carsError) throw carsError;
 
-      // Filter out any null cars and map to the car objects
-      const validFavorites = favoritesData
-        ?.filter(f => f.cars !== null)
-        .map(f => ({
-          ...f.cars,
-          favorite_id: f.car_id
-        })) || [];
-
-      setFavorites(validFavorites);
+      setFavorites(cars);
     } catch (error) {
       console.error('Error fetching favorites:', error);
-      toast.error('Failed to load favorites');
+      toast.error(t('favorites.error.load'));
     } finally {
       setLoading(false);
     }
@@ -80,13 +84,13 @@ export default function FavoritesPage() {
       // Update local state with animation
       setFavorites(prev => prev.filter(car => car.id !== carId));
       
-      toast.success('Removed from favorites', {
+      toast.success(t('favorites.success.removed'), {
         icon: '💔',
         position: 'bottom-right',
       });
     } catch (error) {
       console.error('Error removing favorite:', error);
-      toast.error('Failed to remove from favorites');
+      toast.error(t('favorites.error.remove'));
     }
   };
 
@@ -103,10 +107,10 @@ export default function FavoritesPage() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            My Favorites
+            {t('favorites.title')}
           </h1>
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {favorites.length} {favorites.length === 1 ? 'car' : 'cars'}
+            {t(`favorites.count${favorites.length === 1 ? '' : '_plural'}`, { count: favorites.length })}
           </span>
         </div>
         
@@ -129,16 +133,16 @@ export default function FavoritesPage() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No favorites yet
+              {t('favorites.empty.title')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Start adding cars to your favorites to see them here
+              {t('favorites.empty.description')}
             </p>
             <button
               onClick={() => router.push('/cars')}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
             >
-              Browse Cars
+              {t('favorites.empty.browse')}
             </button>
           </div>
         ) : (

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface ImageCarouselProps {
-  images: { url: string }[];
+  images: { url: string; is_main?: boolean }[];
   alt: string;
   aspectRatio?: string;
 }
@@ -17,8 +17,15 @@ export default function ImageCarousel({
 }: ImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // Sort images to show main image first
+  const sortedImages = [...images].sort((a, b) => {
+    if (a.is_main && !b.is_main) return -1;
+    if (!a.is_main && b.is_main) return 1;
+    return 0;
+  });
+
   // Use placeholder if no images
-  const imageUrls = images.length > 0 ? images : [{ url: '/placeholder-car.jpg' }];
+  const imageUrls = sortedImages.length > 0 ? sortedImages : [{ url: '/placeholder-car.jpg' }];
 
   const next = (e: React.MouseEvent) => {
     e.preventDefault();

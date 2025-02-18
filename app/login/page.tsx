@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import SocialLogin from '@/components/auth/SocialLogin';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { signOutMessage, setSignOutMessage } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Clear sign-out message after it's been shown
@@ -33,13 +35,41 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    // Basic validation
+    if (!email || !email.includes('@')) {
+      setError(t('auth.error.invalidEmail'));
+      setLoading(false);
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      setError(t('auth.error.invalidPassword'));
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log('Attempting sign in...', { email }); // Log attempt
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        console.error('Sign in error:', signInError); // Log the full error
+
+        if (signInError.message.includes('Invalid login credentials')) {
+          throw new Error(t('auth.error.invalidCredentials'));
+        } else if (signInError.message.includes('Email not confirmed')) {
+          throw new Error(t('auth.error.emailNotVerified'));
+        } else if (signInError.status === 400) {
+          throw new Error(t('auth.error.badRequest'));
+        }
+        throw new Error(t('auth.error.signIn'));
+      }
+
+      console.log('Sign in successful:', { user: data.user?.id }); // Log success
 
       // Save email if remember me is checked
       if (rememberMe) {
@@ -57,10 +87,11 @@ export default function LoginPage() {
         router.push('/'); // Default redirect to home
       }
 
-      toast.success('Successfully logged in!');
+      toast.success(t('login.success'));
     } catch (error: any) {
+      console.error('Login error:', error); // Log any other errors
       setError(error.message);
-      toast.error(error.message || 'Failed to sign in');
+      toast.error(error.message || t('login.error.failed'));
     } finally {
       setLoading(false);
     }
@@ -79,15 +110,15 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Welcome back
+            {t('login.welcome')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link
               href="/signup"
               className="font-medium text-qatar-maroon hover:text-qatar-maroon/80 transition-colors duration-200"
             >
-              Create a new account
+              {t('login.createAccount')}
             </Link>
           </p>
         </div>
@@ -102,7 +133,7 @@ export default function LoginPage() {
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email address
+                {t('login.email')}
               </label>
               <input
                 id="email"
@@ -113,13 +144,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                placeholder="john@example.com"
+                placeholder="Hamad@example.com"
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
+                {t('login.password')}
               </label>
               <div className="relative">
                 <input
@@ -137,7 +168,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-qatar-maroon"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="h-5 w-5" />
@@ -163,7 +194,7 @@ export default function LoginPage() {
                 htmlFor="remember-me"
                 className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
               >
-                Remember me
+                {t('login.rememberMe')}
               </label>
             </div>
 
@@ -172,7 +203,7 @@ export default function LoginPage() {
                 href="/forgot-password"
                 className="font-medium text-qatar-maroon hover:text-qatar-maroon/80 transition-colors duration-200"
               >
-                Forgot password?
+                {t('login.forgotPassword')}
               </Link>
             </div>
           </div>
@@ -186,7 +217,7 @@ export default function LoginPage() {
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                'Sign in'
+                t('login.signIn')
               )}
             </button>
           </div>

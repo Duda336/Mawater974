@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import { useLanguage } from './LanguageContext';
 
 interface AuthContextType {
   user: User | null;
@@ -31,6 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [signOutMessage, setSignOutMessage] = useState<string | null>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Function to ensure user profile exists
   const ensureProfile = async (user: User) => {
@@ -137,11 +139,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('already registered')) {
+          throw new Error(t('auth.error.emailInUse'));
+        } else if (error.message.includes('password')) {
+          throw new Error(t('auth.error.weakPassword'));
+        } else if (error.message.includes('email')) {
+          throw new Error(t('auth.error.invalidEmail'));
+        }
+        throw new Error(t('auth.error.signUp'));
+      }
 
       // Profile will be created by ensureProfile when auth state changes
     } catch (error) {
       console.error('Error signing up:', error);
+      toast.error(error instanceof Error ? error.message : t('auth.error.signUpFailed'));
       throw error;
     } finally {
       setIsLoading(false);
@@ -156,9 +168,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error(t('auth.error.invalidCredentials'));
+        }
+        throw new Error(t('auth.error.signIn'));
+      }
     } catch (error) {
       console.error('Error signing in:', error);
+      toast.error(error instanceof Error ? error.message : t('auth.error.signInFailed'));
       throw error;
     } finally {
       setIsLoading(false);
@@ -171,18 +189,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        toast.error('Error signing out');
+        toast.error(t('auth.error.signOut'));
         return;
       }
 
       // Optional: set a sign-out message that can be displayed on home page
-      setSignOutMessage('You have been successfully signed out.');
+      setSignOutMessage(t('auth.success.signedOut'));
       
       // Redirect to home page
       router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
-      toast.error('Failed to sign out');
+      toast.error(t('auth.error.signOutFailed'));
     } finally {
       setIsLoading(false);
     }

@@ -14,8 +14,10 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   HomeIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import Image from 'next/image';
 import { supabase } from '../lib/supabase';
 
@@ -23,8 +25,10 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -41,7 +45,47 @@ export default function Navbar() {
       }
     };
     checkAdminStatus();
+    if (user) {
+      fetchUnreadCount();
+      // Subscribe to notifications
+      const channel = supabase
+        .channel('notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchUnreadCount();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [user]);
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+
+    try {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+
+      if (error) throw error;
+      setUnreadCount(count || 0);
+    } catch (err) {
+      console.error('Error fetching unread count:', err);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -52,19 +96,19 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { name: 'Browse Cars', href: '/cars' },
-    { name: 'Sell Your Car', href: '/sell' },
-    { name: 'Car Rental', href: '/car-rental' },
-    { name: 'Spare Parts', href: '/spare-parts' },
-    { name: 'Car Photography', href: '/car-photography' },
-    { name: 'Showrooms', href: '/showrooms' },
+    { name: t('nav.browseCars'), href: '/cars' },
+    { name: t('nav.sellYourCar'), href: '/sell' },
+    { name: t('nav.carRental'), href: '/car-rental' },
+    { name: t('nav.spareParts'), href: '/spare-parts' },
+    { name: t('nav.carPhotography'), href: '/car-photography' },
+    { name: t('nav.showrooms'), href: '/showrooms' },
   ];
 
   const userMenuItems = [
-    { name: 'My Profile', href: '/profile', icon: UserCircleIcon },
-    ...(isAdmin ? [{ name: 'Admin Dashboard', href: '/admin', icon: ClipboardDocumentListIcon }] : []),
-    { name: 'My Ads', href: '/my-ads', icon: ClipboardDocumentListIcon },
-    { name: 'Favorites', href: '/favorites', icon: HeartIcon },
+    { name: t('user.myProfile'), href: '/profile', icon: UserCircleIcon },
+    ...(isAdmin ? [{ name: t('user.adminDashboard'), href: '/admin', icon: ClipboardDocumentListIcon }] : []),
+    { name: t('user.myAds'), href: '/my-ads', icon: ClipboardDocumentListIcon },
+    { name: t('user.favorites'), href: '/favorites', icon: HeartIcon },
   ];
 
   if (!mounted) {
@@ -87,7 +131,7 @@ export default function Navbar() {
                 href="/"
                 className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium"
               >
-                Home
+                {t('nav.home')}
               </Link>
               {navItems.map((item) => (
                 <Link
@@ -104,9 +148,10 @@ export default function Navbar() {
             <div className="flex items-center space-x-4">
               {/* Language Switcher */}
               <button
+                onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon border border-gray-200 dark:border-gray-700 rounded-lg hover:border-qatar-maroon dark:hover:border-qatar-maroon transition-colors"
               >
-                EN / عربي
+                {language === 'en' ? 'EN/ع' : 'ع/EN'}
               </button>
 
               {/* Theme Toggle */}
@@ -140,35 +185,98 @@ export default function Navbar() {
                     leaveTo="transform opacity-0 scale-95"
                   >
                     <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                      {userMenuItems.map((item) => (
-                        <Menu.Item key={item.name}>
+                      {/* Profile */}
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link
+                            href="/profile"
+                            className={`${
+                              active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                            } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
+                          >
+                            <UserCircleIcon className="mr-3 h-5 w-5" />
+                            {t('user.myProfile')}
+                          </Link>
+                        )}
+                      </Menu.Item>
+
+                      {/* Messages & Notifications */}
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link
+                            href="/messages"
+                            className={`${
+                              active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                            } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 relative`}
+                          >
+                            <BellIcon className="mr-3 h-5 w-5" />
+                            {t('user.messages')}
+                            {unreadCount > 0 && (
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 bg-qatar-maroon text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                {unreadCount}
+                              </span>
+                            )}
+                          </Link>
+                        )}
+                      </Menu.Item>
+
+                      {/* Favorites */}
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link
+                            href="/favorites"
+                            className={`${
+                              active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                            } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
+                          >
+                            <HeartIcon className="mr-3 h-5 w-5" />
+                            {t('user.favorites')}
+                          </Link>
+                        )}
+                      </Menu.Item>
+
+                      {/* My Ads */}
+                      <Menu.Item>
+                        {({ active }) => (
+                          <Link
+                            href="/my-ads"
+                            className={`${
+                              active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                            } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
+                          >
+                            <ClipboardDocumentListIcon className="mr-3 h-5 w-5" />
+                            {t('user.myAds')}
+                          </Link>
+                        )}
+                      </Menu.Item>
+
+                      {/* Admin Dashboard */}
+                      {isAdmin && (
+                        <Menu.Item>
                           {({ active }) => (
                             <Link
-                              href={item.href}
+                              href="/admin"
                               className={`${
-                                active
-                                  ? 'bg-gray-100 dark:bg-gray-700'
-                                  : ''
-                              } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200`}
+                                active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                              } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                             >
-                              <item.icon className="h-5 w-5 mr-2" />
-                              {item.name}
+                              <Cog6ToothIcon className="mr-3 h-5 w-5" />
+                              {t('user.adminDashboard')}
                             </Link>
                           )}
                         </Menu.Item>
-                      ))}
+                      )}
+
                       <Menu.Item>
                         {({ active }) => (
                           <button
                             onClick={handleSignOut}
                             className={`${
-                              active
-                                ? 'bg-gray-100 dark:bg-gray-700'
-                                : ''
-                            } flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200`}
+                              active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                            } flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                           >
-                            <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
-                            Sign Out
+                            <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5" />
+                            {t('user.signOut')}
                           </button>
                         )}
                       </Menu.Item>
@@ -181,13 +289,13 @@ export default function Navbar() {
                     href="/login"
                     className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon px-3 py-2 text-sm font-medium"
                   >
-                    Sign In
+                    {t('nav.signIn')}
                   </Link>
                   <Link
                     href="/signup"
                     className="bg-qatar-maroon text-white hover:bg-qatar-maroon/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    Sign Up
+                    {t('nav.signUp')}
                   </Link>
                 </div>
               )}
@@ -214,7 +322,7 @@ export default function Navbar() {
             className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
             onClick={() => setMobileMenuOpen(false)}
           >
-            Home
+            {t('nav.home')}
           </Link>
           {navItems.map((item) => (
             <Link
@@ -228,9 +336,10 @@ export default function Navbar() {
           ))}
           {/* Mobile Language Switcher */}
           <button
+            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
             className="w-full text-left px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
           >
-            EN / عربي
+            {language === 'en' ? 'EN/ع' : 'ع/EN'}
           </button>
           {!user && (
             <>
@@ -239,14 +348,14 @@ export default function Navbar() {
                 className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sign In
+                {t('nav.signIn')}
               </Link>
               <Link
                 href="/signup"
                 className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Sign Up
+                {t('nav.signUp')}
               </Link>
             </>
           )}

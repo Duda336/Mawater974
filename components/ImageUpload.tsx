@@ -10,7 +10,7 @@ interface ImageUploadProps {
   onImageUploaded: (url: string) => void;
 }
 
-async function uploadCarImage(file: File, carId: number, isFirstImage: boolean) {
+async function uploadCarImage(file: File, carId: number, isMain: boolean = false) {
   const fileExt = file.name.split('.').pop();
   const filePath = `${carId}/${Date.now()}.${fileExt}`;
 
@@ -27,30 +27,20 @@ async function uploadCarImage(file: File, carId: number, isFirstImage: boolean) 
     .from('car-images')
     .getPublicUrl(filePath);
 
-  if (isFirstImage) {
-    // Update car record with new image URL as main image
-    const { error: updateError } = await supabase
-      .from('cars')
-      .update({ image_url: publicUrl })
-      .eq('id', carId);
+  // Insert into car_images table with is_main flag
+  const { error: insertError } = await supabase
+    .from('car_images')
+    .insert({
+      car_id: carId,
+      url: publicUrl,
+      is_main: isMain
+    });
 
-    if (updateError) {
-      throw updateError;
-    }
-
-    return { mainUrl: publicUrl };
-  } else {
-    // Insert new image into car_images table
-    const { error: insertError } = await supabase
-      .from('car_images')
-      .insert({ car_id: carId, image_url: publicUrl });
-
-    if (insertError) {
-      throw insertError;
-    }
-
-    return { galleryUrl: publicUrl };
+  if (insertError) {
+    throw insertError;
   }
+
+  return publicUrl;
 }
 
 export default function ImageUpload({ carId, currentImageUrl, onImageUploaded }: ImageUploadProps) {
@@ -85,15 +75,9 @@ export default function ImageUpload({ carId, currentImageUrl, onImageUploaded }:
 
       const isFirstImage = !currentImages || currentImages.length === 0;
 
-      // Upload the image
-      const result = await uploadCarImage(file, carId, isFirstImage);
-
-      // Call the callback with the appropriate URL
-      if (isFirstImage && 'mainUrl' in result) {
-        onImageUploaded(result.mainUrl);
-      } else if ('galleryUrl' in result) {
-        onImageUploaded(result.galleryUrl);
-      }
+      // Upload the image with appropriate main flag
+      const url = await uploadCarImage(file, carId, isFirstImage);
+      onImageUploaded(url);
 
     } catch (err) {
       console.error('Error uploading image:', err);
@@ -104,51 +88,48 @@ export default function ImageUpload({ carId, currentImageUrl, onImageUploaded }:
   };
 
   return (
-    <div className="relative group">
-      <div className="w-20 h-20 relative rounded-lg overflow-hidden">
-        <Image
-          src={currentImageUrl || '/placeholder-car.svg'}
-          alt="Car image"
-          fill
-          className="object-cover"
-          sizes="80px"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200">
-          <label className="absolute inset-0 flex items-center justify-center cursor-pointer">
-            <span className="sr-only">Upload image</span>
-            <svg
-              className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <input
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-              disabled={uploading}
+    <div>
+      <label className="cursor-pointer inline-block">
+        <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-qatar-maroon transition-colors">
+          {currentImageUrl ? (
+            <Image
+              src={currentImageUrl}
+              alt="Current image"
+              fill
+              className="object-cover"
             />
-          </label>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+            </div>
+          )}
+          <input
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
+            accept="image/*"
+            disabled={uploading}
+          />
+          {uploading && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            </div>
+          )}
         </div>
-      </div>
-      {uploading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-qatar-maroon border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-      {error && (
-        <div className="absolute top-full left-0 right-0 mt-1 text-xs text-red-500">
-          {error}
-        </div>
-      )}
+      </label>
+      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
     </div>
   );
 }

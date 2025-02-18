@@ -9,74 +9,78 @@ export default function TestConnection() {
   const [details, setDetails] = useState<string>('');
   const [config, setConfig] = useState<any>(null);
 
-  useEffect(() => {
-    async function checkConnection() {
+  const checkConnection = async () => {
+    setStatus('checking');
+    setError(null);
+    setDetails('');
+
+    try {
+      // Get environment variables
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const hasAnonKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      // Store config for display
+      const configInfo = {
+        hasUrl: !!supabaseUrl,
+        hasAnonKey,
+        url: supabaseUrl
+      };
+      setConfig(configInfo);
+      console.log('Config check:', configInfo);
+
+      setDetails('Checking Supabase configuration...');
+
+      if (!supabaseUrl || !hasAnonKey) {
+        throw new Error('Missing Supabase configuration. Please check your environment variables.');
+      }
+
+      // First test if we can reach the Supabase REST endpoint
       try {
-        // Get environment variables
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const hasAnonKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        
-        // Store config for display
-        const configInfo = {
-          hasUrl: !!supabaseUrl,
-          hasAnonKey,
-          url: supabaseUrl
-        };
-        setConfig(configInfo);
-        console.log('Config check:', configInfo);
-
-        setDetails('Checking Supabase configuration...');
-
-        if (!supabaseUrl || !hasAnonKey) {
-          throw new Error('Missing Supabase configuration. Please check your environment variables.');
-        }
-
-        // First test if we can reach the Supabase REST endpoint
-        try {
-          setDetails('Testing Supabase URL accessibility...');
-          const apiUrl = `${supabaseUrl}/rest/v1/`;
-          const response = await fetch(apiUrl, {
-            method: 'HEAD',
-            headers: {
-              'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-            }
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Failed to reach Supabase API: ${response.statusText}`);
+        setDetails('Testing Supabase URL accessibility...');
+        const apiUrl = `${supabaseUrl}/rest/v1/`;
+        const response = await fetch(apiUrl, {
+          method: 'HEAD',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
           }
-        } catch (fetchErr: any) {
-          throw new Error(`Cannot reach Supabase API: ${fetchErr.message}`);
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to reach Supabase API: ${response.statusText}`);
         }
+      } catch (fetchErr: any) {
+        throw new Error(`Cannot reach Supabase API: ${fetchErr.message}`);
+      }
 
-        setDetails('Testing database connection...');
-        
-        // Try a simple ping to the database
-        const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
+      setDetails('Testing database connection...');
+      
+      // Try a simple ping to the database
+      const { error } = await supabase.from('profiles').select('count', { count: 'exact', head: true });
 
-        if (error) throw error;
-        
-        setStatus('connected');
-        setError(null);
-        setDetails('Connected successfully!');
-        
-      } catch (err: any) {
-        console.error('Connection error:', err);
-        setStatus('error');
-        setError(err.message);
-        
-        if (err.message.includes('Cannot reach Supabase API')) {
-          setDetails('Cannot reach Supabase API. This could mean:\n1. The project is paused\n2. The URL is incorrect\n3. The API key is invalid');
-        } else if (err.message.includes('fetch failed')) {
-          setDetails('Network error. Please check your internet connection.');
-        } else if (err.message.includes('Missing Supabase configuration')) {
-          setDetails('Environment variables are not properly set. Check .env.local file.');
-        } else {
-          setDetails('Failed to connect to the database. Check console for details.');
-        }
+      if (error) throw error;
+      
+      setStatus('connected');
+      setError(null);
+      setDetails('Connected successfully!');
+      
+    } catch (err: any) {
+      console.error('Connection error:', err);
+      setStatus('error');
+      setError(err.message);
+      
+      if (err.message.includes('Cannot reach Supabase API')) {
+        setDetails('Cannot reach Supabase API. This could mean:\n1. The project is paused\n2. The URL is incorrect\n3. The API key is invalid');
+      } else if (err.message.includes('fetch failed')) {
+        setDetails('Network error. Please check your internet connection.');
+      } else if (err.message.includes('Missing Supabase configuration')) {
+        setDetails('Environment variables are not properly set. Check .env.local file.');
+      } else {
+        setDetails('Failed to connect to the database. Check console for details.');
       }
     }
+  };
 
+  useEffect(() => {
     checkConnection();
   }, []);
 
@@ -142,6 +146,21 @@ export default function TestConnection() {
             )}
           </div>
         )}
+
+        {/* Retest Connection Button */}
+        <div className="mt-4">
+          <button 
+            onClick={checkConnection} 
+            disabled={status === 'checking'}
+            className={`w-full py-2 rounded transition-colors ${
+              status === 'checking' 
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            {status === 'checking' ? 'Retesting...' : 'Retest Connection'}
+          </button>
+        </div>
       </div>
     </div>
   );

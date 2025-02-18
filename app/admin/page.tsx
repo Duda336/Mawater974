@@ -231,32 +231,14 @@ export default function AdminDashboard() {
           brand:brands(id, name),
           model:models(id, name),
           user:profiles(id, full_name, email, phone_number),
-          images
+          images:car_images(url, is_main)
         `)
         .eq('status', status)
         .order('created_at', { ascending: sortOrder === 'oldest' });
 
       if (error) throw error;
-      
-      const formattedCarListings = await Promise.all(data.map(async (car) => {
-        // Fetch image URLs from storage
-        const imageUrls = await Promise.all(
-          (car.images || []).map(async (imagePath: string) => {
-            const { data: imageData } = supabase.storage
-              .from('car_images')
-              .getPublicUrl(imagePath);
-            return imageData.publicUrl;
-          })
-        );
 
-        return {
-          ...car,
-          images: imageUrls,
-          thumbnail: imageUrls[0] || null
-        };
-      }));
-      
-      setCarListings(formattedCarListings);
+      setCarListings(data);
     } catch (error: any) {
       console.error('Error fetching car listings:', error);
       setErrorCar(error.message);
@@ -883,7 +865,95 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-          {renderCarListings()}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+            {carListings.map((car) => (
+              <div
+                key={car.id}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-qatar-maroon dark:hover:border-qatar-maroon transition-colors duration-200"
+              >
+                {/* Car Image */}
+                <div className="relative aspect-[16/9] overflow-hidden">
+                  {car.images && car.images.length > 0 ? (
+                    <img
+                      src={car.images.find(img => img.is_main)?.url || car.images[0].url}
+                      alt={`${car.brand.name} ${car.model.name}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <span className="text-gray-400 dark:text-gray-500">No Image</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Car Details */}
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {car.brand.name} {car.model.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {car.year} • {car.mileage.toLocaleString()} km
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {/* Featured Toggle */}
+                      <button
+                        onClick={() => handleToggleFeature(car.id, car.is_featured)}
+                        className={`p-1.5 rounded-lg transition-colors duration-200 ${
+                          car.is_featured 
+                            ? 'text-yellow-500 hover:text-yellow-600' 
+                            : 'text-gray-400 hover:text-yellow-500'
+                        }`}
+                        title={car.is_featured ? 'Remove from featured' : 'Add to featured'}
+                      >
+                        <StarIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-lg font-semibold text-qatar-maroon">
+                      QAR {car.price.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Posted by: {car.user.full_name}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-4 flex items-center justify-end space-x-2">
+                    <Link
+                      href={`/cars/${car.id}`}
+                      className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-qatar-maroon hover:bg-qatar-maroon hover:text-white rounded-md transition-colors duration-200"
+                    >
+                      View Details
+                    </Link>
+                    {car.status === 'Pending' && (
+                      <>
+                        <button
+                          onClick={() => handleCarAction(car.id, 'Approved')}
+                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-600 hover:bg-green-600 hover:text-white rounded-md transition-colors duration-200"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleCarAction(car.id, 'Rejected')}
+                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white rounded-md transition-colors duration-200"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -911,7 +981,7 @@ export default function AdminDashboard() {
           {images.length > 0 ? (
             <div className="flex-grow flex items-center justify-center">
               <Image
-                src={selectedImage || images[0]}
+                src={selectedImage || images[0].url}
                 alt={`${selectedCar.brand.name} ${selectedCar.model.name}`}
                 className="max-h-full max-w-full object-contain"
                 width={800}
@@ -929,15 +999,15 @@ export default function AdminDashboard() {
               {images.map((image, index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedImage(image)}
+                  onClick={() => setSelectedImage(image.url)}
                   className={`w-16 h-16 rounded-md overflow-hidden border-2 ${
-                    selectedImage === image || (!selectedImage && index === 0)
+                    selectedImage === image.url || (!selectedImage && index === 0)
                       ? 'border-qatar-maroon'
                       : 'border-transparent'
                   }`}
                 >
                   <Image
-                    src={image}
+                    src={image.url}
                     alt={`Car image ${index + 1}`}
                     width={64}
                     height={64}
@@ -1455,7 +1525,7 @@ export default function AdminDashboard() {
               {selectedCar.images?.map((image, index) => (
                 <Image
                   key={index}
-                  src={image}
+                  src={image.url}
                   alt={`Car image ${index + 1}`}
                   width={300}
                   height={200}

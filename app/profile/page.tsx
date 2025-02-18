@@ -7,6 +7,7 @@ import { Database } from '../../types/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   UserCircleIcon,
   PhoneIcon,
@@ -24,6 +25,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
   const [editForm, setEditForm] = useState({
     full_name: '',
     phone_number: '',
@@ -54,7 +56,7 @@ export default function ProfilePage() {
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
-      toast.error('Failed to load profile');
+      toast.error(t('profile.error.load'));
     } finally {
       setLoading(false);
     }
@@ -87,10 +89,10 @@ export default function ProfilePage() {
 
       await fetchProfile();
       setIsEditing(false);
-      toast.success('Profile updated successfully');
+      toast.success(t('profile.success.updated'));
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      toast.error(t('profile.error.update'));
     } finally {
       setLoading(false);
     }
@@ -117,14 +119,14 @@ export default function ProfilePage() {
           <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
-                Profile Information
+                {t('profile.title')}
               </h3>
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
               >
                 <PencilIcon className="h-4 w-4 mr-2" />
-                {isEditing ? 'Cancel' : 'Edit Profile'}
+                {isEditing ? t('profile.cancel') : t('profile.edit')}
               </button>
             </div>
           </div>
@@ -135,7 +137,7 @@ export default function ProfilePage() {
               <form onSubmit={handleUpdateProfile} className="space-y-6">
                 <div>
                   <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Full Name
+                    {t('profile.form.fullName')}
                   </label>
                   <input
                     type="text"
@@ -148,7 +150,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Email
+                    {t('profile.form.email')}
                   </label>
                   <input
                     type="email"
@@ -161,7 +163,7 @@ export default function ProfilePage() {
 
                 <div>
                   <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Phone Number
+                    {t('profile.form.phone')}
                   </label>
                   <input
                     type="tel"
@@ -178,14 +180,14 @@ export default function ProfilePage() {
                     onClick={() => setIsEditing(false)}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600"
                   >
-                    Cancel
+                    {t('profile.form.cancel')}
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon disabled:opacity-50"
                   >
-                    {loading ? 'Saving...' : 'Save Changes'}
+                    {loading ? t('profile.form.saving') : t('profile.form.save')}
                   </button>
                 </div>
               </form>
@@ -198,7 +200,7 @@ export default function ProfilePage() {
                       {profile?.full_name}
                     </h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {profile?.role === 'admin' ? 'Administrator' : 'User'}
+                      {profile?.role === 'admin' ? t('profile.role.admin') : t('profile.role.user')}
                     </p>
                   </div>
                 </div>

@@ -2,8 +2,11 @@
 
 import { supabase } from '../../lib/supabase';
 import { Provider } from '@supabase/supabase-js';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function SocialLogin() {
+  const { t } = useLanguage();
+
   const handleSocialLogin = async (provider: Provider) => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -26,7 +29,7 @@ export default function SocialLogin() {
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-            Or continue with
+            {t('login.continueWith')}
           </span>
         </div>
       </div>
@@ -36,7 +39,7 @@ export default function SocialLogin() {
           onClick={() => handleSocialLogin('google')}
           className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"
         >
-          <span className="sr-only">Sign in with Google</span>
+          <span className="sr-only">{t('login.socialGoogle')}</span>
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12.545,12.151L12.545,12.151c0,1.054,0.855,1.909,1.909,1.909h3.536c-0.684,2.047-2.583,3.534-4.81,3.534 c-2.831,0-5.125-2.294-5.125-5.125c0-2.831,2.294-5.125,5.125-5.125c1.343,0,2.564,0.518,3.48,1.365l1.433-1.433 C16.945,5.251,14.941,4.536,12.8,4.536c-4.198,0-7.636,3.438-7.636,7.636c0,4.198,3.438,7.636,7.636,7.636 c4.198,0,7.636-3.438,7.636-7.636v-1.909h-7.891V12.151z" />
           </svg>
@@ -46,7 +49,7 @@ export default function SocialLogin() {
           onClick={() => handleSocialLogin('github')}
           className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200"
         >
-          <span className="sr-only">Sign in with GitHub</span>
+          <span className="sr-only">{t('login.socialGithub')}</span>
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path
               fillRule="evenodd"

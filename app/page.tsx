@@ -7,10 +7,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide, faTag, faSearch } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from '../components/SearchBar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 export default function Home() {
   const { signOutMessage, setSignOutMessage } = useAuth();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Clear sign-out message after it's been shown
@@ -46,19 +48,20 @@ export default function Home() {
             {/* Text Content */}
             <div className="flex-1 text-center lg:text-left">
               <h1 className="text-5xl lg:text-7xl font-bold mb-6">
-                <span className="text-white">Premium Cars</span>
-                <span className="text-primary block mt-2">in Qatar</span>
+                <span className="text-white">{t('home.hero.title1')}</span>
+                <span className="text-primary block mt-2">{t('home.hero.title2')}</span>
               </h1>
               <p className="text-xl text-white/80 mb-8 max-w-2xl">
-                Discover the finest collection of luxury vehicles in Qatar. From exotic supercars to premium sedans, 
-                find your perfect match with Mawater974.
+                {t('home.hero.description')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/cars" className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
-                  <FontAwesomeIcon icon={faCarSide} className="mr-2" />Browse Cars
+                  <FontAwesomeIcon icon={faCarSide} className="mr-2" />
+                  {t('home.hero.browseCars')}
                 </Link>
                 <Link href="/sell" className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
-                  <FontAwesomeIcon icon={faTag} className="mr-2" />Sell Your Car
+                  <FontAwesomeIcon icon={faTag} className="mr-2" />
+                  {t('home.hero.sellYourCar')}
                 </Link>
               </div>
             </div>
@@ -68,19 +71,19 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                   <div className="text-4xl font-bold text-primary mb-2">500+</div>
-                  <div className="text-white/80">Premium Cars</div>
+                  <div className="text-white/80">{t('home.stats.premiumCars')}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                   <div className="text-4xl font-bold text-primary mb-2">50+</div>
-                  <div className="text-white/80">Trusted Dealers</div>
+                  <div className="text-white/80">{t('home.stats.trustedDealers')}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                   <div className="text-4xl font-bold text-primary mb-2">24/7</div>
-                  <div className="text-white/80">Support</div>
+                  <div className="text-white/80">{t('home.stats.support')}</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
                   <div className="text-4xl font-bold text-primary mb-2">100%</div>
-                  <div className="text-white/80">Satisfaction</div>
+                  <div className="text-white/80">{t('home.stats.satisfaction')}</div>
                 </div>
               </div>
             </div>
@@ -94,29 +97,26 @@ export default function Home() {
       </div>
 
       {/* Why Choose Us Section */}
-      <div className="py-12">
+      <div className="bg-white dark:bg-gray-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-12">
-            Why Choose Mawater974?
+            {t('home.whyChoose.title')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                title: 'Verified Sellers',
-                description:
-                  'All our sellers go through a strict verification process to ensure your safety.',
+                title: t('home.whyChoose.verifiedSellers.title'),
+                description: t('home.whyChoose.verifiedSellers.description'),
                 icon: '🛡️',
               },
               {
-                title: 'Wide Selection',
-                description:
-                  'Browse through thousands of cars from various brands and price ranges.',
+                title: t('home.whyChoose.wideSelection.title'),
+                description: t('home.whyChoose.wideSelection.description'),
                 icon: '🚗',
               },
               {
-                title: 'Easy Process',
-                description:
-                  'Simple and straightforward process to buy or sell your car.',
+                title: t('home.whyChoose.easyProcess.title'),
+                description: t('home.whyChoose.easyProcess.description'),
                 icon: '✨',
               },
             ].map((feature) => (

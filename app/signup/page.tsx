@@ -7,8 +7,10 @@ import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import SocialLogin from '../../components/auth/SocialLogin';
 import PasswordStrengthIndicator from '../../components/auth/PasswordStrengthIndicator';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function SignUp() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -19,19 +21,19 @@ export default function SignUp() {
 
   const validateForm = () => {
     if (!fullName.trim()) {
-      setError('Full name is required');
+      setError(t('signup.validation.fullName'));
       return false;
     }
     if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      setError('Please enter a valid email address');
+      setError(t('signup.validation.email'));
       return false;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      setError(t('signup.validation.password'));
       return false;
     }
     if (!phoneNumber.match(/^\d{8}$/)) {
-      setError('Please enter a valid 8-digit phone number');
+      setError(t('signup.validation.phone'));
       return false;
     }
     return true;
@@ -59,7 +61,7 @@ export default function SignUp() {
 
       if (signUpError) {
         if (signUpError.message.includes('already registered')) {
-          setError('This email is already registered. Please try logging in instead.');
+          setError(t('signup.validation.emailExists'));
         } else {
           setError(signUpError.message);
         }
@@ -67,16 +69,16 @@ export default function SignUp() {
       }
 
       if (!data?.user?.id) {
-        setError('Failed to create account. Please try again.');
+        setError(t('signup.validation.failed'));
         return;
       }
 
       // Show success toast and redirect
-      toast.success('Account created successfully! Welcome to Mawater974.com');
+      toast.success(t('signup.success'));
       router.push('/');
     } catch (error: any) {
       console.error('Signup error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      setError(t('signup.validation.error'));
     } finally {
       setLoading(false);
     }
@@ -87,15 +89,15 @@ export default function SignUp() {
       <div className="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
         <div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Create your account
+            {t('signup.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Already have an account?{' '}
+            {t('signup.haveAccount')}{' '}
             <Link
               href="/login"
               className="font-medium text-qatar-maroon hover:text-qatar-maroon/80 transition-colors duration-200"
             >
-              Sign in
+              {t('signup.signIn')}
             </Link>
           </p>
         </div>
@@ -110,7 +112,7 @@ export default function SignUp() {
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Full Name
+                {t('signup.fullName')}
               </label>
               <input
                 id="full-name"
@@ -118,7 +120,7 @@ export default function SignUp() {
                 type="text"
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                placeholder="Hamad Khlaifa"
+                placeholder={t('signup.fullNamePlaceholder')}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
@@ -126,7 +128,7 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Email address
+                {t('signup.email')}
               </label>
               <input
                 id="email"
@@ -134,7 +136,7 @@ export default function SignUp() {
                 type="email"
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                placeholder="hamad@example.com"
+                placeholder={t('signup.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -142,7 +144,7 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Phone Number
+                {t('signup.phone')}
               </label>
               <div className="relative flex">
                 <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm">
@@ -156,7 +158,7 @@ export default function SignUp() {
                   maxLength={8}
                   pattern="\d{8}"
                   className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                  placeholder="12345678"
+                  placeholder={t('signup.phonePlaceholder')}
                   value={phoneNumber}
                   onChange={(e) => {
                     // Only allow digits
@@ -169,7 +171,7 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Password
+                {t('signup.password')}
               </label>
               <input
                 id="password"
@@ -194,7 +196,7 @@ export default function SignUp() {
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                'Create Account'
+                t('signup.createAccount')
               )}
             </button>
           </div>

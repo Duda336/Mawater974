@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function Showrooms() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-2">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">Car Showrooms</h1>
         
@@ -16,9 +16,9 @@ export default function Showrooms() {
             />
             <select className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-qatar-maroon focus:border-transparent">
               <option value="">Select Location</option>
-              <option value="north">North Region</option>
-              <option value="south">South Region</option>
-              <option value="central">Central Region</option>
+              <option value="north"></option>
+              <option value="south"></option>
+              <option value="central"></option>
             </select>
             <button className="bg-qatar-maroon text-white px-8 py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
               Search

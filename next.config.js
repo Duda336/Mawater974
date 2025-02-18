@@ -11,18 +11,11 @@ const nextConfig = {
     domains: ['eyhpjdnfeetmlayyxshx.supabase.co'],
     unoptimized: true
   },
-  experimental: {
-    appDir: true,
-    serverActions: true
-  },
   compiler: {
     removeConsole: false
   },
   webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false
-    };
+    config.resolve.fallback = { fs: false };
     return config;
   },
   env: {

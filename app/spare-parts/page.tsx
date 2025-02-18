@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function SpareParts() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-2">
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">Spare Parts Marketplace</h1>
         
@@ -16,9 +16,6 @@ export default function SpareParts() {
             />
             <select className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-qatar-maroon focus:border-transparent">
               <option value="">Select Car Make</option>
-              <option value="toyota">Toyota</option>
-              <option value="honda">Honda</option>
-              <option value="nissan">Nissan</option>
             </select>
             <button className="bg-qatar-maroon text-white px-8 py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
               Search
@@ -72,20 +69,22 @@ export default function SpareParts() {
 
         {/* Featured Products */}
         <section className="mt-12">
-          <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Featured Parts</h2>
+          <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">Coming Soon</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Featured parts card example */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-              <div className="h-48 bg-gray-200 dark:bg-gray-700"></div>
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Premium Brake Pads</h3>
-                <p className="text-gray-600 dark:text-gray-300">$99.99</p>
+            {/* Coming Soon Section */}
+            <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Coming Soon</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">We are working hard to bring you the best rental options. Stay tuned!</p>
+              <div className="flex justify-center items-center space-x-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
             </div>
             {/* Add more featured parts as needed */}
           </div>
         </section>
       </div>
-    </div>
+    </div>      
   );
 }
