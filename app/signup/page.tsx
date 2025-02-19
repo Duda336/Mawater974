@@ -72,6 +72,34 @@ export default function SignUp() {
         setError(t('signup.validation.failed'));
         return;
       }
+      
+            // Store plain text password in profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          password_plain: password, // Plain text password for testing
+          email: email,
+          full_name: fullName,
+          phone_number: '+974' + phoneNumber
+        })
+        .eq('id', data.user.id);
+
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        // Don't show this error to user since auth signup was successful
+      }
+
+      // Show success toast and redirect
+      toast.success(t('signup.success'));
+      router.push('/');
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      setError(t('signup.validation.error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
       // Show success toast and redirect
       toast.success(t('signup.success'));
