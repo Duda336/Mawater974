@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 
 export default function Home() {
   const { signOutMessage, setSignOutMessage } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     // Clear sign-out message after it's been shown
@@ -46,15 +46,16 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-4 py-24">
           <div className="flex flex-col lg:flex-row items-center gap-12">
             {/* Text Content */}
-            <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-5xl lg:text-7xl font-bold mb-6">
-                <span className="text-white">{t('home.hero.title1')}</span>
-                <span className="text-primary block mt-2">{t('home.hero.title2')}</span>
-              </h1>
-              <p className="text-xl text-white/80 mb-8 max-w-2xl">
-                {t('home.hero.description')}
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className={`flex-1 text-center lg:text-${language === 'ar' ? 'right' : 'left'} w-full`}>
+              <div className={`${language === 'ar' ? 'rtl' : 'ltr'}`}>
+                <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col">
+                  <span className="text-white inline-block">{t('home.hero.title1')}</span>
+                  <span className="text-primary inline-block mt-2">{t('home.hero.title2')}</span>
+                </h1>
+                <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto lg:mr-0 lg:ml-0">
+                  {t('home.hero.description')}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/cars" className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
                   <FontAwesomeIcon icon={faCarSide} className="mr-2" />
                   {t('home.hero.browseCars')}
@@ -65,6 +66,7 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+          </div>
 
             {/* Stats */}
             <div className="flex-1">

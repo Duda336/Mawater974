@@ -8,6 +8,7 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string, variables?: Record<string, any>) => string;
+  dir: 'ltr' | 'rtl';
 }
 
 const translations = {
@@ -32,9 +33,9 @@ const translations = {
     'user.signOut': 'Sign Out',
     'user.messages': 'Messages',
     // Home Page
-    'home.hero.title1': 'Premium Cars',
+    'home.hero.title1': 'Exclusive Cars',
     'home.hero.title2': 'in Qatar',
-    'home.hero.description': 'Discover the finest collection of luxury vehicles in Qatar. From exotic supercars to premium sedans, find your perfect match with Mawater974.',
+    'home.hero.description': 'Discover the finest vehicles in Qatar. From supercars to economic sedans, find your perfect match with Mawater974.',
     'home.hero.browseCars': 'Browse Cars',
     'home.hero.sellYourCar': 'Sell Your Car',
     'home.stats.premiumCars': 'Premium Cars',
@@ -552,6 +553,41 @@ const translations = {
     'photography.professional.button': 'Select Package',
     
     'photography.portfolio.title': 'Our Portfolio',
+    // Spare Parts Page
+    'spareParts.title': 'Spare Parts Marketplace',
+    'spareParts.search.placeholder': 'Search parts...',
+    'spareParts.search.carMake': 'Select Car Make',
+    'spareParts.search.button': 'Search',
+    'spareParts.categories.engineParts': 'Engine Parts',
+    'spareParts.categories.engineParts.desc': 'Browse engine components',
+    'spareParts.categories.brakeSystem': 'Brake System',
+    'spareParts.categories.brakeSystem.desc': 'All brake related parts',
+    'spareParts.categories.suspension': 'Suspension',
+    'spareParts.categories.suspension.desc': 'Suspension and steering',
+    'spareParts.categories.bodyParts': 'Body Parts',
+    'spareParts.categories.bodyParts.desc': 'Exterior and interior parts',
+    'spareParts.comingSoon.title': 'Coming Soon',
+    'spareParts.comingSoon.desc': 'We are working hard to bring you the best spare parts options. Stay tuned!',
+
+    // Showrooms Page
+    'showrooms.title': 'Car Showrooms',
+    'showrooms.search.placeholder': 'Search showrooms...',
+    'showrooms.search.location': 'Select Location',
+    'showrooms.search.button': 'Search',
+    'showrooms.location.north': 'North',
+    'showrooms.location.south': 'South',
+    'showrooms.location.central': 'Central',
+    'showrooms.featured.premiumAuto': 'Premium Auto Gallery',
+    'showrooms.featured.premiumAuto.desc': 'Luxury car showroom featuring the latest models',
+    'showrooms.featured.eliteMotors': 'Elite Motors',
+    'showrooms.featured.eliteMotors.desc': 'Specialized in sports and performance vehicles',
+    'showrooms.featured.familyAuto': 'Family Auto Gallery',
+    'showrooms.featured.familyAuto.desc': 'Car showroom featuring the most popular models',
+    'showrooms.location.southDistrict': 'South District',
+    'showrooms.rating': '{rating} ({reviews} reviews)',
+    'showrooms.location.centralDistrict': 'Central District',
+    'showrooms.map.title': 'Showroom Map',
+    'showrooms.viewDetails': 'View Details',
   },
   ar: {
     // Navigation
@@ -574,9 +610,9 @@ const translations = {
     'user.signOut': 'تسجيل الخروج',
     'user.messages': 'الرسائل',
     // Home Page
-    'home.hero.title1': 'سيارات فاخرة',
+    'home.hero.title1': 'سيارات مميزة',
     'home.hero.title2': 'في قطر',
-    'home.hero.description': 'اكتشف أفخم مجموعة من السيارات الفاخرة في قطر. من السيارات الخارقة إلى السيارات الفاخرة، اعثر على سيارتك المثالية مع مواتر974.',
+    'home.hero.description': 'اكتشف أرقى السيارات في قطر. من السيارات الخارقة إلى السيارات الاقتصادية، وابحث عن خيارك المثالي مع مواتر974',
     'home.hero.browseCars': 'تصفح السيارات',
     'home.hero.sellYourCar': 'بيع سيارتك',
     'home.stats.premiumCars': 'سيارة فاخرة',
@@ -650,7 +686,7 @@ const translations = {
     'cars.condition.new': 'جديد',
     'cars.condition.excellent': 'ممتازة',
     'cars.condition.good': 'جيدة',
-    'cars.condition.notworking': 'لا تعمل',
+    'cars.condition.notWorking': 'لا تعمل',
     'cars.transmission.automatic': 'أوتوماتيك',
     'cars.transmission.manual': 'يدوي',
     'cars.fuelType.petrol': 'بنزين',
@@ -1096,6 +1132,41 @@ const translations = {
     'photography.professional.button': 'اختر الباقة',
     
     'photography.portfolio.title': 'معرض أعمالنا',
+    // Spare Parts Page
+    'spareParts.title': 'سوق قطع الغيار',
+    'spareParts.search.placeholder': 'ابحث عن قطع الغيار...',
+    'spareParts.search.carMake': 'اختر نوع السيارة',
+    'spareParts.search.button': 'بحث',
+    'spareParts.categories.engineParts': 'قطع المحرك',
+    'spareParts.categories.engineParts.desc': 'تصفح مكونات المحرك',
+    'spareParts.categories.brakeSystem': 'نظام الفرامل',
+    'spareParts.categories.brakeSystem.desc': 'جميع قطع الفرامل',
+    'spareParts.categories.suspension': 'نظام التعليق',
+    'spareParts.categories.suspension.desc': 'التعليق والتوجيه',
+    'spareParts.categories.bodyParts': 'قطع الهيكل',
+    'spareParts.categories.bodyParts.desc': 'قطع خارجية وداخلية',
+    'spareParts.comingSoon.title': 'قريباً',
+    'spareParts.comingSoon.desc': 'نعمل بجد لتوفير أفضل خيارات قطع الغيار. ترقبونا!',
+
+    // Showrooms Page
+    'showrooms.title': 'معارض السيارات',
+    'showrooms.search.placeholder': 'ابحث عن المعارض...',
+    'showrooms.search.location': 'اختر الموقع',
+    'showrooms.search.button': 'بحث',
+    'showrooms.location.north': 'الشمال',
+    'showrooms.location.south': 'الجنوب',
+    'showrooms.location.central': 'المنطقة المركزية',
+    'showrooms.featured.premiumAuto': 'معرض السيارات الفاخرة',
+    'showrooms.featured.premiumAuto.desc': 'معرض سيارات فاخرة يعرض أحدث الموديلات',
+    'showrooms.featured.eliteMotors': 'إيليت موتورز',
+    'showrooms.featured.eliteMotors.desc': 'متخصصون في السيارات الرياضية وعالية الأداء',
+    'showrooms.featured.familyAuto': 'معرض السيارات العائلية',
+    'showrooms.featured.familyAuto.desc': 'معرض سيارات عائلية يعرض أحدث الموديلات',
+    'showrooms.location.southDistrict': 'المنطقة الجنوبية',
+    'showrooms.map.title': 'خريطة المعارض',
+    'showrooms.rating': '{rating} ({reviews} تقييم)',
+    'showrooms.location.centralDistrict': 'المنطقة المركزية',
+    'showrooms.viewDetails': 'عرض التفاصيل',
   }
 };
 
@@ -1116,27 +1187,53 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     const savedLanguage = localStorage.getItem('language');
     if (savedLanguage) {
       setCurrentLanguage(savedLanguage as Language);
+      document.documentElement.dir = savedLanguage === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = savedLanguage;
+      if (savedLanguage === 'ar') {
+        document.documentElement.classList.add('rtl');
+      } else {
+        document.documentElement.classList.remove('rtl');
+      }
     }
   }, []);
 
   const toggleLanguage = (lang: Language) => {
     setCurrentLanguage(lang);
     localStorage.setItem('language', lang);
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = lang;
+    if (lang === 'ar') {
+      document.documentElement.classList.add('rtl');
+    } else {
+      document.documentElement.classList.remove('rtl');
+    }
   };
 
   const t = (key: string, variables?: Record<string, any>) => {
-    const translation = translations[currentLanguage][key] || key;
-    if (variables) {
-      return Object.entries(variables).reduce(
-        (acc, [key, value]) => acc.replace(`{${key}}`, String(value)),
-        translation
-      );
+    try {
+      const translationObj = translations[currentLanguage];
+      const translation = translationObj && translationObj[key] ? translationObj[key] : key;
+      
+      if (variables) {
+        return Object.entries(variables).reduce(
+          (acc, [key, value]) => acc.replace(`{${key}}`, String(value)),
+          translation
+        );
+      }
+      return translation;
+    } catch (error) {
+      console.warn(`Translation error for key: ${key}`, error);
+      return key;
     }
-    return translation;
   };
 
   return (
-    <LanguageContext.Provider value={{ language: currentLanguage, setLanguage: toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language: currentLanguage, 
+      setLanguage: toggleLanguage, 
+      t,
+      dir: currentLanguage === 'ar' ? 'rtl' : 'ltr'
+    }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -60,3 +60,60 @@ body {
   background-repeat: repeat;
   background-size: 60px 60px;
 }
+
+/* RTL Support */
+.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.rtl .ltr-only {
+  display: none;
+}
+
+html:not(.rtl) .rtl-only {
+  display: none;
+}
+
+/* RTL-specific margins and paddings */
+.rtl [dir="ltr"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* RTL-specific transforms */
+.rtl .transform-flip {
+  transform: scaleX(-1);
+}
+
+/* RTL-specific flexbox */
+.rtl .flex-row {
+  flex-direction: row-reverse;
+}
+
+.rtl .space-x-1 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+.rtl .space-x-2 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+.rtl .space-x-3 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+.rtl .space-x-4 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}
+
+/* RTL-specific borders */
+.rtl .border-l {
+  border-left: none;
+  border-right-width: 1px;
+}
+
+.rtl .border-r {
+  border-right: none;
+  border-left-width: 1px;
+}

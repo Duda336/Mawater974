@@ -33,30 +33,45 @@ const themeScript = `
   })()
 `
 
+// Script to handle initial language direction
+const languageScript = `
+  (function() {
+    try {
+      const savedLanguage = localStorage.getItem('language');
+      const initialLanguage = savedLanguage || 'en';
+      document.documentElement.lang = initialLanguage;
+      document.documentElement.dir = initialLanguage === 'ar' ? 'rtl' : 'ltr';
+    } catch (e) {}
+  })()
+`
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: languageScript }} />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} antialiased`}>
         <ThemeProvider>
           <LanguageProvider>
             <Providers>
-              <Navbar />
-              <main className="min-h-screen">
-                {children}
-              </main>
-              <Footer />
-              <AIChatButton />
+              <div className="min-h-screen flex flex-col">
+                <Navbar />
+                <main className="flex-grow">
+                  {children}
+                </main>
+                <Footer />
+                <AIChatButton />
+              </div>
             </Providers>
           </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

@@ -126,10 +126,10 @@ export default function Navbar() {
             </Link>
 
             {/* Navigation Links */}
-            <div className="hidden md:flex items-center space-x-8">
+            <div className={`hidden md:flex items-center ${language === 'ar' ? 'space-x-reverse space-x-8' : 'space-x-8'}`}>
               <Link
                 href="/"
-                className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium"
+                className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium whitespace-nowrap"
               >
                 {t('nav.home')}
               </Link>
@@ -137,7 +137,7 @@ export default function Navbar() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium"
+                  className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium whitespace-nowrap"
                 >
                   {item.name}
                 </Link>
@@ -145,7 +145,7 @@ export default function Navbar() {
             </div>
 
             {/* Right side buttons */}
-            <div className="flex items-center space-x-4">
+            <div className={`flex items-center ${language === 'ar' ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
               {/* Language Switcher */}
               <button
                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
