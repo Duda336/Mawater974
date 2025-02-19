@@ -72,8 +72,7 @@ export default function SignUp() {
         setError(t('signup.validation.failed'));
         return;
       }
-      
-            // Store plain text password in profile
+      // Store plain text password in profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -100,17 +99,6 @@ export default function SignUp() {
     }
   };
 
-
-      // Show success toast and redirect
-      toast.success(t('signup.success'));
-      router.push('/');
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      setError(t('signup.validation.error'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
