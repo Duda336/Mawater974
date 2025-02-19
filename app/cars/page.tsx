@@ -59,6 +59,8 @@ export default function CarsPage() {
   const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState<Filters>({ sort: 'newest' });
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -71,7 +73,6 @@ export default function CarsPage() {
   const [selectedFuelTypes, setSelectedFuelTypes] = useState<string[]>([]);
   const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -98,6 +99,23 @@ export default function CarsPage() {
   useEffect(() => {
     setShowCompareBar(selectedCars.length > 0);
   }, [selectedCars]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setShowFilters(!mobile);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchBrands = async () => {
     const { data, error } = await supabase
