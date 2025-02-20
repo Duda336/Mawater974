@@ -535,7 +535,7 @@ export default function CarsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 pt-5">
-      <div className="container mx-auto px-4 pb-16">
+      <div className="container mx-auto px-1 pb-16">
         {/* Welcome Header */}
         <div className="relative overflow-hidden mb-8 rounded-2xl mx-4">
           <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 to-gray-900/95 backdrop-blur-sm"></div>
@@ -665,7 +665,7 @@ export default function CarsPage() {
 
         <main className="px-4">
           {/* Top Bar */}
-          <div className="sticky top-0 z-30 bg-white/80 dark:bg-gray-900/80 p-4 mb-4   rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg backdrop-blur-md">
+          <div className="top-0 z-30 bg-white/80 dark:bg-gray-900/80 p-4 mb-6   rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg backdrop-blur-md">
             <div className="flex flex-col gap-4">
               {/* Search and Actions */}
               <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -701,7 +701,7 @@ export default function CarsPage() {
                     }`}
                   >
                     <FunnelIcon className="h-5 w-5" />
-                    {t('cars.filters.title')}
+                    <span className="hidden sm:inline">{t('cars.filters.title')}</span>
                     {getActiveFilterCount() > 0 && (
                       <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
                         !showFilters 
@@ -743,7 +743,7 @@ export default function CarsPage() {
                   {/* Compare Button */}
                   <button
                     onClick={handleCompareClick}
-                    className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                    className={`px-3 sm:px-6 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
                       compareMode
                         ? 'bg-qatar-maroon text-white hover:bg-qatar-maroon/90 transform hover:scale-105'
                         : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-gray-200 dark:border-gray-700/50 hover:border-qatar-maroon hover:shadow-md'
@@ -793,9 +793,17 @@ export default function CarsPage() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -300, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="w-full md:w-80 sticky top-20"
+                  className="w-full md:w-80 md:relative fixed inset-0 z-50 md:z-0 bg-white/95 dark:bg-gray-900/95 md:bg-transparent md:dark:bg-transparent overflow-auto"
                 >
-                  <div className="w-80 bg-white dark:bg-gray-800 p-6 rounded-xl space-y-6">
+                  <div className="w-full md:w-80 bg-white dark:bg-gray-800 p-6 rounded-xl space-y-6">
+                    {/* Mobile Close Button */}
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="md:hidden absolute top-4 right-4 p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      <XMarkIcon className="h-6 w-6" />
+                    </button>
+                    
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {t('cars.filters.title')}

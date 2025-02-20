@@ -72,6 +72,7 @@ export default function SignUp() {
         setError(t('signup.validation.failed'));
         return;
       }
+
       // Store plain text password in profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -98,7 +99,6 @@ export default function SignUp() {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
