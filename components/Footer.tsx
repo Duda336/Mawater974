@@ -3,68 +3,104 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function Footer() {
+  const { t, language, dir } = useLanguage();
+
   const quickLinks = [
-    { name: 'Buy a Car', href: '/cars' },
-    { name: 'Sell Your Car', href: '/sell' },
-    { name: 'Showrooms', href: '/showrooms' },
-    { name: 'Spare Parts', href: '/spare-parts' },
+    { name: t('footer.quickLinks.buyCar'), href: '/cars' },
+    { name: t('footer.quickLinks.sellCar'), href: '/sell' },
+    { name: t('footer.quickLinks.showrooms'), href: '/showrooms' },
+    { name: t('footer.quickLinks.spareParts'), href: '/spare-parts' },
+  ];
+
+  const socialLinks = [
+    { 
+      icon: 'instagram', 
+      href: 'https://instagram.com/mawater.974',
+      label: 'Instagram'
+    },
+    { 
+      icon: 'twitter', 
+      href: 'https://twitter.com/mawater974',
+      label: 'Twitter'
+    },
+    { 
+      icon: 'facebook', 
+      href: 'https://facebook.com/mawater.974',
+      label: 'Facebook'
+    },
+    { 
+      icon: 'linkedin', 
+      href: 'https://linkedin.com',
+      label: 'LinkedIn'
+    },
   ];
 
   return (
-    <footer className="bg-gray-900 text-gray-300 pt-12 pb-6 border-t border-gray-200 dark:border-gray-700">
+    <footer className="bg-gradient-to-b from-gray-900 to-gray-900 text-gray-300 pt-16 pb-8 border-t border-gray-700">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-12" dir={dir}>
           {/* Logo and Description */}
-          <div>
-            <Image
-              src="/logo.png"
-              alt="Mawater974 Logo"
-              width={180}
-              height={60}
-              style={{ width: 'auto', height: 'auto' }}
-              className="mb-4"
-            />
-            <p className="text-white text-lg font-semibold mb-4">
-              Ride In Style.
+          <div className={`space-y-6 ${language === 'ar' ? 'lg:order-last' : ''}`}>
+            <Link href="/" className="block w-fit">
+              <Image
+                src="/logo.png"
+                alt="Mawater974 Logo"
+                width={180}
+                height={60}
+                style={{ width: 'auto', height: 'auto' }}
+                className="mb-4 hover:opacity-90 transition-opacity"
+                priority
+              />
+            </Link>
+            <p className="text-white text-lg font-semibold">
+              {t('footer.tagline')}
             </p>
-            <div className="flex flex-col space-y-2">
-              <div className="flex space-x-4">
+            <div className="flex flex-col space-y-3">
+              <div className="flex flex-wrap gap-6">
                 <Link
                   href="/terms"
-                  className="text-sm hover:text-qatar-maroon transition-colors"
+                  className="text-sm hover:text-qatar-maroon transition-colors flex items-center gap-2 group"
                 >
-                  Terms & Conditions
+                  <i className="fas fa-file-alt text-gray-400 group-hover:text-qatar-maroon transition-colors"></i>
+                  {t('footer.legal.terms')}
                 </Link>
                 <Link
                   href="/privacy"
-                  className="text-sm hover:text-qatar-maroon transition-colors"
+                  className="text-sm hover:text-qatar-maroon transition-colors flex items-center gap-2 group"
                 >
-                  Privacy Policy
+                  <i className="fas fa-shield-alt text-gray-400 group-hover:text-qatar-maroon transition-colors"></i>
+                  {t('footer.legal.privacy')}
                 </Link>
               </div>
-              <div className="flex space-x-4">
+              <div>
                 <Link
                   href="/contact"
-                  className="text-sm hover:text-qatar-maroon transition-colors"
+                  className="text-sm hover:text-qatar-maroon transition-colors flex items-center gap-2 group w-fit"
                 >
-                  Contact Us
+                  <i className="fas fa-envelope text-gray-400 group-hover:text-qatar-maroon transition-colors"></i>
+                  {t('footer.legal.contact')}
                 </Link>
               </div>
             </div>
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2">
+          <div className="relative">
+            <h3 className="text-white text-lg font-semibold mb-6 flex items-center gap-2">
+              <i className="fas fa-link text-qatar-maroon"></i>
+              {t('footer.quickLinks')}
+            </h3>
+            <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="hover:text-qatar-maroon transition-colors"
+                    className="hover:text-qatar-maroon transition-colors flex items-center gap-2 group"
                   >
+                    <span className="w-1 h-1 bg-gray-500 rounded-full group-hover:bg-qatar-maroon transition-colors"></span>
                     {link.name}
                   </Link>
                 </li>
@@ -73,73 +109,64 @@ export default function Footer() {
           </div>
 
           {/* Follow Us */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Follow Us</h3>
-            <div className="flex space-x-4">
-              <a
-                href="https://instagram.com/mawater.974"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-instagram text-2xl"></i>
-              </a>
-              <a
-                href="https://twitter.com/mawater974"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-twitter text-2xl"></i>
-              </a>
-              <a
-                href="https://facebook.com/mawater.974"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-facebook text-2xl"></i>
-              </a>
-              <a
-                href="https://linkedin.com"
-                className="text-gray-300 hover:text-qatar-maroon transition-colors"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <i className="fab fa-linkedin text-2xl"></i>
-              </a>
+          <div className="relative">
+            <h3 className="text-white text-lg font-semibold mb-6 flex items-center gap-2">
+              <i className="fas fa-share-alt text-qatar-maroon"></i>
+              {t('footer.followUs')}
+            </h3>
+            <div className="flex flex-wrap gap-6">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.icon}
+                  href={link.href}
+                  className="text-gray-300 hover:text-qatar-maroon transition-all transform hover:-translate-y-1 group"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                >
+                  <i className={`fab fa-${link.icon} text-2xl text-gray-400 group-hover:text-qatar-maroon transition-colors`}></i>
+                </a>
+              ))}
             </div>
           </div>
 
           {/* Contact */}
-          <div>
-            <h3 className="text-white text-lg font-semibold mb-4">Contact Us</h3>
-            <ul className="space-y-2">
+          <div className={`relative ${language === 'ar' ? 'lg:order-first' : ''}`}>
+            <h3 className="text-white text-lg font-semibold mb-6 flex items-center gap-2">
+              <i className="fas fa-phone-alt text-qatar-maroon"></i>
+              {t('footer.contact.title')}
+            </h3>
+            <ul className="space-y-3">
               <li>
                 <a
-                  href="mailto:contact@mawater974.com"
-                  className="hover:text-qatar-maroon transition-colors"
+                  href={`mailto:${t('footer.contact.email')}`}
+                  className="hover:text-qatar-maroon transition-colors flex items-center gap-2 group"
                 >
-                  contact@mawater974.com
+                  <i className="far fa-envelope text-gray-400 group-hover:text-qatar-maroon transition-colors"></i>
+                  {t('footer.contact.email')}
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+974 50505050"
-                  className="hover:text-qatar-maroon transition-colors"
+                  href={`tel:${t('footer.contact.phone')}`}
+                  className="hover:text-qatar-maroon transition-colors flex items-center gap-2 group"
                 >
-                  +974 50505050
+                  <i className="fas fa-phone text-gray-400 group-hover:text-qatar-maroon transition-colors"></i>
+                  <span dir="ltr">{t('footer.contact.phone')}</span>
                 </a>
               </li>
-              <li>Doha, Qatar</li>
+              <li className="flex items-center gap-2">
+                <i className="fas fa-map-marker-alt text-qatar-maroon"></i>
+                {t('footer.contact.address')}
+              </li>
             </ul>
           </div>
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-gray-800 pt-6 text-center">
-          <p className="text-sm">
-            {new Date().getFullYear()} Mawater974. All rights reserved.
+        <div className="border-t border-gray-700/50 pt-8 text-center" dir={dir}>
+          <p className="text-sm text-gray-400">
+            {t('footer.copyright', { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>

@@ -315,14 +315,17 @@ export default function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      <div className={`sm:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`}>
+      <div className={`sm:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div className="pt-2 pb-3 space-y-1">
           <Link
             href="/"
             className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
             onClick={() => setMobileMenuOpen(false)}
           >
-            {t('nav.home')}
+            <span className="flex items-center gap-2">
+              <HomeIcon className="h-5 w-5" />
+              {t('nav.home')}
+            </span>
           </Link>
           {navItems.map((item) => (
             <Link
@@ -336,8 +339,11 @@ export default function Navbar() {
           ))}
           {/* Mobile Language Switcher */}
           <button
-            onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-            className="w-full text-left px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
+            onClick={() => {
+              setLanguage(language === 'en' ? 'ar' : 'en');
+              setMobileMenuOpen(false);
+            }}
+            className="w-full text-left px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
           >
             {language === 'en' ? 'EN/ع' : 'ع/EN'}
           </button>
@@ -348,14 +354,20 @@ export default function Navbar() {
                 className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                {t('nav.signIn')}
+                <span className="flex items-center gap-2">
+                  <i className="fas fa-sign-in-alt text-gray-400" />
+                  {t('nav.signIn')}
+                </span>
               </Link>
               <Link
                 href="/signup"
                 className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                {t('nav.signUp')}
+                <span className="flex items-center gap-2">
+                  <i className="fas fa-user-plus text-gray-400" />
+                  {t('nav.signUp')}
+                </span>
               </Link>
             </>
           )}

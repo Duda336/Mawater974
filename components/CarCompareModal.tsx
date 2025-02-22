@@ -128,9 +128,9 @@ export default function CarCompareModal({ isOpen, onClose, cars }: CarCompareMod
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800/95 p-6 shadow-xl transition-all backdrop-blur-md">
+              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800/95 p-4 sm:p-6 shadow-xl transition-all backdrop-blur-md">
                 <div className="flex items-center justify-between mb-6">
-                  <Dialog.Title className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  <Dialog.Title className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
                     Compare Cars
                   </Dialog.Title>
                   <button
@@ -142,7 +142,48 @@ export default function CarCompareModal({ isOpen, onClose, cars }: CarCompareMod
                   </button>
                 </div>
 
-                <div className="grid grid-cols-[180px_1fr_1fr] gap-6">
+                {/* Mobile View */}
+                <div className="block sm:hidden">
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {cars.map((car, index) => (
+                      <div key={car.id}>
+                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden shadow-lg mb-2">
+                          <Image
+                            src={car.images?.[0]?.url || '/placeholder-car.jpg'}
+                            alt={`${car.brand.name} ${car.model.name}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="text-center">
+                          <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate">{car.brand.name} {car.model.name}</h3>
+                          <p className="text-qatar-maroon font-medium text-sm">{formatValue(car.price, 'price')}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {specs.map((spec) => (
+                    <div key={spec.key} className="mb-3">
+                      <div className="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1">
+                        {spec.label}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {cars.map((car) => (
+                          <div
+                            key={`${car.id}-${spec.key}`}
+                            className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-900 dark:text-white"
+                          >
+                            {spec.format ? spec.format(car[spec.key]) : formatValue(car[spec.key], spec.key) || '-'}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop View */}
+                <div className="hidden sm:grid grid-cols-[180px_1fr_1fr] gap-6">
                   {/* Car Images */}
                   <div className="pt-4">
                     <div className="font-medium text-gray-900 dark:text-white mb-4">Features</div>

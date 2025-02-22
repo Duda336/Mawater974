@@ -149,11 +149,6 @@ export default function SellPage() {
 
   const steps = [
     { 
-      id: 'plan-selection', 
-      name: t('sell.steps.planSelection'), 
-      description: t('sell.steps.planSelection.desc')
-    },
-    { 
       id: 'step1', 
       name: t('sell.steps.basicInfo'), 
       description: t('sell.steps.basicInfo.desc')
@@ -174,6 +169,62 @@ export default function SellPage() {
       description: t('sell.steps.review.desc')
     }
   ];
+
+  const currentStepIndex = useMemo(() => {
+    switch (currentStep) {
+      case 'step1':
+        return 0;
+      case 'step2':
+        return 1;
+      case 'step3':
+        return 2;
+      case 'step4':
+        return 3;
+      default:
+        return 0;
+    }
+  }, [currentStep]);
+
+  const renderProgressLine = () => (
+    <div className="w-full max-w-4xl mx-auto mb-8">
+      <nav aria-label="Progress">
+        <ol role="list" className="flex items-center">
+          {steps.map((step, index) => (
+            <li key={step.id} className={`relative ${index !== steps.length - 1 ? 'pr-8 sm:pr-20' : ''} ${index !== 0 ? 'pl-8 sm:pl-20' : ''} flex-1`}>
+              <div className="flex items-center justify-center">
+                <div
+                  className={`${
+                    index <= currentStepIndex ? 'bg-qatar-maroon' : 'bg-gray-200 dark:bg-gray-600'
+                  } h-8 w-8 rounded-full flex items-center justify-center`}
+                >
+                  <span className={`${
+                    index <= currentStepIndex ? 'text-white' : 'text-gray-500 dark:text-gray-400'
+                  } text-sm font-medium`}>
+                    {index + 1}
+                  </span>
+                </div>
+                {index !== steps.length - 1 && (
+                  <div
+                    className={`${
+                      index < currentStepIndex ? 'bg-qatar-maroon' : 'bg-gray-200 dark:bg-gray-600'
+                    } h-0.5 absolute top-4 left-0 -right-0.5 w-full`}
+                  />
+                )}
+              </div>
+              <div className="mt-3 text-center">
+                <span className="block text-sm font-medium text-gray-900 dark:text-white">
+                  {step.name}
+                </span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {step.description}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </div>
+  );
 
   const fetchBrands = async () => {
     try {
@@ -399,7 +450,7 @@ export default function SellPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Mileage */}
           <div>
             <label 
@@ -614,7 +665,7 @@ export default function SellPage() {
           </div>
 
           {/* Description */}
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label 
               htmlFor="description" 
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -676,28 +727,100 @@ export default function SellPage() {
         </div>
 
         {/* Main Photo Guidance */}
-        {allImages.length > 0 && mainPhotoIndex !== null && (
-          <div className="bg-[#2a3441] border-l-4 border-qatar-maroon p-4 rounded-md mb-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 mr-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-sm text-gray-300">
-                  {t('sell.images.main.info', {
-                    number: mainPhotoIndex + 1,
-                    suffix: getNumberSuffix(mainPhotoIndex + 1)
-                  })}
-                </p>
-              </div>
+        {(newImages.length > 0 || existingImages.length > 0) && (
+          <div className="mt-8">             
+            <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                {mainPhotoIndex === null 
+                  ? t('sell.images.selectMain')
+                  : t('sell.images.mainSelected', { 
+                      number: mainPhotoIndex + 1,
+                      suffix: getNumberSuffix(mainPhotoIndex + 1)
+                    })
+                }
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+              {allImages.map((image, index) => (
+                <div 
+                  key={index} 
+                  className={`relative border-4 rounded-lg overflow-hidden transition-all duration-300 ease-in-out ${
+                    index === mainPhotoIndex 
+                      ? 'border-qatar-maroon shadow-lg scale-105' 
+                      : 'border-[#2a3441] hover:border-gray-600'
+                  }`}
+                >
+                  <img 
+                    src={image.url} 
+                    alt={`Car image ${index + 1}`} 
+                    className="w-full h-40 object-cover"
+                  />
+                  
+                  {/* Main Photo Badge */}
+                  {index === mainPhotoIndex && (
+                    <div className="absolute top-2 left-2 bg-qatar-maroon text-white px-2 py-1 rounded-full text-xs font-bold flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 110 4v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 110-4V9a2 2 0 00-2-2h-6V7a5 5 0 00-5-5z" />
+                      </svg>
+                      {t('sell.images.mainPhoto')}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-between p-2 bg-[#1e2530]/90">
+                    {/* Set as Main Photo Button */}
+                    {index !== mainPhotoIndex && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetMainPhoto(index)}
+                        className="bg-qatar-maroon text-white px-3 py-1.5 rounded-md text-xs 
+                          transition-all duration-300 ease-in-out 
+                          transform hover:scale-105 hover:shadow-lg 
+                          active:scale-95 
+                          focus:outline-none focus:ring-2 focus:ring-qatar-maroon/50"
+                      >
+                        <div className="flex items-center justify-center gap-1 rtl:flex-row-reverse">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+                            <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+                          </svg>
+                          {t('sell.images.setMainBtn')}
+                        </div>
+                      </button>
+                    )}
+
+                    {/* Remove Image Button */}
+                    <button
+                      type="button"
+                      onClick={() => 
+                        image.type === 'existing' 
+                          ? handleRemoveExistingImage(existingImages[index].id) 
+                          : handleRemoveNewImage(index - (existingImages.length - imagesToDelete.length))
+                      }
+                      className="bg-[#2a3441] text-white px-3 py-1.5 rounded-md text-xs 
+                        transition-all duration-300 ease-in-out 
+                        transform hover:scale-105 hover:shadow-lg 
+                        active:scale-95 
+                        focus:outline-none focus:ring-2 focus:ring-gray-500/50 
+                        hover:bg-[#323d4d] ml-auto rtl:mr-auto rtl:ml-0 flex items-center justify-center"
+                    >
+                      <div className="flex items-center justify-center gap-1 rtl:flex-row-reverse">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0111 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v3a1 1 0 002 0V8a1 1 0 00-1-1z" />
+                        </svg>
+                        {t('sell.images.removeBtn')}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {/* Upload Area when no images */}
-        {allImages.length === 0 && (
+        {(newImages.length === 0 && existingImages.length === 0) && (
           <div 
             onClick={() => document.getElementById('file-upload')?.click()}
             className="cursor-pointer flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-gray-600 rounded-lg bg-[#2a3441] hover:bg-[#323d4d] transition-colors group"
@@ -732,83 +855,6 @@ export default function SellPage() {
               onChange={handleImageChange}
               className="hidden"
             />
-          </div>
-        )}
-
-        {/* Image Grid */}
-        {allImages.length > 0 && (
-          <div className="grid grid-cols-3 gap-4">
-            {allImages.map((image, index) => (
-              <div 
-                key={index} 
-                className={`relative border-4 rounded-lg overflow-hidden transition-all duration-300 ease-in-out ${
-                  index === mainPhotoIndex 
-                    ? 'border-qatar-maroon shadow-lg scale-105' 
-                    : 'border-[#2a3441] hover:border-gray-600'
-                }`}
-              >
-                <img 
-                  src={image.url} 
-                  alt={`Car image ${index + 1}`} 
-                  className="w-full h-40 object-cover"
-                />
-                
-                {/* Main Photo Badge */}
-                {index === mainPhotoIndex && (
-                  <div className="absolute top-2 left-2 bg-qatar-maroon text-white px-2 py-1 rounded-full text-xs font-bold flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 110 4v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 110-4V9a2 2 0 00-2-2h-6V7a5 5 0 00-5-5z" />
-                    </svg>
-                    {t('sell.images.mainPhoto')}
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="absolute bottom-0 left-0 right-0 flex justify-between p-2 bg-[#1e2530]/90">
-                  {/* Set as Main Photo Button */}
-                  {index !== mainPhotoIndex && (
-                    <button
-                      type="button"
-                      onClick={() => handleSetMainPhoto(index)}
-                      className="bg-qatar-maroon text-white px-3 py-1.5 rounded-md text-xs 
-                        transition-all duration-300 ease-in-out 
-                        transform hover:scale-105 hover:shadow-lg 
-                        active:scale-95 
-                        focus:outline-none focus:ring-2 focus:ring-qatar-maroon/50"
-                    >
-                      <div className="flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
-                          <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                        {t('sell.images.setMain')}
-                      </div>
-                    </button>
-                  )}
-
-                  {/* Remove Image Button */}
-                  <button
-                    type="button"
-                    onClick={() => 
-                      image.type === 'existing' 
-                        ? handleRemoveExistingImage(existingImages[index].id) 
-                        : handleRemoveNewImage(index - (existingImages.length - imagesToDelete.length))
-                    }
-                    className="bg-[#2a3441] text-white px-3 py-1.5 rounded-md text-xs 
-                      transition-all duration-300 ease-in-out 
-                      transform hover:scale-105 hover:shadow-lg 
-                      active:scale-95 
-                      focus:outline-none focus:ring-2 focus:ring-gray-500/50 
-                      hover:bg-[#323d4d] ml-auto flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0111 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v3a1 1 0 002 0V8a1 1 0 00-1-1z" />
-                    </svg>
-                    {t('sell.images.remove')}
-                  </button>
-                </div>
-              </div>
-            ))}
           </div>
         )}
 
@@ -909,20 +955,22 @@ export default function SellPage() {
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             {t('sell.review.images.title')} ({existingImages.length - imagesToDelete.length + newImages.length})
           </h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {/* Existing Images */}
             {existingImages
               .filter(img => !imagesToDelete.includes(img.id))
               .map((image, index) => (
-                <div key={image.id} className="relative aspect-square group">
+                <div 
+                  key={image.id}
+                  className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden"
+                >
                   <img
                     src={image.url}
                     alt="Car"
-                    className="object-cover rounded-lg w-full h-full"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg" />
-                  {index === mainPhotoIndex && (
-                    <div className="absolute top-2 right-2 bg-qatar-maroon text-white px-2 py-1 rounded-md text-xs font-medium">
+                  {image.is_main && (
+                    <div className="absolute top-2 right-2 bg-qatar-maroon text-white px-2 py-1 rounded-md text-xs">
                       {t('sell.review.mainPhoto')}
                     </div>
                   )}
@@ -930,24 +978,23 @@ export default function SellPage() {
               ))}
             
             {/* New Images */}
-            {newImages.map((file, index) => {
-              const actualIndex = index + (existingImages.length - imagesToDelete.length);
-              return (
-                <div key={index} className="relative aspect-square group">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`New ${index + 1}`}
-                    className="object-cover rounded-lg w-full h-full"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity rounded-lg" />
-                  {actualIndex === mainPhotoIndex && (
-                    <div className="absolute top-2 right-2 bg-qatar-maroon text-white px-2 py-1 rounded-md text-xs font-medium">
-                      {t('sell.review.mainPhoto')}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {newImages.map((file, index) => (
+              <div
+                key={`new-${index}`}
+                className="relative aspect-[4/3] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden"
+              >
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`New car image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {mainPhotoIndex === existingImages.length + index && (
+                  <div className="absolute top-2 right-2 bg-qatar-maroon text-white px-2 py-1 rounded-md text-xs">
+                    {t('sell.review.mainPhoto')}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -1322,7 +1369,7 @@ export default function SellPage() {
                   <div className="flex justify-center space-x-4">
                     <Link
                       href="/my-ads"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
                     >
                       {t('sell.messages.viewListings')}
                     </Link>
@@ -1572,7 +1619,7 @@ export default function SellPage() {
               <div 
                 className="absolute top-4 left-0 h-1 bg-qatar-maroon rounded-full transition-all duration-500 ease-in-out"
                 style={{ 
-                  width: `${((['plan-selection', 'step1', 'step2', 'step3', 'step4'].indexOf(currentStep)) / 4) * 100}%`,
+                  width: `${((['step1', 'step2', 'step3', 'step4'].indexOf(currentStep)) / 3) * 100}%`,
                   boxShadow: '0 0 10px rgba(158, 27, 52, 0.3)' 
                 }}
               />
