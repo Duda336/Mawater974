@@ -24,7 +24,7 @@ const gaDebugScript = `
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-BB130CTM44');
+    gtag('config', 'G-VPGL3CMS1K');
 
     window.addEventListener('load', function() {
         console.log('Checking GA status...');
