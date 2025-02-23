@@ -1,4 +1,4 @@
-export const GA_MEASUREMENT_ID = 'G-BB130CTM44';
+export const GA_MEASUREMENT_ID = 'G-VPGL3CMS1K';
 
 // Custom dimensions
 export const GA_CUSTOM_DIMENSIONS = {
