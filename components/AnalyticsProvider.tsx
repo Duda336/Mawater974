@@ -4,7 +4,11 @@ import { useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAnalytics } from '../hooks/useAnalytics';
 
-export default function AnalyticsProvider() {
+export default function AnalyticsProvider({
+  children
+}: {
+  children: React.ReactNode
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { trackPageView } = useAnalytics();
@@ -14,5 +18,5 @@ export default function AnalyticsProvider() {
     trackPageView();
   }, [pathname, searchParams, trackPageView]);
 
-  return null; // This component doesn't render anything
+  return <>{children}</>; // Pass through children
 }
