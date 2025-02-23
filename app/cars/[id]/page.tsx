@@ -20,12 +20,14 @@ import {
 import Image from 'next/image';
 import type { ExtendedCar } from '../../../types/supabase';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { useAnalytics } from '../../../hooks/useAnalytics';
 
 export default function CarDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
   const { t, currentLanguage } = useLanguage();
+  const { trackCarView, trackContactSeller } = useAnalytics();
   const [car, setCar] = useState<ExtendedCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +156,12 @@ export default function CarDetailsPage() {
       fetchCarDetails();
     }
   }, [params.id, user]);
+
+  useEffect(() => {
+    if (car) {
+      trackCarView(car.id, car.name);
+    }
+  }, [car]);
 
   useEffect(() => {
     const fetchSimilarCars = async () => {
@@ -301,6 +309,13 @@ export default function CarDetailsPage() {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleContactSeller = () => {
+    if (car) {
+      trackContactSeller(car.id, car.user_id);
+    }
+    setShowContactInfo(true);
   };
 
   if (loading) {
@@ -616,7 +631,7 @@ export default function CarDetailsPage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowContactInfo(true)}
+                  onClick={handleContactSeller}
                   className="w-full py-3 bg-qatar-maroon text-white rounded-lg hover:bg-qatar-maroon/90 transition-colors"
                 >
                   {t('car.details.showContact')}

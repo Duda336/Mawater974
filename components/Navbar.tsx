@@ -151,7 +151,7 @@ export default function Navbar() {
                 onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon border border-gray-200 dark:border-gray-700 rounded-lg hover:border-qatar-maroon dark:hover:border-qatar-maroon transition-colors"
               >
-                {language === 'en' ? 'EN/ع' : 'ع/EN'}
+                {language === 'ar' ? 'EN' : 'ع'}
               </button>
 
               {/* Theme Toggle */}

@@ -6,6 +6,7 @@ import '@fortawesome/fontawesome-svg-core/styles.css'
 import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
 import AIChatButton from '../components/AIChatButton'
+import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from '../contexts/ThemeContext'
 import { LanguageProvider } from '../contexts/LanguageContext'
 
@@ -17,9 +18,26 @@ const inter = Inter({
   display: 'swap',
 })
 
+// Hotjar Tracking Code
+const hotjarScript = `
+    (function(h,o,t,j,a,r){
+        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+        h._hjSettings={hjid:5314941,hjsv:6};
+        a=o.getElementsByTagName('head')[0];
+        r=o.createElement('script');r.async=1;
+        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+        a.appendChild(r);
+    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+`;
+
 export const metadata = {
   title: 'Mawater974',
-  description: 'Your destination for Premium cars in Qatar.',
+  description: 'Your premier destination for cars in Qatar',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 // Script to prevent theme flash and handle initial theme
@@ -51,14 +69,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: languageScript }} />
+        <script dangerouslySetInnerHTML={{ __html: hotjarScript }} />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <ThemeProvider>
-          <LanguageProvider>
+        <LanguageProvider>
+          <ThemeProvider>
             <Providers>
               <div className="min-h-screen flex flex-col">
                 <Navbar />
@@ -67,10 +86,11 @@ export default function RootLayout({
                 </main>
                 <Footer />
                 <AIChatButton />
+                <GoogleAnalytics gaId="G-W1GHWG1R13" />
               </div>
             </Providers>
-          </LanguageProvider>
-        </ThemeProvider>
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   );
