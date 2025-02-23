@@ -9,6 +9,7 @@ import AIChatButton from '../components/AIChatButton'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from '../contexts/ThemeContext'
 import { LanguageProvider } from '../contexts/LanguageContext'
+import AnalyticsProvider from '../components/AnalyticsProvider'
 
 // Initialize Font Awesome
 config.autoAddCss = false
@@ -18,17 +19,58 @@ const inter = Inter({
   display: 'swap',
 })
 
-// Hotjar Tracking Code
-const hotjarScript = `
-    (function(h,o,t,j,a,r){
-        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
-        h._hjSettings={hjid:5314941,hjsv:6};
-        a=o.getElementsByTagName('head')[0];
-        r=o.createElement('script');r.async=1;
-        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
-        a.appendChild(r);
-    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+// Google Analytics Debug Script
+const gaDebugScript = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-BB130CTM44');
+
+    window.addEventListener('load', function() {
+        console.log('Checking GA status...');
+        if (window.gtag) {
+            console.log('Google Analytics is loaded and ready');
+            window.gtag('event', 'test_event', {
+                'event_category': 'test',
+                'event_label': 'test'
+            });
+        } else {
+            console.log('Google Analytics is not loaded');
+        }
+    });
 `;
+
+// Script to prevent theme flash and handle initial theme
+const themeScript = `
+  (function() {
+    document.documentElement.classList.add('js')
+    var darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    
+    function getThemePreference() {
+      if(typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+        return localStorage.getItem('theme')
+      }
+      return darkQuery.matches ? 'dark' : 'light'
+    }
+    
+    var theme = getThemePreference()
+    
+    if(theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    }
+  })()
+`
+
+// Script to handle initial language
+const languageScript = `
+  (function() {
+    var lang = localStorage.getItem('language') || 'en'
+    document.documentElement.setAttribute('lang', lang)
+    if(lang === 'ar') {
+      document.documentElement.setAttribute('dir', 'rtl')
+    }
+  })()
+`
 
 export const metadata = {
   title: 'Mawater974',
@@ -40,29 +82,6 @@ export const metadata = {
   },
 }
 
-// Script to prevent theme flash and handle initial theme
-const themeScript = `
-  (function() {
-    try {
-      const savedTheme = localStorage.getItem('theme');
-      const initialTheme = savedTheme || 'dark';
-      document.documentElement.classList.add(initialTheme);
-    } catch (e) {}
-  })()
-`
-
-// Script to handle initial language direction
-const languageScript = `
-  (function() {
-    try {
-      const savedLanguage = localStorage.getItem('language');
-      const initialLanguage = savedLanguage || 'en';
-      document.documentElement.lang = initialLanguage;
-      document.documentElement.dir = initialLanguage === 'ar' ? 'rtl' : 'ltr';
-    } catch (e) {}
-  })()
-`
-
 export default function RootLayout({
   children,
 }: {
@@ -73,25 +92,27 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: languageScript }} />
-        <script dangerouslySetInnerHTML={{ __html: hotjarScript }} />
+        <script dangerouslySetInnerHTML={{ __html: gaDebugScript }} />
+        <GoogleAnalytics gaId="G-BB130CTM44" />
       </head>
       <body className={`${inter.className} antialiased`}>
         <LanguageProvider>
           <ThemeProvider>
             <Providers>
-              <div className="min-h-screen flex flex-col">
-                <Navbar />
-                <main className="flex-grow">
-                  {children}
-                </main>
-                <Footer />
-                <AIChatButton />
-                <GoogleAnalytics gaId="G-W1GHWG1R13" />
-              </div>
+              <AnalyticsProvider>
+                <div className="flex flex-col min-h-screen">
+                  <Navbar />
+                  <main className="flex-grow">
+                    {children}
+                  </main>
+                  <Footer />
+                  <AIChatButton />
+                </div>
+              </AnalyticsProvider>
             </Providers>
           </ThemeProvider>
         </LanguageProvider>
       </body>
     </html>
-  );
+  )
 }

@@ -1,16 +1,8 @@
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
-
-declare global {
-  interface Window {
-    gtag: (
-      command: 'event',
-      action: string,
-      params: { [key: string]: any }
-    ) => void;
-  }
-}
+import { supabase } from '../lib/supabaseClient';
+import { analyticsService } from '../lib/analytics/service';
+import { GA_EVENTS, GA_CUSTOM_DIMENSIONS } from '../lib/analytics/config';
 
 export const useAnalytics = () => {
   const sessionId = typeof window !== 'undefined' ? localStorage.getItem('sessionId') || uuidv4() : uuidv4();
@@ -18,67 +10,102 @@ export const useAnalytics = () => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('sessionId', sessionId);
+      
+      // Set initial user properties
+      analyticsService.setUserProperties({
+        session_id: sessionId,
+        [GA_CUSTOM_DIMENSIONS.deviceType]: getDeviceType(),
+        [GA_CUSTOM_DIMENSIONS.userLanguage]: localStorage.getItem('language') || 'en',
+      });
+
+      // Track session start
+      analyticsService.trackEvent(GA_EVENTS.USER_LOGIN, {
+        new_session: !localStorage.getItem('sessionId'),
+        session_id: sessionId,
+      });
     }
   }, [sessionId]);
 
-  const trackEvent = async (
-    eventType: string,
-    eventData: { [key: string]: any } = {}
-  ) => {
-    // Track in Google Analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', eventType, eventData);
+  const getDeviceType = () => {
+    if (typeof window === 'undefined') return 'unknown';
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+      return 'tablet';
     }
-
-    // Store in Supabase
-    try {
-      const { data: user } = await supabase.auth.getUser();
-      await supabase.from('analytics_events').insert({
-        event_type: eventType,
-        event_data: eventData,
-        user_id: user?.user?.id,
-        session_id: sessionId,
-        page_url: typeof window !== 'undefined' ? window.location.href : null,
-        user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
-      });
-    } catch (error) {
-      console.error('Error tracking event:', error);
+    if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+      return 'mobile';
     }
+    return 'desktop';
   };
 
-  const trackCarView = (carId: string, carName: string) => {
-    trackEvent('car_view', {
-      car_id: carId,
-      car_name: carName,
+  const trackPageView = (title?: string) => {
+    analyticsService.trackPageView(title, {
+      [GA_CUSTOM_DIMENSIONS.deviceType]: getDeviceType(),
+      [GA_CUSTOM_DIMENSIONS.userLanguage]: localStorage.getItem('language') || 'en',
     });
   };
 
-  const trackContactSeller = (carId: string, sellerId: string) => {
-    trackEvent('contact_seller', {
+  const trackCarView = (carId: string, carName: string, price?: number, category?: string) => {
+    analyticsService.trackCarView({
+      id: carId,
+      name: carName,
+      price,
+      category: category || 'unknown',
+      seller_id: 'unknown', // You should pass the actual seller ID
+    });
+  };
+
+  const trackContactSeller = (carId: string, sellerId: string, contactMethod: 'phone' | 'whatsapp' | 'email') => {
+    analyticsService.trackContactSeller({
       car_id: carId,
       seller_id: sellerId,
+      contact_method: contactMethod,
     });
   };
 
-  const trackSearch = (searchQuery: string, filters: any) => {
-    trackEvent('car_search', {
-      search_term: searchQuery,
-      filters: JSON.stringify(filters),
+  const trackSearch = (searchQuery: string, filters: any, resultsCount: number) => {
+    analyticsService.trackSearch({
+      query: searchQuery,
+      filters,
+      resultCount: resultsCount,
     });
   };
 
   const trackFilterUse = (filterName: string, filterValue: string) => {
-    trackEvent('filter_use', {
+    analyticsService.trackEvent(GA_EVENTS.FILTER_USED, {
       filter_name: filterName,
       filter_value: filterValue,
     });
   };
 
+  const trackUserAction = (actionType: string, actionData: any = {}) => {
+    analyticsService.trackUserAction(actionType, actionData);
+  };
+
+  const trackError = (errorType: string, errorMessage: string, errorData: any = {}) => {
+    analyticsService.trackEvent(GA_EVENTS.FORM_ERROR, {
+      error_type: errorType,
+      error_message: errorMessage,
+      ...errorData,
+    });
+  };
+
+  const trackSocialShare = (platform: string, contentType: string, contentId: string) => {
+    analyticsService.trackEvent(GA_EVENTS.CAR_SHARE, {
+      platform,
+      content_type: contentType,
+      content_id: contentId,
+    });
+  };
+
   return {
-    trackEvent,
+    trackPageView,
     trackCarView,
     trackContactSeller,
     trackSearch,
     trackFilterUse,
+    trackUserAction,
+    trackError,
+    trackSocialShare,
   };
 };

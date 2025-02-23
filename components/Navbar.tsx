@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAnalytics } from '../hooks/useAnalytics';
 import Image from 'next/image';
 import { supabase } from '../lib/supabase';
 
@@ -26,6 +27,7 @@ export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+  const { trackEvent } = useAnalytics();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -95,6 +97,12 @@ export default function Navbar() {
     }
   };
 
+  const handleLanguageChange = () => {
+    const newLang = language === 'en' ? 'ar' : 'en';
+    setLanguage(newLang);
+    trackEvent('language_change', { from: language, to: newLang });
+  };
+
   const navItems = [
     { name: t('nav.browseCars'), href: '/cars' },
     { name: t('nav.sellYourCar'), href: '/sell' },
@@ -148,7 +156,7 @@ export default function Navbar() {
             <div className={`flex items-center ${language === 'ar' ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
               {/* Language Switcher */}
               <button
-                onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+                onClick={handleLanguageChange}
                 className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon border border-gray-200 dark:border-gray-700 rounded-lg hover:border-qatar-maroon dark:hover:border-qatar-maroon transition-colors"
               >
                 {language === 'ar' ? 'EN' : 'ع'}
@@ -340,7 +348,7 @@ export default function Navbar() {
           {/* Mobile Language Switcher */}
           <button
             onClick={() => {
-              setLanguage(language === 'en' ? 'ar' : 'en');
+              handleLanguageChange();
               setMobileMenuOpen(false);
             }}
             className="w-full text-left px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
