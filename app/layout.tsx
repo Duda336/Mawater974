@@ -10,6 +10,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from '../contexts/ThemeContext'
 import { LanguageProvider } from '../contexts/LanguageContext'
 import AnalyticsProvider from '../components/AnalyticsProvider'
+import { SupabaseProvider } from '@/contexts/SupabaseContext'
 
 // Initialize Font Awesome
 config.autoAddCss = false
@@ -24,7 +25,7 @@ const gaDebugScript = `
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-VPGL3CMS1K');
+    gtag('config', 'G-VPPL3CMS1K');
 
     window.addEventListener('load', function() {
         console.log('Checking GA status...');
@@ -93,25 +94,27 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: languageScript }} />
         <script dangerouslySetInnerHTML={{ __html: gaDebugScript }} />
-        <GoogleAnalytics gaId="G-BB130CTM44" />
+        <GoogleAnalytics gaId="G-VPPL3CMS1K" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <LanguageProvider>
-          <ThemeProvider>
-            <Providers>
-              <AnalyticsProvider>
-                <div className="flex flex-col min-h-screen">
-                  <Navbar />
-                  <main className="flex-grow">
-                    {children}
-                  </main>
-                  <Footer />
-                  <AIChatButton />
-                </div>
-              </AnalyticsProvider>
-            </Providers>
-          </ThemeProvider>
-        </LanguageProvider>
+        <SupabaseProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <Providers>
+                <AnalyticsProvider>
+                  <div className="flex flex-col min-h-screen">
+                    <Navbar />
+                    <main className="flex-grow">
+                      {children}
+                    </main>
+                    <Footer />
+                    <AIChatButton />
+                  </div>
+                </AnalyticsProvider>
+              </Providers>
+            </ThemeProvider>
+          </LanguageProvider>
+        </SupabaseProvider>
       </body>
     </html>
   )

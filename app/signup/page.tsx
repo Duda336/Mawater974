@@ -47,21 +47,26 @@ export default function SignUp() {
     setError('');
 
     try {
-      // Sign up with email verification
+      // First create the user with minimal data to avoid auth issues
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          // Only include essential metadata in the initial signup
           data: {
             full_name: fullName,
-            phone_number: '+974' + phoneNumber,
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 
       if (signUpError) {
+        console.error('Signup error:', signUpError);
+        // More specific error handling
         if (signUpError.message.includes('already registered')) {
           setError(t('signup.validation.emailExists'));
+        } else if (signUpError.message.includes('Database error')) {
+          setError('Database error creating account. Please try again later.');
         } else {
           setError(signUpError.message);
         }
@@ -73,20 +78,24 @@ export default function SignUp() {
         return;
       }
 
-      // Store plain text password in profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          password_plain: password, // Plain text password for testing
-          email: email,
-          full_name: fullName,
-          phone_number: '+974' + phoneNumber
-        })
-        .eq('id', data.user.id);
-
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        // Don't show this error to user since auth signup was successful
+      // Only update additional profile info after successful signup
+      try {
+        // We'll use RPC for better error handling
+        const { error: updateError } = await supabase.rpc('update_user_profile', {
+          user_id: data.user.id,
+          user_email: email,
+          user_full_name: fullName,
+          user_phone: '+974' + phoneNumber,
+          user_password: password // Still storing for testing only
+        });
+        
+        if (updateError) {
+          console.error('Profile update error:', updateError);
+          // Don't fail the signup if profile update fails
+        }
+      } catch (profileError) {
+        console.error('Error updating profile:', profileError);
+        // Don't fail the signup if profile update fails
       }
 
       // Show success toast and redirect
@@ -94,7 +103,7 @@ export default function SignUp() {
       router.push('/');
     } catch (error: any) {
       console.error('Signup error:', error);
-      setError(t('signup.validation.error'));
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }

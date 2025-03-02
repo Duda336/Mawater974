@@ -1,208 +1,175 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useSupabase } from './SupabaseContext';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { useLanguage } from './LanguageContext';
+
+interface UserProfile {
+  id: string;
+  user_type?: 'private' | 'dealer';
+  full_name?: string | null;
+  name?: string | null;  // Keep for backward compatibility
+  phone_number?: string | null;
+  phone?: string | null;  // Keep for backward compatibility
+  email: string | null;
+  role?: string;
+}
+
+interface DealershipProfile {
+  id: number;
+  business_name: string;
+  business_name_ar: string;
+  description: string | null;
+  description_ar: string | null;
+  logo_url: string | null;
+  location: string | null;
+  dealership_type: 'Official' | 'Private';
+  business_type: 'Dealership' | 'Service Center' | 'Both';
+  brands: string[];
+  is_verified: boolean;
+}
 
 interface AuthContextType {
   user: User | null;
+  profile: UserProfile | null;
+  dealershipProfile: DealershipProfile | null;
+  isDealer: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
-  setSignOutMessage: (message: string) => void;
-  signOutMessage: string | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  profile: null,
+  dealershipProfile: null,
+  isDealer: false,
   isLoading: true,
   signIn: async () => {},
-  signUp: async () => {},
   signOut: async () => {},
-  setSignOutMessage: () => {},
-  signOutMessage: null,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { supabase } = useSupabase();
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [dealershipProfile, setDealershipProfile] = useState<DealershipProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [signOutMessage, setSignOutMessage] = useState<string | null>(null);
-  const router = useRouter();
-  const { t } = useLanguage();
-
-  // Function to ensure user profile exists
-  const ensureProfile = async (user: User) => {
-    try {
-      // Check if profile exists
-      const { data: profile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code === 'PGRST116') {
-        // Profile doesn't exist, create it
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: user.id,
-              email: user.email,
-              full_name: user.user_metadata.full_name || user.email?.split('@')[0],
-              phone_number: user.user_metadata.phone_number || null,
-              role: 'normal_user',
-            },
-          ]);
-
-        if (insertError) throw insertError;
-      } else if (fetchError) {
-        throw fetchError;
-      } else if (profile) {
-        // Profile exists, update it with any new metadata
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            email: user.email,
-            full_name: user.user_metadata.full_name || profile.full_name,
-            phone_number: user.user_metadata.phone_number || profile.phone_number,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', user.id);
-
-        if (updateError) throw updateError;
-      }
-    } catch (error) {
-      console.error('Error ensuring profile exists:', error);
-    }
-  };
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    const getSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        if (session?.user) {
-          setUser(session.user);
-          await ensureProfile(session.user);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error('Error getting session:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getSession();
-
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       if (session?.user) {
-        setUser(session.user);
-        await ensureProfile(session.user);
+        fetchUserData(session.user.id);
       } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        // Clear any stored redirect paths
-        localStorage.removeItem('redirectAfterLogin');
-        
-        // Redirect to home page
-        router.push('/');
+        setIsLoading(false);
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserData(session.user.id);
+      } else {
+        setProfile(null);
+        setDealershipProfile(null);
+        setIsLoading(false);
+      }
+    });
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const fetchUserData = async (userId: string) => {
     try {
-      setIsLoading(true);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
+      // Try to fetch the profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-      if (error) {
-        if (error.message.includes('already registered')) {
-          throw new Error(t('auth.error.emailInUse'));
-        } else if (error.message.includes('password')) {
-          throw new Error(t('auth.error.weakPassword'));
-        } else if (error.message.includes('email')) {
-          throw new Error(t('auth.error.invalidEmail'));
+      // If no profile found or error, create one using our RPC function
+      if (profileError || !profileData) {
+        console.log('Profile not found, creating one...');
+        
+        // Get user details from auth
+        const { data: userData } = await supabase.auth.getUser();
+        const user = userData?.user;
+        
+        if (user) {
+          // Create profile using RPC
+          const { data: rpcResult, error: rpcError } = await supabase.rpc('update_user_profile', {
+            user_id: userId,
+            user_email: user.email || '',
+            user_full_name: user.user_metadata?.full_name || '',
+            user_phone: user.user_metadata?.phone_number || '',
+            user_password: null
+          });
+          
+          if (rpcError) {
+            console.error('Error creating profile via RPC:', rpcError);
+          } else {
+            console.log('Profile created successfully:', rpcResult);
+            
+            // Try fetching the profile again
+            const { data: newProfileData } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', userId)
+              .single();
+              
+            if (newProfileData) {
+              setProfile(newProfileData);
+              return;
+            }
+          }
         }
-        throw new Error(t('auth.error.signUp'));
+      } else {
+        setProfile(profileData);
       }
 
-      // Profile will be created by ensureProfile when auth state changes
+      // If user is a dealer, fetch dealership profile
+      if (profileData?.user_type === 'dealer') {
+        const { data: dealershipData, error: dealershipError } = await supabase
+          .from('dealership_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (dealershipError && dealershipError.code !== 'PGRST116') {
+          throw dealershipError;
+        }
+        setDealershipProfile(dealershipData);
+      }
     } catch (error) {
-      console.error('Error signing up:', error);
-      toast.error(error instanceof Error ? error.message : t('auth.error.signUpFailed'));
-      throw error;
+      console.error('Error fetching user data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+  const signIn = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error(t('auth.error.invalidCredentials'));
-        }
-        throw new Error(t('auth.error.signIn'));
-      }
-    } catch (error) {
-      console.error('Error signing in:', error);
-      toast.error(error instanceof Error ? error.message : t('auth.error.signInFailed'));
+    if (error) {
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        toast.error(t('auth.error.signOut'));
-        return;
-      }
-
-      // Optional: set a sign-out message that can be displayed on home page
-      setSignOutMessage(t('auth.success.signedOut'));
-      
-      // Redirect to home page
-      router.push('/');
-    } catch (error) {
-      console.error('Sign out error:', error);
-      toast.error(t('auth.error.signOutFailed'));
-    } finally {
-      setIsLoading(false);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
     }
   };
 
@@ -210,22 +177,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        profile,
+        dealershipProfile,
+        isDealer: profile?.user_type === 'dealer',
         isLoading,
         signIn,
-        signUp,
         signOut,
-        setSignOutMessage,
-        signOutMessage,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

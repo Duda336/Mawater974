@@ -1,108 +1,197 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSupabase } from '@/contexts/SupabaseContext';
+import { Showroom, DealershipType } from '@/types/showroom';
+import ShowroomCard from '@/components/showrooms/ShowroomCard';
+import DealershipRegistrationModal from '@/components/showrooms/DealershipRegistrationModal';
+import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
-export default function Showrooms() {
-  const { t } = useLanguage();
+export default function ShowroomsPage() {
+  const { t, language } = useLanguage();
+  const { supabase } = useSupabase();
+  const [showrooms, setShowrooms] = useState<Showroom[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedDealershipType, setSelectedDealershipType] = useState<DealershipType | ''>('');
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
 
-  const showrooms = [
-    {
-      name: 'showrooms.featured.premiumAuto',
-      description: 'showrooms.featured.premiumAuto.desc',
-      rating: '4.8',
-      reviews: '120',
-      location: 'showrooms.location.centralDistrict'
-    },
-    {
-      name: 'showrooms.featured.eliteMotors',
-      description: 'showrooms.featured.eliteMotors.desc',
-      rating: '4.9',
-      reviews: '85',
-      location: 'showrooms.location.centralDistrict'
-    },
-    {
-      name: 'showrooms.featured.familyAuto',
-      description: 'showrooms.featured.familyAuto.desc',
-      rating: '4.7',
-      reviews: '150',
-      location: 'showrooms.location.southDistrict'
+  const fetchShowrooms = async () => {
+    try {
+      if (!supabase) {
+        console.error('Supabase client not initialized');
+        return;
+      }
+
+      // Fetch approved dealerships from the dealerships table
+      const { data, error } = await supabase
+        .from('dealerships')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform the data to match the Showroom interface
+      const transformedData = data.map(dealership => ({
+        id: dealership.id,
+        name: dealership.business_name,
+        name_ar: dealership.business_name_ar || dealership.business_name,
+        description: dealership.description,
+        description_ar: dealership.description_ar || dealership.description,
+        logo: dealership.logo_url,
+        coverImage: dealership.cover_image_url || dealership.logo_url,
+        location: dealership.location,
+        location_ar: dealership.location_ar,
+        rating: 0, // Default value as we don't have ratings yet
+        reviewCount: 0, // Default value as we don't have reviews yet
+        featured: dealership.featured || false, // Use the featured field from the database
+        contactInfo: {
+          phone: dealership.phone || '',
+          email: dealership.email || ''
+        },
+        dealershipType: dealership.dealership_type,
+        businessType: dealership.business_type,
+        user_id: dealership.user_id
+      }));
+
+      setShowrooms(transformedData);
+    } catch (error) {
+      console.error('Error fetching showrooms:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchShowrooms();
+  }, []);
+
+  const filteredShowrooms = showrooms.filter(showroom => {
+    const searchText = searchQuery.toLowerCase();
+    const nameMatch = language === 'ar' 
+      ? (showroom.name_ar?.toLowerCase().includes(searchText) || showroom.name.toLowerCase().includes(searchText))
+      : showroom.name.toLowerCase().includes(searchText);
+    
+    const descriptionMatch = language === 'ar'
+      ? (showroom.description_ar?.toLowerCase().includes(searchText) || showroom.description.toLowerCase().includes(searchText))
+      : showroom.description.toLowerCase().includes(searchText);
+    
+    const matchesSearch = nameMatch || descriptionMatch;
+    const matchesLocation = !selectedLocation || showroom.location === selectedLocation;
+    const matchesDealershipType = !selectedDealershipType || showroom.dealershipType === selectedDealershipType;
+    
+    return matchesSearch && matchesLocation && matchesDealershipType;
+  });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-2">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">{t('showrooms.title')}</h1>
-        
-        {/* Search and Filter Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-12">
-          <div className="flex flex-col md:flex-row gap-4">
+    <div className="container mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-0">
+          {t('showroom.title')}
+        </h1>
+        <button
+          onClick={() => setIsRegistrationModalOpen(true)}
+          className="bg-qatar-maroon text-white px-6 py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors"
+        >
+          {t('showroom.registerDealership')}
+        </button>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder={t('showrooms.search.placeholder')}
-              className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 
-                         text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 
-                         focus:ring-qatar-maroon focus:border-transparent"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t('showroom.searchPlaceholder')}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-qatar-maroon focus:border-qatar-maroon dark:bg-gray-700 dark:text-white"
             />
-            <select className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 
-                             text-gray-900 dark:text-white focus:ring-2 focus:ring-qatar-maroon focus:border-transparent">
-              <option value="">{t('showrooms.search.location')}</option>
-              <option value="north">{t('showrooms.location.north')}</option>
-              <option value="south">{t('showrooms.location.south')}</option>
-              <option value="central">{t('showrooms.location.central')}</option>
+          </div>
+          <div className="relative">
+            <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-qatar-maroon focus:border-qatar-maroon dark:bg-gray-700 dark:text-white appearance-none"
+            >
+              <option value="">{t('showroom.allLocations')}</option>
+              <option value="Doha">{t('showroom.locations.doha')}</option>
+              <option value="Al Wakrah">{t('showroom.locations.alWakrah')}</option>
+              <option value="Al Khor">{t('showroom.locations.alKhor')}</option>
+              <option value="Umm Salal">{t('showroom.locations.umSalal')}</option>
+              <option value="Al Rayyan">{t('showroom.locations.alRayyan')}</option>
+              <option value="Al Shamal">{t('showroom.locations.alShamal')}</option>
+              <option value="Al Daayen">{t('showroom.locations.alDaayen')}</option>
+              <option value="Lusail">{t('showroom.locations.lusail')}</option>
             </select>
-            <button className="bg-qatar-maroon text-white px-8 py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
-              {t('showrooms.search.button')}
-            </button>
+          </div>
+          <div className="relative">
+            <select
+              value={selectedDealershipType}
+              onChange={(e) => setSelectedDealershipType(e.target.value as DealershipType | '')}
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-qatar-maroon focus:border-qatar-maroon dark:bg-gray-700 dark:text-white appearance-none"
+            >
+              <option value="">{t('showroom.allDealershipTypes')}</option>
+              <option value="Official">{t('showroom.dealershipTypes.official')}</option>
+              <option value="Private">{t('showroom.dealershipTypes.private')}</option>
+            </select>
           </div>
         </div>
-
-        {/* Featured Showrooms */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {showrooms.map((showroom, index) => (
-            <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300">
-              <div className="h-48 bg-gray-200 dark:bg-gray-700">
-                {/* Showroom Image */}
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
-                  {t(showroom.name)}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  {t(showroom.description)}
-                </p>
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  <span className="flex items-center mr-4">
-                    <svg className="w-4 h-4 text-qatar-maroon mr-1" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    {t('showrooms.rating', { rating: showroom.rating, reviews: showroom.reviews })}
-                  </span>
-                  <span className="flex items-center">
-                    <svg className="w-4 h-4 text-qatar-maroon mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {t(showroom.location)}
-                  </span>
-                </div>
-                <button className="w-full bg-qatar-maroon text-white py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
-                  {t('showrooms.viewDetails')}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Map Section */}
-        <section className="mt-16">
-          <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">{t('showrooms.map.title')}</h2>
-          <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded-xl shadow-lg">
-            {/* Map Component will go here */}
-          </div>
-        </section>
       </div>
+
+      {/* Featured Showrooms */}
+      {filteredShowrooms.some(showroom => showroom.featured) && (
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+            {t('showroom.featuredShowrooms')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredShowrooms
+              .filter(showroom => showroom.featured)
+              .map((showroom) => (
+                <ShowroomCard key={showroom.id} showroom={showroom} />
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* All Showrooms */}
+      <div>
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+          {t('showroom.allShowrooms')}
+        </h2>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-qatar-maroon mx-auto"></div>
+          </div>
+        ) : filteredShowrooms.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredShowrooms
+              .filter(showroom => !showroom.featured)
+              .map((showroom) => (
+                <ShowroomCard key={showroom.id} showroom={showroom} />
+              ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            {t('showroom.noResults')}
+          </div>
+        )}
+      </div>
+
+      <DealershipRegistrationModal
+        isOpen={isRegistrationModalOpen}
+        onClose={() => setIsRegistrationModalOpen(false)}
+      />
     </div>
   );
 }

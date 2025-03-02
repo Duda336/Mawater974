@@ -30,23 +30,34 @@ export default function Navbar() {
   const { trackEvent } = useAnalytics();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDealer, setIsDealer] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
     // Check if user is admin
-    const checkAdminStatus = async () => {
+    const checkUserRole = async () => {
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        setIsAdmin(profile?.role === 'admin');
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) {
+            console.error('Error checking user role:', error);
+            return;
+          }
+          
+          setIsAdmin(data?.role === 'admin');
+          setIsDealer(data?.role === 'dealer');
+        } catch (error) {
+          console.error('Error checking user role:', error);
+        }
       }
     };
-    checkAdminStatus();
+    checkUserRole();
     if (user) {
       fetchUnreadCount();
       // Subscribe to notifications
@@ -100,7 +111,11 @@ export default function Navbar() {
   const handleLanguageChange = () => {
     const newLang = language === 'en' ? 'ar' : 'en';
     setLanguage(newLang);
-    trackEvent('language_change', { from: language, to: newLang });
+    try {
+      trackEvent?.('language_change', { from: language, to: newLang });
+    } catch (error) {
+      console.error('Error tracking language change:', error);
+    }
   };
 
   const navItems = [
@@ -257,6 +272,23 @@ export default function Navbar() {
                           </Link>
                         )}
                       </Menu.Item>
+
+                      {/* Showroom Dashboard */}
+                      {isDealer && (
+                        <Menu.Item>
+                          {({ active }) => (
+                            <Link
+                              href="/dashboard"
+                              className={`${
+                                active ? 'bg-gray-100 dark:bg-gray-700' : ''
+                              } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
+                            >
+                              <Cog6ToothIcon className="mr-3 h-5 w-5" />
+                              {t('dashboard.title')}
+                            </Link>
+                          )}
+                        </Menu.Item>
+                      )}
 
                       {/* Admin Dashboard */}
                       {isAdmin && (

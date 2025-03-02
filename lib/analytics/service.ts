@@ -60,52 +60,62 @@ class AnalyticsService {
     eventParams: Record<string, any> = {},
     isConversion: boolean = false
   ) {
-    if (!window.gtag) return;
+    try {
+      if (!window.gtag) return;
 
-    const baseParams = {
-      send_to: GA_MEASUREMENT_ID,
-      timestamp: new Date().toISOString(),
-      page_path: window.location.pathname,
-      page_title: document.title,
-      ...eventParams,
-    };
+      const baseParams = {
+        send_to: GA_MEASUREMENT_ID,
+        timestamp: new Date().toISOString(),
+        page_path: window.location.pathname,
+        page_title: document.title,
+        ...eventParams,
+      };
 
-    // Add user properties if available
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      baseParams.user_id = userId;
+      // Add user properties if available
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        baseParams.user_id = userId;
+      }
+
+      // Check if this is a conversion event
+      const conversionEvent = Object.values(GA_CONVERSIONS).find(conv => conv.name === eventName);
+      if (isConversion && conversionEvent) {
+        baseParams.conversion = true;
+        baseParams.value = conversionEvent.params.value;
+        baseParams.currency = conversionEvent.params.currency;
+      }
+
+      window.gtag('event', eventName, baseParams);
+    } catch (error) {
+      // Silently fail if analytics is blocked
+      console.debug('Analytics event failed:', error);
     }
-
-    // Check if this is a conversion event
-    const conversionEvent = Object.values(GA_CONVERSIONS).find(conv => conv.name === eventName);
-    if (isConversion && conversionEvent) {
-      baseParams.conversion = true;
-      baseParams.value = conversionEvent.params.value;
-      baseParams.currency = conversionEvent.params.currency;
-    }
-
-    window.gtag('event', eventName, baseParams);
   }
 
   public trackPageView(
     pageTitle?: string,
     customDimensions: Record<string, any> = {}
   ) {
-    if (!window.gtag) return;
+    try {
+      if (!window.gtag) return;
 
-    // Reset scroll tracking for new page
-    this.scrollDepthTracked.clear();
+      // Reset scroll tracking for new page
+      this.scrollDepthTracked.clear();
 
-    const params = {
-      page_title: pageTitle || document.title,
-      page_location: window.location.href,
-      page_path: window.location.pathname,
-      send_to: GA_MEASUREMENT_ID,
-      ...customDimensions,
-    };
+      const params = {
+        page_title: pageTitle || document.title,
+        page_location: window.location.href,
+        page_path: window.location.pathname,
+        send_to: GA_MEASUREMENT_ID,
+        ...customDimensions,
+      };
 
-    window.gtag('config', GA_MEASUREMENT_ID, params);
-    this.trackEvent(GA_EVENTS.PAGE_VIEW, params);
+      window.gtag('config', GA_MEASUREMENT_ID, params);
+      this.trackEvent(GA_EVENTS.PAGE_VIEW, params);
+    } catch (error) {
+      // Silently fail if analytics is blocked
+      console.debug('Analytics event failed:', error);
+    }
   }
 
   public trackCarView(car: {
@@ -166,9 +176,14 @@ class AnalyticsService {
   }
 
   public setUserProperties(properties: Record<string, any>) {
-    if (!window.gtag) return;
+    try {
+      if (!window.gtag) return;
 
-    window.gtag('set', 'user_properties', properties);
+      window.gtag('set', 'user_properties', properties);
+    } catch (error) {
+      // Silently fail if analytics is blocked
+      console.debug('Analytics event failed:', error);
+    }
   }
 }
 
