@@ -18,6 +18,8 @@ export interface Database {
           role: UserRole
           created_at: string
           updated_at: string
+          country_id: number | null
+          city_id: number | null
         }
         Insert: {
           id: string
@@ -27,6 +29,8 @@ export interface Database {
           role?: UserRole
           created_at?: string
           updated_at?: string
+          country_id?: number | null
+          city_id?: number | null
         }
         Update: {
           id?: string
@@ -36,6 +40,8 @@ export interface Database {
           role?: UserRole
           created_at?: string
           updated_at?: string
+          country_id?: number | null
+          city_id?: number | null
         }
       }
       brands: {
@@ -103,6 +109,8 @@ export interface Database {
           image_url: string | null
           created_at: string
           updated_at: string
+          country_id: number | null
+          city_id: number | null
         }
         Insert: {
           id?: number
@@ -122,6 +130,8 @@ export interface Database {
           image_url?: string | null
           created_at?: string
           updated_at?: string
+          country_id?: number | null
+          city_id?: number | null
         }
         Update: {
           id?: number
@@ -141,6 +151,8 @@ export interface Database {
           image_url?: string | null
           created_at?: string
           updated_at?: string
+          country_id?: number | null
+          city_id?: number | null
         }
       }
       car_images: {
@@ -215,6 +227,105 @@ export interface Database {
           created_at?: string
         }
       }
+      countries: {
+        Row: {
+          id: number
+          code: string
+          name: string
+          name_ar: string
+          currency_code: string
+          currency_symbol: string
+          currency_name: string
+          currency_name_ar: string
+          phone_code: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          code: string
+          name: string
+          name_ar: string
+          currency_code: string
+          currency_symbol: string
+          currency_name: string
+          currency_name_ar: string
+          phone_code: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          code?: string
+          name?: string
+          name_ar?: string
+          currency_code?: string
+          currency_symbol?: string
+          currency_name?: string
+          currency_name_ar?: string
+          phone_code?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      cities: {
+        Row: {
+          id: number
+          country_id: number
+          name: string
+          name_ar: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          country_id: number
+          name: string
+          name_ar: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          country_id?: number
+          name?: string
+          name_ar?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      currency_rates: {
+        Row: {
+          id: number
+          from_currency: string
+          to_currency: string
+          rate: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          from_currency: string
+          to_currency: string
+          rate: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          from_currency?: string
+          to_currency?: string
+          rate?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -254,15 +365,19 @@ export type Car = TableRow<'cars'>
 export type CarImage = TableRow<'car_images'>
 export type Favorite = TableRow<'favorites'>
 export type AdminLog = TableRow<'admin_logs'>
+export type Country = TableRow<'countries'>
+export type City = TableRow<'cities'>
+export type CurrencyRate = TableRow<'currency_rates'>
 
-export type CarBrand = Database['public']['Tables']['brands']['Row'];
-export type CarModel = Database['public']['Tables']['models']['Row'];
+export type CarBrand = Pick<Brand, 'id' | 'name' | 'logo_url'>
+export type CarModel = Pick<Model, 'id' | 'name'>
 
 export interface ExtendedCar extends Database['public']['Tables']['cars']['Row'] {
   brand: CarBrand;
   model: CarModel;
   user: Profile;
-  images: CarImage[];
-  color: string;
-  cylinders: string | null;
+  country?: Country;
+  city?: City;
+  images?: CarImage[];
+  favorite?: boolean;
 }
