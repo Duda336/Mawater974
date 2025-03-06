@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSupabase } from '@/contexts/SupabaseContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { Dialog } from '@headlessui/react';
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
@@ -17,8 +18,10 @@ interface CarListingFormProps {
 export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess }: CarListingFormProps) {
   const { t, language } = useLanguage();
   const { supabase } = useSupabase();
+  const { countries, cities, currentCountry, getCitiesByCountry } = useCountry();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
+  const [availableCities, setAvailableCities] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     title_ar: '',
@@ -35,8 +38,49 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
     transmission: 'automatic',
     fuel_type: 'petrol',
     body_type: '',
-    condition: 'new'
+    condition: 'new',
+    country_id: 0,
+    city_id: 0
   });
+
+  // Set default country and city when component mounts
+  useEffect(() => {
+    if (currentCountry) {
+      setFormData(prev => ({
+        ...prev,
+        country_id: currentCountry.id
+      }));
+      
+      const countryCities = getCitiesByCountry(currentCountry.id);
+      setAvailableCities(countryCities);
+      
+      if (countryCities.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          city_id: countryCities[0].id
+        }));
+      }
+    }
+  }, [currentCountry, getCitiesByCountry]);
+
+  // Update available cities when country changes
+  const handleCountryChange = (countryId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      country_id: countryId,
+      city_id: 0 // Reset city when country changes
+    }));
+    
+    const countryCities = getCitiesByCountry(countryId);
+    setAvailableCities(countryCities);
+    
+    if (countryCities.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        city_id: countryCities[0].id
+      }));
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -83,7 +127,9 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
           price: parseFloat(formData.price),
           mileage: formData.mileage ? parseInt(formData.mileage) : null,
           images: imageUrls,
-          status: 'active'
+          status: 'active',
+          country_id: formData.country_id || null,
+          city_id: formData.city_id || null
         });
 
       if (error) throw error;
@@ -175,11 +221,50 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
               </div>
             </div>
 
+            {/* Location */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  {t('common.country')}
+                </label>
+                <select
+                  value={formData.country_id}
+                  onChange={e => handleCountryChange(parseInt(e.target.value))}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                >
+                  <option value="">{t('common.selectCountry')}</option>
+                  {countries.map(country => (
+                    <option key={country.id} value={country.id}>
+                      {language === 'ar' ? country.name_ar : country.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  {t('common.city')}
+                </label>
+                <select
+                  value={formData.city_id}
+                  onChange={e => setFormData(prev => ({ ...prev, city_id: parseInt(e.target.value) }))}
+                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                  disabled={availableCities.length === 0}
+                >
+                  <option value="">{t('common.selectCity')}</option>
+                  {availableCities.map(city => (
+                    <option key={city.id} value={city.id}>
+                      {language === 'ar' ? city.name_ar : city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Car Details */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  {t('car.price')} (QAR)
+                  {t('car.price')} ({currentCountry?.currency_code || 'QAR'})
                 </label>
                 <input
                   type="number"

@@ -77,10 +77,23 @@ export const useAnalytics = () => {
     });
   };
 
+  const trackContactSeller = (carId: string, carName: string, sellerType: string, contactMethod: string) => {
+    analyticsService.trackEvent(GA_EVENTS.CONTACT_SELLER || 'contact_seller', {
+      car_id: carId,
+      car_name: carName,
+      seller_type: sellerType,
+      contact_method: contactMethod,
+      session_id: sessionId,
+      [GA_CUSTOM_DIMENSIONS.deviceType]: getDeviceType(),
+      [GA_CUSTOM_DIMENSIONS.userLanguage]: localStorage.getItem('language') || 'en',
+    });
+  };
+
   return {
     trackPageView,
     trackEvent,
     trackCarView,
     trackSearch,
+    trackContactSeller,
   };
 };

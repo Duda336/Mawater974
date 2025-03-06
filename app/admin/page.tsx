@@ -1,32 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Database, Profile, CarBrand, CarModel } from '../../types/supabase';
-import Image from 'next/image';
-import ImageUpload from '../../components/ImageUpload';
-import {
-  ChartBarIcon,
-  UsersIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  TagIcon,
-  PencilIcon,
-  TrashIcon,
-  EyeIcon,
-  ExclamationTriangleIcon,
-  XMarkIcon,
-  StarIcon,
-  CurrencyDollarIcon,
-  DatabaseIcon,
-} from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import Image from 'next/image';
+import { Database, Profile, CarBrand, CarModel } from '../../types/supabase';
+import ImageUpload from '../../components/ImageUpload';
 import PlaceholderCar from '../../components/PlaceholderCar';
 import DatabaseManager from '../../components/admin/DatabaseManager';
-import { ChevronRightIcon, PlusIcon, PencilIcon as PencilIcon2, CogIcon, TrashIcon as TrashIcon2 } from '@heroicons/react/24/outline';
+import AdminNavbar from '../../components/admin/AdminNavbar';
 
 type Car = Database['public']['Tables']['cars']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
@@ -132,6 +116,13 @@ export default function AdminDashboard() {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('oldest');
   const [expandedBrands, setExpandedBrands] = useState<{ [key: string]: boolean }>({});
   const [showAllBrands, setShowAllBrands] = useState(false);
+  const [countries, setCountries] = useState([
+    { code: 'qa', name: 'Qatar' },
+    { code: 'sa', name: 'Saudi Arabia' },
+    { code: 'ae', name: 'UAE' },
+    { code: 'kw', name: 'Kuwait' },
+    { code: 'sy', name: 'Syria' }
+  ]);
 
   const handleUpdateBrand = async (brand: any) => {
     try {
@@ -856,7 +847,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="p-3 rounded-full bg-qatar-maroon bg-opacity-10">
-                <TagIcon className="h-8 w-8 text-qatar-maroon" />
+                <div className="h-8 w-8"></div>
               </div>
             </div>
           </div>
@@ -874,7 +865,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="p-3 rounded-full bg-yellow-100">
-                <StarIcon className="h-8 w-8 text-yellow-600" />
+                <div className="h-8 w-8"></div>
               </div>
             </div>
           </div>
@@ -892,7 +883,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="p-3 rounded-full bg-green-100">
-                <CurrencyDollarIcon className="h-8 w-8 text-green-600" />
+                <div className="h-8 w-8"></div>
               </div>
             </div>
           </div>
@@ -910,7 +901,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <div className="p-3 rounded-full bg-blue-100">
-                <UsersIcon className="h-8 w-8 text-blue-600" />
+                <div className="h-8 w-8"></div>
               </div>
             </div>
           </div>
@@ -1061,15 +1052,9 @@ export default function AdminDashboard() {
                   onClick={() => toggleBrandExpansion(item.brand)}
                 >
                   <div className="flex items-center space-x-3">
-                    <ChevronRightIcon 
-                      className={`w-5 h-5 text-gray-500 dark:text-gray-400 transform transition-transform ${
-                        expandedBrands[item.brand] ? 'rotate-90' : ''
-                      }`}
-                    />
+                    <div className="w-5 h-5"></div>
                     <div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {item.brand}
-                      </span>
+                      <span className="text-sm font-medium text-gray-900">{item.brand}</span>
                       <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                         ({item.count} cars)
                       </span>
@@ -1159,12 +1144,7 @@ export default function AdminDashboard() {
                     activity.action === 'delete' ? 'bg-red-100 dark:bg-red-900' :
                     'bg-gray-100 dark:bg-gray-900'
                   }`}>
-                    {activity.action === 'create' && <PlusIcon className="h-4 w-4 text-green-600 dark:text-green-400" />}
-                    {activity.action === 'update' && <PencilIcon2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
-                    {activity.action === 'delete' && <TrashIcon2 className="h-4 w-4 text-red-600 dark:text-red-400" />}
-                    {!['create', 'update', 'delete'].includes(activity.action) && (
-                      <CogIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                    )}
+                    <div className="h-4 w-4"></div>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1236,7 +1216,7 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <ClockIcon className="w-5 h-5 inline-block mr-1" />
+                    <div className="w-5 h-5"></div>
                     Pending
                   </button>
                   <button
@@ -1250,7 +1230,7 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <CheckCircleIcon className="w-5 h-5 inline-block mr-1" />
+                    <div className="w-5 h-5"></div>
                     Approved
                   </button>
                   <button
@@ -1264,7 +1244,7 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <XCircleIcon className="w-5 h-5 inline-block mr-1" />
+                    <div className="w-5 h-5"></div>
                     Rejected
                   </button>
                   <button
@@ -1278,7 +1258,7 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <TagIcon className="w-5 h-5 inline-block mr-1" />
+                    <div className="w-5 h-5"></div>
                     Sold
                   </button>
                 </div>
@@ -1314,7 +1294,7 @@ export default function AdminDashboard() {
                         {car.year} • {car.mileage.toLocaleString()} km
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center">
                       {/* Featured Toggle */}
                       <button
                         onClick={() => handleToggleFeature(car.id, car.is_featured)}
@@ -1325,7 +1305,7 @@ export default function AdminDashboard() {
                         }`}
                         title={car.is_featured ? 'Remove from featured' : 'Add to featured'}
                       >
-                        <StarIcon className="h-5 w-5" />
+                        <div className="w-5 h-5"></div>
                       </button>
                     </div>
                   </div>
@@ -1356,12 +1336,14 @@ export default function AdminDashboard() {
                           onClick={() => handleCarAction(car.id, 'Approved')}
                           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-600 hover:bg-green-600 hover:text-white rounded-md transition-colors duration-200"
                         >
+                          <div className="w-5 h-5"></div>
                           Approve
                         </button>
                         <button
                           onClick={() => handleCarAction(car.id, 'Rejected')}
                           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white rounded-md transition-colors duration-200"
                         >
+                          <div className="w-5 h-5"></div>
                           Reject
                         </button>
                       </>
@@ -1392,7 +1374,7 @@ export default function AdminDashboard() {
             }}
             className="absolute top-4 right-4 text-white hover:text-gray-300 z-10"
           >
-            <XMarkIcon className="w-6 h-6" />
+            <div className="w-6 h-6"></div>
           </button>
           
           {images.length > 0 ? (
@@ -1450,9 +1432,7 @@ export default function AdminDashboard() {
         }`}
         title="Grid View"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-        </svg>
+        <div className="w-5 h-5"></div>
       </button>
       <button
         onClick={() => setViewMode('list')}
@@ -1463,9 +1443,7 @@ export default function AdminDashboard() {
         }`}
         title="List View"
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-        </svg>
+        <div className="w-5 h-5"></div>
       </button>
     </div>
   );
@@ -1515,7 +1493,7 @@ export default function AdminDashboard() {
                 }`}
                 title={car.is_featured ? 'Remove from featured' : 'Add to featured'}
               >
-                <StarIcon className="w-5 h-5 text-white" />
+                <div className="w-5 h-5"></div>
               </button>
             </div>
           </div>
@@ -1573,14 +1551,14 @@ export default function AdminDashboard() {
                     onClick={() => handleCarAction(car.id, 'Approved')}
                     className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-600 hover:bg-green-600 hover:text-white rounded-md transition-colors duration-200"
                   >
-                    <CheckCircleIcon className="w-5 h-5 inline-block mr-1" />
+                    <div className="w-5 h-5"></div>
                     Approve
                   </button>
                   <button
                     onClick={() => handleCarAction(car.id, 'Rejected')}
                     className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white rounded-md transition-colors duration-200"
                   >
-                    <XCircleIcon className="w-5 h-5 inline-block mr-1" />
+                    <div className="w-5 h-5"></div>
                     Reject
                   </button>
                 </>
@@ -1647,7 +1625,7 @@ export default function AdminDashboard() {
                   }`}
                   title={car.is_featured ? 'Remove from featured' : 'Add to featured'}
                 >
-                  <StarIcon className="w-5 h-5 text-white" />
+                  <div className="w-5 h-5"></div>
                 </button>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
@@ -1664,7 +1642,7 @@ export default function AdminDashboard() {
                         }`}
                         title="Approve"
                       >
-                        <CheckCircleIcon className="w-5 h-5" />
+                        <div className="w-5 h-5"></div>
                       </button>
                       <button
                         onClick={() => handleCarAction(car.id, 'Rejected')}
@@ -1676,7 +1654,7 @@ export default function AdminDashboard() {
                         }`}
                         title="Reject"
                       >
-                        <XCircleIcon className="w-5 h-5" />
+                        <div className="w-5 h-5"></div>
                       </button>
                     </>
                   )}
@@ -1686,7 +1664,7 @@ export default function AdminDashboard() {
                       className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                       title="Mark as Sold"
                     >
-                      <TagIcon className="w-5 h-5" />
+                      <div className="w-5 h-5"></div>
                     </button>
                   )}
                   <button
@@ -1697,7 +1675,7 @@ export default function AdminDashboard() {
                     className="p-1.5 bg-qatar-maroon text-white rounded-md hover:bg-qatar-maroon/90"
                     title="View Details"
                   >
-                    <EyeIcon className="w-5 h-5" />
+                    <div className="w-5 h-5"></div>
                   </button>
                 </div>
               </td>
@@ -1709,129 +1687,79 @@ export default function AdminDashboard() {
   );
 
   useEffect(() => {
-    if (!authLoading) {
-      checkAdmin();
-      fetchAnalyticsData();
-    }
-  }, [authLoading]);
+    if (!cars) return;
 
-  const checkAdmin = async () => {
-    if (!user) {
-      router.push('/');
-      return;
-    }
+    // Calculate brand statistics
+    const brandStats = new Map<string, {
+      count: number;
+      activeCount: number;
+      soldCount: number;
+      pendingCount: number;
+      totalRevenue: number;
+      prices: number[];
+    }>();
 
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+    cars.forEach(car => {
+      const brandName = car.brand?.name || 'Unknown';
+      const currentStats = brandStats.get(brandName) || {
+        count: 0,
+        activeCount: 0,
+        soldCount: 0,
+        pendingCount: 0,
+        totalRevenue: 0,
+        prices: []
+      };
 
-      if (profile?.role !== 'admin') {
-        router.push('/');
-        return;
+      currentStats.count++;
+      if (car.status === 'Approved') currentStats.activeCount++;
+      if (car.status === 'Sold') currentStats.soldCount++;
+      if (car.status === 'Pending') currentStats.pendingCount++;
+      if (car.price) {
+        currentStats.totalRevenue += car.price;
+        currentStats.prices.push(car.price);
       }
 
-      setIsAdmin(true);
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      router.push('/');
-    }
-  };
+      brandStats.set(brandName, currentStats);
+    });
 
-  const fetchAnalyticsData = async () => {
-    try {
-      setLoading(true);
+    const carsByBrand = Array.from(brandStats.entries())
+      .map(([brand, stats]) => ({
+        brand,
+        count: stats.count,
+        activeCount: stats.activeCount,
+        soldCount: stats.soldCount,
+        pendingCount: stats.pendingCount,
+        totalRevenue: stats.totalRevenue,
+        averagePrice: stats.prices.length > 0 ? stats.totalRevenue / stats.prices.length : 0
+      }))
+      .sort((a, b) => b.count - a.count);
 
-      // Fetch cars data with more details
-      const { data: carsData } = await supabase
-        .from('cars')
-        .select(`
-          *,
-          brand:brands(name),
-          model:models(name),
-          seller:profiles(full_name)
-        `);
-
-      // Fetch users data
-      const { data: usersData } = await supabase
-        .from('profiles')
-        .select('*');
-
-      // Fetch recent activity
-      const { data: activityData } = await supabase
-        .from('admin_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (!carsData) return;
-
-      // Process cars by brand with detailed statistics
-      const brandStats = new Map<string, {
-        count: number;
-        activeCount: number;
-        soldCount: number;
-        pendingCount: number;
-        totalRevenue: number;
-        prices: number[];
-      }>();
-
-      carsData?.forEach(car => {
-        const brandName = car.brand?.name || 'Unknown';
-        const currentStats = brandStats.get(brandName) || {
-          count: 0,
-          activeCount: 0,
-          soldCount: 0,
-          pendingCount: 0,
-          totalRevenue: 0,
-          prices: []
-        };
-
-        currentStats.count++;
-        if (car.status === 'Approved') currentStats.activeCount++;
-        if (car.status === 'Sold') currentStats.soldCount++;
-        if (car.status === 'Pending') currentStats.pendingCount++;
-        if (car.price) {
-          currentStats.totalRevenue += car.price;
-          currentStats.prices.push(car.price);
-        }
-
-        brandStats.set(brandName, currentStats);
-      });
-
-      analyticsData.carsByBrand = Array.from(brandStats.entries())
-        .map(([brand, stats]) => ({
-          brand,
-          count: stats.count,
-          activeCount: stats.activeCount,
-          soldCount: stats.soldCount,
-          pendingCount: stats.pendingCount,
-          totalRevenue: stats.totalRevenue,
-          averagePrice: stats.prices.length > 0 ? stats.totalRevenue / stats.prices.length : 0
-        }))
-        .sort((a, b) => b.count - a.count);
-
-      setAnalytics(prev => ({
-        ...prev,
-        totalCars: carsData.length,
-        pendingCars: carsData.filter(car => car.status === 'Pending').length,
-        activeCars: carsData.filter(car => car.status === 'Approved').length,
-        soldCars: carsData.filter(car => car.status === 'Sold').length,
-        featuredCars: carsData.filter(car => car.is_featured).length,
-        featuredPercentage: (carsData.filter(car => car.is_featured).length / carsData.length) * 100,
-        totalRevenue: carsData.reduce((sum, car) => sum + (car.price || 0), 0),
-        averagePrice: carsData.reduce((sum, car) => sum + (car.price || 0), 0) / carsData.length,
-        carsByBrand
+    // Create pending cars list
+    const pendingCarsList = cars
+      .filter(car => car.status === 'Pending')
+      .map(car => ({
+        id: car.id,
+        brand: car.brand?.name || 'Unknown',
+        model: car.model?.name || 'Unknown',
+        year: car.year,
+        price: car.price,
+        seller: car.seller?.full_name || 'Unknown'
       }));
-    } catch (error) {
-      console.error('Error fetching analytics data:', error);
-      setError('Failed to fetch analytics data');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    setAnalytics(prev => ({
+      ...prev,
+      totalCars: cars.length,
+      pendingCars: cars.filter(car => car.status === 'Pending').length,
+      activeCars: cars.filter(car => car.status === 'Approved').length,
+      soldCars: cars.filter(car => car.status === 'Sold').length,
+      featuredCars: cars.filter(car => car.is_featured).length,
+      featuredPercentage: (cars.filter(car => car.is_featured).length / cars.length) * 100,
+      totalRevenue: cars.reduce((sum, car) => sum + (car.price || 0), 0),
+      averagePrice: cars.reduce((sum, car) => sum + (car.price || 0), 0) / cars.length,
+      carsByBrand,
+      pendingCarsList
+    }));
+  }, [cars]);
 
   // Show loading state while checking auth and admin status
   if (authLoading || (loading && !isAdmin)) {
@@ -1861,355 +1789,24 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex">
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`mr-8 py-4 px-1 ${
-                activeTab === 'analytics'
-                  ? 'border-b-2 border-qatar-maroon text-qatar-maroon dark:border-qatar-maroon-light dark:text-qatar-maroon-light'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              Analytics
-            </button>
-            <Link
-              href="/admin/cars"
-              className="mr-8 py-4 px-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-            >
-              Cars
-            </Link>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`mr-8 py-4 px-1 ${
-                activeTab === 'users'
-                  ? 'border-b-2 border-qatar-maroon text-qatar-maroon dark:border-qatar-maroon-light dark:text-qatar-maroon-light'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              Users
-            </button>
-            <button
-              onClick={() => setActiveTab('database')}
-              className={`mr-8 py-4 px-1 ${
-                activeTab === 'database'
-                  ? 'border-b-2 border-qatar-maroon text-qatar-maroon dark:border-qatar-maroon-light dark:text-qatar-maroon-light'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              Database
-            </button>
-            <Link
-              href="/admin/brands"
-              className="mr-8 py-4 px-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-            >
-              Brands
-            </Link>
-            <Link
-              href="/admin/models"
-              className="mr-8 py-4 px-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
-            >
-              Models
-            </Link>
-          </nav>
-        </div>
-
-        {/* Main content */}
-        <div className="mt-6">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-qatar-maroon dark:border-qatar-maroon-light"></div>
+      <AdminNavbar />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {!isAdmin ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Checking admin privileges...</h2>
+              <p className="text-gray-500 dark:text-gray-400">Please wait while we verify your access.</p>
             </div>
-          ) : activeTab === 'analytics' ? (
-            renderAnalytics()
-          ) : activeTab === 'users' ? (
-            <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
-              {/* Users Table */}
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-900/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {users.map((user) => (
-                    <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          {user.full_name || 'N/A'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {user.email}<br />
-                          {user.phone_number}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.role === 'admin'
-                            ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200'
-                            : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                        }`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleUserRoleChange(user.id, user.role === 'admin' ? 'normal_user' : 'admin')}
-                          className="text-qatar-maroon dark:text-qatar-maroon-light hover:text-qatar-maroon-dark dark:hover:text-qatar-maroon transition-colors duration-200"
-                        >
-                          {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div>
-              <DatabaseManager />
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div>
+            {activeTab === 'analytics' && renderAnalytics()}
+            {activeTab === 'users' && renderUsers()}
+            {activeTab === 'database' && renderDatabase()}
+          </div>
+        )}
       </div>
     </div>
   );
-
-  // View Car Modal
-  if (isViewModalOpen && selectedCar) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div className="p-6">
-            <div className="flex justify-between items-start">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                {selectedCar.brand.name} {selectedCar.model.name}
-              </h3>
-              <button
-                onClick={() => setIsViewModalOpen(false)}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
-              >
-                <XCircleIcon className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              {selectedCar.images?.map((image, index) => (
-                <Image
-                  key={index}
-                  src={image.url}
-                  alt={`Car image ${index + 1}`}
-                  width={300}
-                  height={200}
-                  className="rounded-lg object-cover"
-                />
-              ))}
-            </div>
-            <div className="mt-4 space-y-4">
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Details</h4>
-                <dl className="mt-2 grid grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-sm text-gray-500 dark:text-gray-400">Year</dt>
-                    <dd className="text-sm text-gray-900 dark:text-white">{selectedCar.year}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-500 dark:text-gray-400">Mileage</dt>
-                    <dd className="text-sm text-gray-900 dark:text-white">
-                      {selectedCar.mileage.toLocaleString()} km
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-500 dark:text-gray-400">Price</dt>
-                    <dd className="text-sm text-gray-900 dark:text-white">
-                      QAR {selectedCar.price.toLocaleString()}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm text-gray-500 dark:text-gray-400">Status</dt>
-                    <dd className="text-sm text-gray-900 dark:text-white">{selectedCar.status}</dd>
-                  </div>
-                </dl>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Description</h4>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{selectedCar.description}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Seller Information</h4>
-                <dl className="mt-2">
-                  <div>
-                    <dt className="text-sm text-gray-500 dark:text-gray-400">Name</dt>
-                    <dd className="text-sm text-gray-900 dark:text-white">
-                      {selectedCar.seller.full_name}
-                    </dd>
-                  </div>
-                  <div className="mt-2">
-                    <dt className="text-sm text-gray-500 dark:text-gray-400">Contact</dt>
-                    <dd className="text-sm text-gray-900 dark:text-white">
-                      {selectedCar.seller.phone_number}
-                      <br />
-                      {selectedCar.seller.email}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Edit Car Modal
-  if (isEditModalOpen && selectedCar) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full">
-          <div className="p-6">
-            <div className="flex justify-between items-start">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                Edit Car Listing
-              </h3>
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400"
-              >
-                <XCircleIcon className="h-6 w-6" />
-              </button>
-            </div>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleEditCar(selectedCar);
-              }}
-              className="mt-4 space-y-4"
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Price (QAR)
-                </label>
-                <input
-                  type="number"
-                  value={selectedCar.price}
-                  onChange={(e) => setSelectedCar({ ...selectedCar, price: Number(e.target.value) })}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Mileage (km)
-                </label>
-                <input
-                  type="number"
-                  value={selectedCar.mileage}
-                  onChange={(e) => setSelectedCar({ ...selectedCar, mileage: Number(e.target.value) })}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Description
-                </label>
-                <textarea
-                  value={selectedCar.description || ''}
-                  onChange={(e) => setSelectedCar({ ...selectedCar, description: e.target.value })}
-                  rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Status
-                </label>
-                <select
-                  value={selectedCar.status}
-                  onChange={(e) => setSelectedCar({ ...selectedCar, status: e.target.value as any })}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm"
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Sold">Sold</option>
-                </select>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-qatar-maroon dark:bg-qatar-maroon-light rounded-md hover:bg-qatar-maroon-dark dark:hover:bg-qatar-maroon"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Delete Confirmation Modal
-  if (isDeleteModalOpen && selectedCar) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full">
-          <div className="p-6">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                  Delete Car Listing
-                </h3>
-                <div className="mt-2">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Are you sure you want to delete this car listing? This action cannot be undone.
-                  </p>
-                </div>
-                <div className="mt-4 flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCar(selectedCar.id)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 dark:bg-red-400 rounded-md hover:bg-red-700 dark:hover:bg-red-500"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Photo Viewer Modal
-  if (isPhotoViewerOpen) {
-    return (
-      <PhotoViewerModal />
-    );
-  }
 }

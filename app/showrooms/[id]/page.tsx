@@ -9,15 +9,17 @@ import { ShowroomRegistration } from '@/types/showroom';
 import Image from 'next/image';
 import { Tab } from '@headlessui/react';
 import { MapPinIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
-import CarListingCard from '@/components/showrooms/CarListingCard';
+import CarCard from '@/components/CarCard';
 import ShowroomDashboard from '@/components/showrooms/ShowroomDashboard';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export default function ShowroomPage() {
   const { id } = useParams();
   const { supabase } = useSupabase();
   const { t, language } = useLanguage();
   const { user } = useAuth();
+  const { trackContactSeller } = useAnalytics();
   const [showroom, setShowroom] = useState<ShowroomRegistration | null>(null);
   const [carListings, setCarListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,8 @@ export default function ShowroomPage() {
           .select(`
             *,
             brands:brand_id(*),
-            models:model_id(*)
+            models:model_id(*),
+            images:car_images(url, is_main)
           `)
           .eq('dealership_id', id);
 
@@ -306,102 +309,22 @@ export default function ShowroomPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {carListings.map((car) => (
-                    <div key={car.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow ${car.featured ? 'ring-2 ring-qatar-maroon' : ''}`}>
-                      <div className="relative h-48 w-full">
-                        {car.featured && (
-                          <div className="absolute top-2 left-2 bg-qatar-maroon text-white px-2 py-1 rounded-md text-xs font-semibold">
-                            {t('showroom.featured')}
-                          </div>
-                        )}
-                        {car.images && car.images.length > 0 ? (
-                          <Image
-                            src={car.images[0]}
-                            alt={language === 'ar' && car.brands?.name_ar && car.models?.name_ar
-                              ? `${car.brands.name_ar} ${car.models.name_ar}`
-                              : `${car.brands?.name} ${car.models?.name}`}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                            <span className="text-gray-400 dark:text-gray-500">{t('common.noImage')}</span>
-                          </div>
-                        )}
-                        <div className="absolute top-0 right-0 bg-primary text-white px-3 py-1 m-2 rounded-full text-sm font-medium">
-                          {t(`car.condition.${car.condition.toLowerCase()}`)}
-                        </div>
-                      </div>
-                      
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                          {language === 'ar' && car.title_ar ? car.title_ar : car.title}
-                        </h3>
-                        
-                        <div className="text-xl font-bold text-primary dark:text-qatar-maroon mb-2">
-                          {new Intl.NumberFormat(language === 'ar' ? 'ar-QA' : 'en-US', {
-                            style: 'currency',
-                            currency: 'QAR',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0,
-                          }).format(car.price)}
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
-                          <div>
-                            <span className="font-medium">{t('car.year')}:</span> {car.year}
-                          </div>
-                          <div>
-                            <span className="font-medium">{t('car.make')}:</span> {language === 'ar' && car.brands?.name_ar ? car.brands.name_ar : car.brands?.name}
-                          </div>
-                          <div>
-                            <span className="font-medium">{t('car.model')}:</span> {language === 'ar' && car.models?.name_ar ? car.models.name_ar : car.models?.name}
-                          </div>
-                          {car.mileage && (
-                            <div>
-                              <span className="font-medium">{t('car.mileage')}:</span> {car.mileage.toLocaleString()} {t('car.km')}
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {car.fuel_type && (
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs text-gray-800 dark:text-gray-200">
-                              {t('car.fuelType')}: {car.fuel_type}
-                            </span>
-                          )}
-                          {car.transmission && (
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs text-gray-800 dark:text-gray-200">
-                              {t('car.transmission')}: {car.transmission}
-                            </span>
-                          )}
-                          {car.color && (
-                            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs text-gray-800 dark:text-gray-200">
-                              {t('car.color')}: {car.color}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <div className="mt-4 flex justify-between items-center">
-                          <a 
-                            href={`/cars/${car.id}`} 
-                            className="inline-flex items-center px-4 py-2 bg-qatar-maroon text-white rounded-md hover:bg-qatar-maroon/90 transition-colors"
-                          >
-                            {t('car.viewDetails')}
-                            <ArrowRightIcon className="h-4 w-4 ml-2 rtl:rotate-180" />
-                          </a>
-                          
-                          {dealerInfo?.phone_number && (
-                            <a 
-                              href={`tel:${dealerInfo.phone_number}`} 
-                              className="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                              <PhoneIcon className="h-4 w-4 mr-2" />
-                              {t('car.call')}
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    <CarCard 
+                      key={car.id} 
+                      car={{
+                        id: car.id,
+                        brand: { name: car.brands?.name, name_ar: car.brands?.name_ar },
+                        model: { name: car.models?.name, name_ar: car.models?.name_ar },
+                        year: car.year,
+                        condition: car.condition,
+                        price: car.price,
+                        mileage: car.mileage,
+                        fuel_type: car.fuel_type,
+                        gearbox_type: car.gearbox_type || car.transmission,
+                        images: car.images || []
+                      }}
+                      featured={car.featured}
+                    />
                   ))}
                   
                   {carListings.length === 0 && (

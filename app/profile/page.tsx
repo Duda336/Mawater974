@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import {
   UserCircleIcon,
   PhoneIcon,
@@ -26,10 +27,12 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+  const { countries, updateUserCountry } = useCountry();
   const [editForm, setEditForm] = useState({
     full_name: '',
     phone_number: '',
     email: '',
+    country_id: '',
   });
 
   useEffect(() => {
@@ -53,6 +56,7 @@ export default function ProfilePage() {
         full_name: data.full_name || '',
         phone_number: data.phone_number || '',
         email: data.email || '',
+        country_id: data.country_id?.toString() || '',
       });
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -73,6 +77,7 @@ export default function ProfilePage() {
           full_name: editForm.full_name,
           phone_number: editForm.phone_number,
           email: editForm.email,
+          country_id: editForm.country_id ? parseInt(editForm.country_id) : null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user?.id);
@@ -135,43 +140,76 @@ export default function ProfilePage() {
           <div className="px-4 py-5 sm:p-6">
             {isEditing ? (
               <form onSubmit={handleUpdateProfile} className="space-y-6">
-                <div>
-                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('profile.form.fullName')}
-                  </label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    value={editForm.full_name}
-                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
+                <div className="mt-6 space-y-6">
+                  <div>
+                    <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('profile.fullName')}
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="text"
+                        name="full_name"
+                        id="full_name"
+                        value={editForm.full_name}
+                        onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                      />
+                    </div>
+                  </div>
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('profile.form.email')}
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('profile.form.email')}
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="email"
+                        name="email"
+                        id="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                      />
+                    </div>
+                  </div>
 
-                <div>
-                  <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t('profile.form.phone')}
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone_number"
-                    value={editForm.phone_number}
-                    onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
+                  <div>
+                    <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('profile.form.phone')}
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        type="tel"
+                        name="phone_number"
+                        id="phone_number"
+                        value={editForm.phone_number}
+                        onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
+                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      {t('profile.country')}
+                    </label>
+                    <div className="mt-1">
+                      <select
+                        id="country"
+                        name="country"
+                        value={editForm.country_id}
+                        onChange={(e) => setEditForm({ ...editForm, country_id: e.target.value })}
+                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                      >
+                        <option value="">{t('profile.selectCountry')}</option>
+                        {countries.map((country) => (
+                          <option key={country.id} value={country.id.toString()}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex justify-end space-x-3">

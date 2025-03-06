@@ -13,6 +13,7 @@ interface UserProfile {
   phone?: string | null;  // Keep for backward compatibility
   email: string | null;
   role?: string;
+  country_id?: number | null;
 }
 
 interface DealershipProfile {

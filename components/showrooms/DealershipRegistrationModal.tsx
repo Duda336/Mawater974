@@ -47,26 +47,48 @@ export default function DealershipRegistrationModal({
 
     const { data, error } = await supabase
       .from('dealerships')
-      .select('status')
+      .select('*')
       .eq('user_id', user.id)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Error checking request status:', error);
       return;
     }
 
-    if (data) {
-      if (data.status === 'pending') {
-        alert(t('dealership.alreadyPending'));
+    // If no data or empty array, user has no requests
+    if (!data || data.length === 0) {
+      return;
+    }
+
+    const latestRequest = data[0];
+    
+    if (latestRequest.status === 'pending') {
+      alert(t('dealership.alreadyPending'));
+      onClose();
+    } else if (latestRequest.status === 'rejected') {
+      // For rejected requests, we'll show a message but allow them to submit again
+      const confirmResubmit = window.confirm(t('dealership.previouslyRejected'));
+      if (!confirmResubmit) {
         onClose();
-      } else if (data.status === 'rejected') {
-        // For rejected requests, we'll just show a message but allow them to submit again
-        const confirmResubmit = window.confirm(t('dealership.previouslyRejected'));
-        if (!confirmResubmit) {
-          onClose();
-        }
+      } else {
+        // If they want to resubmit, we'll pre-fill the form with their previous data
+        // but exclude sensitive fields like logo
+        setFormData({
+          business_name: latestRequest.business_name || '',
+          business_name_ar: latestRequest.business_name_ar || '',
+          description: latestRequest.description || '',
+          description_ar: latestRequest.description_ar || '',
+          location: latestRequest.location || '',
+          location_ar: latestRequest.location_ar || '',
+          dealership_type: latestRequest.dealership_type || '',
+          business_type: latestRequest.business_type || '',
+        });
       }
+    } else if (latestRequest.status === 'approved') {
+      alert(t('dealership.alreadyApproved'));
+      onClose();
     }
   };
 
@@ -115,26 +137,70 @@ export default function DealershipRegistrationModal({
         }
       }
 
-      // Create dealership request
-      const { error: requestError } = await supabase
+      // Check if the user already has a dealership record
+      const { data: existingData, error: existingError } = await supabase
         .from('dealerships')
-        .insert({
-          user_id: user.id,
-          business_name: formData.business_name,
-          business_name_ar: formData.business_name_ar,
-          description: formData.description,
-          description_ar: formData.description_ar,
-          location: formData.location,
-          location_ar: formData.location_ar,
-          dealership_type: formData.dealership_type,
-          business_type: formData.business_type,
-          logo_url: logoUrl,
-          status: 'pending',
-        });
+        .select('id, status')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (requestError) {
-        console.error('Request error details:', requestError);
-        throw requestError;
+      if (existingError) {
+        console.error('Error checking existing dealership:', existingError);
+      }
+
+      let dealershipId = null;
+      
+      // If the user has a rejected request, update it instead of creating a new one
+      if (existingData && existingData.length > 0 && existingData[0].status === 'rejected') {
+        dealershipId = existingData[0].id;
+        
+        const { error: updateError } = await supabase
+          .from('dealerships')
+          .update({
+            business_name: formData.business_name,
+            business_name_ar: formData.business_name_ar,
+            description: formData.description,
+            description_ar: formData.description_ar,
+            location: formData.location,
+            location_ar: formData.location_ar,
+            dealership_type: formData.dealership_type,
+            business_type: formData.business_type,
+            logo_url: logoUrl,
+            status: 'pending',
+            reviewer_id: null,
+            review_notes: null,
+            reviewed_at: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', dealershipId);
+        
+        if (updateError) {
+          console.error('Error updating dealership request:', updateError);
+          throw updateError;
+        }
+      } else {
+        // Create a new dealership request
+        const { error: requestError } = await supabase
+          .from('dealerships')
+          .insert({
+            user_id: user.id,
+            business_name: formData.business_name,
+            business_name_ar: formData.business_name_ar,
+            description: formData.description,
+            description_ar: formData.description_ar,
+            location: formData.location,
+            location_ar: formData.location_ar,
+            dealership_type: formData.dealership_type,
+            business_type: formData.business_type,
+            logo_url: logoUrl,
+            status: 'pending',
+          });
+
+        if (requestError) {
+          console.error('Request error details:', requestError);
+          throw requestError;
+        }
       }
 
       onClose();

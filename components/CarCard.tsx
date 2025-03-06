@@ -8,9 +8,11 @@ import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { SparklesIcon } from '@heroicons/react/24/solid';
 import { useAuth } from '../contexts/AuthContext';
+import { useCountry } from '../contexts/CountryContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import ImageCarousel from './ImageCarousel';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface CarCardProps {
   car: any;
@@ -30,13 +32,15 @@ export default function CarCard({
   featured = false,
 }: CarCardProps) {
   const { user } = useAuth();
+  const { formatPrice, currentCountry } = useCountry();
   const router = useRouter();
+  const { t, language, currentLanguage } = useLanguage();
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error('Please login to add favorites');
+      toast.error(t('cars.favorite.login'));
       router.push('/login');
       return;
     }
@@ -57,7 +61,7 @@ export default function CarCard({
       >
         {featured && (
           <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-qatar-maroon text-white text-xs font-medium rounded-full">
-            Featured
+            {t('cars.featured.badge')}
           </div>
         )}
         
@@ -67,17 +71,6 @@ export default function CarCard({
             alt={`${car.brand?.name || 'Car'} ${car.model?.name || ''}`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-
-          {/* View Details Button - Currently Hidden
-          <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <button
-              className="w-full px-4 py-2 bg-qatar-maroon text-white rounded-lg font-medium transform transition-all duration-200
-                hover:bg-qatar-maroon/90 active:scale-95"
-            >
-              View Details
-            </button>
-          </div>
-          */}
         </div>
 
         <div className="p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
@@ -99,7 +92,7 @@ export default function CarCard({
                     : 'bg-transparent border-gray-200 dark:border-gray-600 text-gray-400 hover:border-qatar-maroon hover:text-qatar-maroon'
                   }
                   transform active:scale-95 hover:scale-105`}
-                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                aria-label={isFavorite ? t('cars.favorite.remove') : t('cars.favorite.add')}
               >
                 {isFavorite ? (
                   <HeartSolid className="h-4 w-4" />
@@ -117,7 +110,7 @@ export default function CarCard({
 
             <div className="mt-3">
               <span className="text-2xl font-semibold text-qatar-maroon">
-                {car.price?.toLocaleString()} QAR
+                {formatPrice(car.price || 0, currentLanguage)}
               </span>
             </div>
 

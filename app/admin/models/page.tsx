@@ -7,6 +7,7 @@ import { supabase } from '../../../lib/supabase';
 import toast from 'react-hot-toast';
 import { Brand, Model } from '../../../types/supabase';
 import LoadingSpinner from '../../../components/LoadingSpinner';
+import AdminNavbar from '../../../components/admin/AdminNavbar';
 
 export default function ModelsManagement() {
   const router = useRouter();
@@ -188,6 +189,7 @@ export default function ModelsManagement() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <AdminNavbar />
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Manage Models</h1>
 

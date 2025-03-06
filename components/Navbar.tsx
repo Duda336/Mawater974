@@ -19,6 +19,8 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useCountry } from '../contexts/CountryContext';
+import CountrySelector from './CountrySelector';
 import Image from 'next/image';
 import { supabase } from '../lib/supabase';
 
@@ -28,6 +30,7 @@ export default function Navbar() {
   const { user, signOut } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { trackEvent } = useAnalytics();
+  const { currentCountry } = useCountry();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDealer, setIsDealer] = useState(false);
@@ -47,6 +50,39 @@ export default function Navbar() {
           
           if (error) {
             console.error('Error checking user role:', error);
+            
+            // Try to ensure the profile exists
+            try {
+              const { data: ensureData, error: ensureError } = await supabase.rpc(
+                'ensure_user_profile_exists',
+                { user_id: user.id }
+              );
+              
+              if (ensureError) {
+                console.error('Error ensuring profile exists:', ensureError);
+                return;
+              }
+              
+              console.log('Profile check result:', ensureData);
+              
+              // Try to get the role again
+              const { data: retryData, error: retryError } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+                
+              if (retryError) {
+                console.error('Error retrying user role check:', retryError);
+                return;
+              }
+              
+              setIsAdmin(retryData?.role === 'admin');
+              setIsDealer(retryData?.role === 'dealer');
+            } catch (ensureError) {
+              console.error('Exception ensuring profile exists:', ensureError);
+            }
+            
             return;
           }
           
@@ -119,12 +155,12 @@ export default function Navbar() {
   };
 
   const navItems = [
-    { name: t('nav.browseCars'), href: '/cars' },
-    { name: t('nav.sellYourCar'), href: '/sell' },
-    { name: t('nav.carRental'), href: '/car-rental' },
-    { name: t('nav.spareParts'), href: '/spare-parts' },
-    { name: t('nav.carPhotography'), href: '/car-photography' },
-    { name: t('nav.showrooms'), href: '/showrooms' },
+    { name: t('nav.browseCars'), href: `/${currentCountry?.code.toLowerCase()}/cars` },
+    { name: t('nav.sellYourCar'), href: `/${currentCountry?.code.toLowerCase()}/sell` },
+    { name: t('nav.carRental'), href: `/${currentCountry?.code.toLowerCase()}/car-rental` },
+    { name: t('nav.spareParts'), href: `/${currentCountry?.code.toLowerCase()}/spare-parts` },
+    { name: t('nav.carPhotography'), href: `/${currentCountry?.code.toLowerCase()}/car-photography` },
+    { name: t('nav.showrooms'), href: `/${currentCountry?.code.toLowerCase()}/showrooms` },
   ];
 
   const userMenuItems = [
@@ -169,6 +205,11 @@ export default function Navbar() {
 
             {/* Right side buttons */}
             <div className={`flex items-center ${language === 'ar' ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+              {/* Country Selector */}
+              <div className="hidden md:block w-35">
+                <CountrySelector />
+              </div>
+              
               {/* Language Switcher */}
               <button
                 onClick={handleLanguageChange}
@@ -355,62 +396,100 @@ export default function Navbar() {
       </div>
 
       {/* Mobile menu */}
-      <div className={`sm:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
-        <div className="pt-2 pb-3 space-y-1">
-          <Link
-            href="/"
-            className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            <span className="flex items-center gap-2">
-              <HomeIcon className="h-5 w-5" />
-              {t('nav.home')}
-            </span>
-          </Link>
-          {navItems.map((item) => (
+      <div className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'} fixed inset-0 z-50`}>
+        <div className="fixed inset-0 bg-black bg-opacity-25" onClick={() => setMobileMenuOpen(false)}></div>
+        <div className="fixed inset-y-0 right-0 max-w-xs w-full bg-white dark:bg-gray-900 shadow-xl transform transition ease-in-out duration-300">
+          <div className="flex items-center justify-between px-4 py-5 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white">{t('nav.menu')}</h2>
+            <button
+              type="button"
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="sr-only">Close menu</span>
+              <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('nav.country')}</span>
+              <div className="w-40">
+                <CountrySelector />
+              </div>
+            </div>
+          </div>
+          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('nav.language')}</span>
+              <button
+                onClick={handleLanguageChange}
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon border border-gray-200 dark:border-gray-700 rounded-lg hover:border-qatar-maroon dark:hover:border-qatar-maroon transition-colors"
+              >
+                {language === 'ar' ? 'EN' : 'ع'}
+              </button>
+            </div>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('nav.theme')}</span>
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon"
+              >
+                {theme === 'dark' ? (
+                  <SunIcon className="h-5 w-5" />
+                ) : (
+                  <MoonIcon className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+          <div className="pt-2 pb-3 space-y-1">
             <Link
-              key={item.name}
-              href={item.href}
+              href="/"
               className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
               onClick={() => setMobileMenuOpen(false)}
             >
-              {item.name}
+              <span className="flex items-center gap-2">
+                <HomeIcon className="h-5 w-5" />
+                {t('nav.home')}
+              </span>
             </Link>
-          ))}
-          {/* Mobile Language Switcher */}
-          <button
-            onClick={() => {
-              handleLanguageChange();
-              setMobileMenuOpen(false);
-            }}
-            className="w-full text-left px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
-          >
-            {language === 'en' ? 'EN/ع' : 'ع/EN'}
-          </button>
-          {!user && (
-            <>
+            {navItems.map((item) => (
               <Link
-                href="/login"
+                key={item.name}
+                href={item.href}
                 className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <span className="flex items-center gap-2">
-                  <i className="fas fa-sign-in-alt text-gray-400" />
-                  {t('nav.signIn')}
-                </span>
+                {item.name}
               </Link>
-              <Link
-                href="/signup"
-                className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <span className="flex items-center gap-2">
-                  <i className="fas fa-user-plus text-gray-400" />
-                  {t('nav.signUp')}
-                </span>
-              </Link>
-            </>
-          )}
+            ))}
+            {!user && (
+              <>
+                <Link
+                  href="/login"
+                  className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-2">
+                    <i className="fas fa-sign-in-alt text-gray-400" />
+                    {t('nav.signIn')}
+                  </span>
+                </Link>
+                <Link
+                  href="/signup"
+                  className="block px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon hover:bg-gray-50 dark:hover:bg-gray-800"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="flex items-center gap-2">
+                    <i className="fas fa-user-plus text-gray-400" />
+                    {t('nav.signUp')}
+                  </span>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </nav>

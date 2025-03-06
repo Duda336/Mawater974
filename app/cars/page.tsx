@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useCountry } from '../../contexts/CountryContext';
 import { supabase } from '../../lib/supabase';
 import { Database, Car, Brand } from '../../types/supabase';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
@@ -75,7 +76,8 @@ export default function CarsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { currentCountry, formatPrice } = useCountry();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -84,8 +86,8 @@ export default function CarsPage() {
     { value: 'oldest', label: t('cars.sort.oldest') },
     { value: 'price_asc', label: t('cars.sort.priceLow') },
     { value: 'price_desc', label: t('cars.sort.priceHigh') },
-    { value: 'year_desc', label: t('cars.sort.yearNew') },
     { value: 'year_asc', label: t('cars.sort.yearOld') },
+    { value: 'year_desc', label: t('cars.sort.yearNew') },
   ];
 
   useEffect(() => {
@@ -117,6 +119,10 @@ export default function CarsPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    fetchCars();
+  }, [currentCountry]);
+
   const fetchBrands = async () => {
     const { data, error } = await supabase
       .from('brands')
@@ -144,6 +150,11 @@ export default function CarsPage() {
           images:car_images(url, is_main)
         `)
         .eq('status', 'Approved');
+        
+      // Filter by country if available
+      if (currentCountry) {
+        query = query.eq('country_id', currentCountry.id);
+      }
 
       // Apply filters
       if (filters.brand_id) {
@@ -219,11 +230,23 @@ export default function CarsPage() {
       if (error) {
         console.error('Error fetching cars:', error);
         setError(t('cars.error.load'));
-      } else {
-        setCars(data || []);
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching cars:', error);
+
+      // Process the data to add favorite status
+      const carsWithFavorites = data.map((car: any) => ({
+        ...car,
+        favorite: favorites.includes(car.id),
+      }));
+
+      // Separate featured cars
+      const featured = carsWithFavorites.filter((car: any) => car.is_featured);
+      const regular = carsWithFavorites.filter((car: any) => !car.is_featured);
+
+      setFeaturedCars(featured);
+      setCars(regular);
+    } catch (err) {
+      console.error('Error in fetchCars:', err);
       setError(t('cars.error.load'));
     } finally {
       setLoading(false);
@@ -602,7 +625,7 @@ export default function CarsPage() {
                     </h3>
                     <div className="flex justify-between items-center mb-4">
                       <p className="text-lg font-bold text-qatar-maroon">
-                        {car.price.toLocaleString()} QAR
+                        {formatPrice(car.price)}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         {car.year}
@@ -1113,7 +1136,15 @@ export default function CarsPage() {
                   <div className="col-span-full text-center text-red-500">{error}</div>
                 ) : cars.length === 0 ? (
                   <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
-                    {t('cars.noResults')}
+                    {currentCountry ? (
+                      <p>
+                        {t('cars.noResultsForCountry', { country: currentCountry.name })}
+                      </p>
+                    ) : (
+                      <p>
+                        {t('cars.noResults')}
+                      </p>
+                    )}
                   </div>
                 ) : (
                   cars.map((car) => (

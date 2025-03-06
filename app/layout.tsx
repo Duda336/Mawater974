@@ -9,6 +9,7 @@ import AIChatButton from '../components/AIChatButton'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { ThemeProvider } from '../contexts/ThemeContext'
 import { LanguageProvider } from '../contexts/LanguageContext'
+import { CountryProvider } from '../contexts/CountryContext'
 import AnalyticsProvider from '../components/AnalyticsProvider'
 import { SupabaseProvider } from '@/contexts/SupabaseContext'
 
@@ -100,18 +101,20 @@ export default function RootLayout({
         <SupabaseProvider>
           <LanguageProvider>
             <ThemeProvider>
-              <Providers>
-                <AnalyticsProvider>
-                  <div className="flex flex-col min-h-screen">
-                    <Navbar />
-                    <main className="flex-grow">
-                      {children}
-                    </main>
-                    <Footer />
-                    <AIChatButton />
-                  </div>
-                </AnalyticsProvider>
-              </Providers>
+              <CountryProvider>
+                <Providers>
+                  <AnalyticsProvider>
+                    <div className="flex flex-col min-h-screen">
+                      <Navbar />
+                      <main className="flex-grow">
+                        {children}
+                      </main>
+                      <Footer />
+                      <AIChatButton />
+                    </div>
+                  </AnalyticsProvider>
+                </Providers>
+              </CountryProvider>
             </ThemeProvider>
           </LanguageProvider>
         </SupabaseProvider>

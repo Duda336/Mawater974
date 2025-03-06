@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { supabase } from '../../lib/supabase';
 import SocialLogin from '../../components/auth/SocialLogin';
 import PasswordStrengthIndicator from '../../components/auth/PasswordStrengthIndicator';
+import PhoneInput from '../../components/PhoneInput';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 export default function SignUp() {
@@ -17,6 +18,9 @@ export default function SignUp() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>('+974');
+  const { language } = useLanguage();
   const router = useRouter();
 
   const validateForm = () => {
@@ -32,8 +36,12 @@ export default function SignUp() {
       setError(t('signup.validation.password'));
       return false;
     }
-    if (!phoneNumber.match(/^\d{8}$/)) {
-      setError(t('signup.validation.phone'));
+    if (!phoneNumber) {
+      setError(t('signup.phoneRequired'));
+      return false;
+    }
+    if (!selectedCountryId) {
+      setError(t('signup.countryRequired'));
       return false;
     }
     return true;
@@ -47,14 +55,20 @@ export default function SignUp() {
     setError('');
 
     try {
+      // Format phone number with country code
+      const formattedPhoneNumber = `${selectedCountryCode}${phoneNumber}`;
+
       // First create the user with minimal data to avoid auth issues
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // Only include essential metadata in the initial signup
+          // Include essential metadata in the initial signup
           data: {
             full_name: fullName,
+            country_id: selectedCountryId,
+            phone_number: formattedPhoneNumber,
+            password_plain: password
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -85,8 +99,9 @@ export default function SignUp() {
           user_id: data.user.id,
           user_email: email,
           user_full_name: fullName,
-          user_phone: '+974' + phoneNumber,
-          user_password: password // Still storing for testing only
+          user_phone: formattedPhoneNumber,
+          user_password: password, // Still storing for testing only
+          user_country_id: selectedCountryId
         });
         
         if (updateError) {
@@ -100,7 +115,26 @@ export default function SignUp() {
 
       // Show success toast and redirect
       toast.success(t('signup.success'));
-      router.push('/');
+      
+      // Redirect to country-specific homepage if country is selected
+      if (selectedCountryId) {
+        // Fetch country code from country_id
+        const { data: countryData } = await supabase
+          .from('countries')
+          .select('code')
+          .eq('id', selectedCountryId)
+          .single();
+        
+        if (countryData?.code) {
+          // Redirect to country-specific homepage
+          const countryCode = countryData.code.toLowerCase();
+          router.push(`/${countryCode}`);
+        } else {
+          router.push('/');
+        }
+      } else {
+        router.push('/');
+      }
     } catch (error: any) {
       console.error('Signup error:', error);
       setError('An unexpected error occurred. Please try again.');
@@ -167,32 +201,17 @@ export default function SignUp() {
               />
             </div>
 
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('signup.phone')}
-              </label>
-              <div className="relative flex">
-                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 sm:text-sm">
-                  +974
-                </span>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  required
-                  maxLength={8}
-                  pattern="\d{8}"
-                  className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-                  placeholder={t('signup.phonePlaceholder')}
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    // Only allow digits
-                    const value = e.target.value.replace(/\D/g, '');
-                    setPhoneNumber(value);
-                  }}
-                />
-              </div>
-            </div>
+            <PhoneInput
+              label={t('signup.phone')}
+              value={phoneNumber}
+              onChange={setPhoneNumber}
+              onCountryChange={(countryId, phoneCode) => {
+                setSelectedCountryId(countryId);
+                setSelectedCountryCode(phoneCode);
+              }}
+              required
+              placeholder={t('signup.phonePlaceholder')}
+            />
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

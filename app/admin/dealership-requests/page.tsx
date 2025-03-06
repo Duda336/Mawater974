@@ -7,6 +7,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import Image from 'next/image';
 import { CheckIcon, XMarkIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import AdminNavbar from '@/components/admin/AdminNavbar';
 
 interface DealershipRequest {
   id: number;
@@ -44,7 +46,64 @@ export default function DealershipRequestsPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+    
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('dealerships-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'dealerships',
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          
+          // Handle different events
+          if (payload.eventType === 'INSERT') {
+            // Add the new dealership to the list
+            getUserInfo(payload.new.user_id).then(userInfo => {
+              setRequests(prev => [{...payload.new, userInfo}, ...prev]);
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            // Update the existing dealership
+            setRequests(prev => 
+              prev.map(req => 
+                req.id === payload.new.id ? {...req, ...payload.new} : req
+              )
+            );
+            
+            // If this is the selected request, update it
+            if (selectedRequest?.id === payload.new.id) {
+              setSelectedRequest(prev => prev ? {...prev, ...payload.new} : null);
+            }
+            
+            // Show toast notification for status changes
+            if (payload.old.status !== payload.new.status) {
+              toast.success(
+                `${t('admin.dealership.statusChanged')}: ${t(`admin.dealership.status.${payload.new.status}`)}`,
+                { duration: 3000 }
+              );
+            }
+          } else if (payload.eventType === 'DELETE') {
+            // Remove the dealership from the list
+            setRequests(prev => prev.filter(req => req.id !== payload.old.id));
+            
+            // If this is the selected request, close the modal
+            if (selectedRequest?.id === payload.old.id) {
+              setSelectedRequest(null);
+            }
+          }
+        }
+      )
+      .subscribe();
+    
+    // Clean up subscription on unmount
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, selectedRequest]);
 
   // Get user info for the request
   const getUserInfo = async (userId: string) => {
@@ -118,8 +177,7 @@ export default function DealershipRequestsPage() {
         id: 'approve-toast',
       });
       
-      // Refresh the requests list
-      fetchRequests();
+      // Close the modal (the list will be updated via real-time subscription)
       setSelectedRequest(null);
       setReviewNotes('');
     } catch (error) {
@@ -153,8 +211,7 @@ export default function DealershipRequestsPage() {
         id: 'reject-toast',
       });
       
-      // Refresh the requests list
-      fetchRequests();
+      // Close the modal (the list will be updated via real-time subscription)
       setSelectedRequest(null);
       setReviewNotes('');
     } catch (error) {
@@ -178,6 +235,7 @@ export default function DealershipRequestsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <AdminNavbar />
       <h1 className="text-2xl font-bold mb-6">{t('admin.dealership.requests')}</h1>
 
       <div className="grid grid-cols-1 gap-6">
@@ -219,13 +277,19 @@ export default function DealershipRequestsPage() {
                 {request.status === 'pending' && (
                   <>
                     <button
-                      onClick={handleApprove}
+                      onClick={() => {
+                        setSelectedRequest(request);
+                        setReviewNotes('');
+                      }}
                       className="p-2 text-green-500 hover:text-green-700"
                     >
                       <CheckIcon className="h-5 w-5" />
                     </button>
                     <button
-                      onClick={handleReject}
+                      onClick={() => {
+                        setSelectedRequest(request);
+                        setReviewNotes('');
+                      }}
                       className="p-2 text-red-500 hover:text-red-700"
                     >
                       <XMarkIcon className="h-5 w-5" />

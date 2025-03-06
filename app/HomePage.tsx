@@ -1,45 +1,67 @@
 'use client';
 
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCarSide, faTag, faSearch } from '@fortawesome/free-solid-svg-icons';
-import SearchBar from '../components/SearchBar';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useCountry } from '@/contexts/CountryContext';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCarSide, faTag } from '@fortawesome/free-solid-svg-icons';
+import SearchBar from '@/components/SearchBar';
 
-export default function Home() {
+export default function HomePage() {
   const { signOutMessage, setSignOutMessage } = useAuth();
   const { t, language } = useLanguage();
-  const router = useRouter();
-  const { currentCountry, isLoading } = useCountry();
-
+  const { currentCountry } = useCountry();
+  
   useEffect(() => {
     // Clear sign-out message after it's been shown
     if (signOutMessage) {
-      // Show as toast and then clear
       toast.success(signOutMessage);
       setSignOutMessage(null);
     }
   }, [signOutMessage, setSignOutMessage]);
 
-  useEffect(() => {
-    // Redirect to country-specific homepage if country is loaded
-    if (!isLoading && currentCountry) {
-      router.push(`/${currentCountry.code.toLowerCase()}`);
+  const countryPrefix = currentCountry ? `/${currentCountry.code.toLowerCase()}` : '';
+  
+  // Get country-specific background image
+  const getCountryBackground = () => {
+    if (!currentCountry) return '/qatar-skyline.jpg';
+    
+    switch (currentCountry.code.toLowerCase()) {
+      case 'qa':
+        return '/qatar-bg.jpg';
+      case 'sa':
+        return '/saudi-bg.jpg';
+      case 'ae':
+        return '/uae-bg.jpg';
+      case 'kw':
+        return '/kuwait-bg.jpg';
+      case 'sy':
+        return '/syria-bg.jpg';
+      default:
+        return '/qatar-bg.jpg';
     }
-  }, [currentCountry, isLoading, router]);
+  };
+  
+  // Get country-specific title
+  const getCountryTitle = () => {
+    if (!currentCountry) return t('home.hero.title2');
+    
+    if (language === 'ar') {
+      return `في ${currentCountry.name_ar}`;
+    } else {
+      return `in ${currentCountry.name}`;
+    }
+  };
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <div className="relative bg-gray-900">
         {/* Premium Background with Overlay */}
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/qatar-skyline.jpg')" }}>
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${getCountryBackground()}')` }}>
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-black/75 to-black/60"></div>
         </div>
@@ -61,17 +83,19 @@ export default function Home() {
               <div className={`${language === 'ar' ? 'rtl' : 'ltr'}`}>
                 <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col">
                   <span className="text-white inline-block">{t('home.hero.title1')}</span>
-                  <span className="text-primary inline-block mt-2">{t('home.hero.title2')}</span>
+                  <span className="text-primary inline-block mt-2">{getCountryTitle()}</span>
                 </h1>
                 <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto lg:mr-0 lg:ml-0">
-                  {t('home.hero.description')}
+                  {currentCountry ? 
+                    t('home.hero.description').replace('Qatar', language === 'ar' ? currentCountry.name_ar : currentCountry.name) : 
+                    t('home.hero.description')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/cars" className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
+                <Link href={`${countryPrefix}/cars`} className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
                   <FontAwesomeIcon icon={faCarSide} className="mr-2" />
                   {t('home.hero.browseCars')}
                 </Link>
-                <Link href="/sell" className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
+                <Link href={`${countryPrefix}/sell`} className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
                   <FontAwesomeIcon icon={faTag} className="mr-2" />
                   {t('home.hero.sellYourCar')}
                 </Link>

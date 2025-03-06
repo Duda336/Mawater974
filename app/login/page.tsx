@@ -78,13 +78,41 @@ export default function LoginPage() {
         localStorage.removeItem('rememberedEmail');
       }
 
-      // Check for redirect path
-      const redirectPath = localStorage.getItem('redirectAfterLogin');
-      if (redirectPath) {
-        localStorage.removeItem('redirectAfterLogin'); // Clear the stored path
-        router.push(redirectPath);
+      // Fetch user profile to get country information
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('country_id')
+        .eq('id', data.user?.id)
+        .single();
+
+      if (profileData?.country_id) {
+        // Fetch country code from country_id
+        const { data: countryData } = await supabase
+          .from('countries')
+          .select('code')
+          .eq('id', profileData.country_id)
+          .single();
+        
+        if (countryData?.code) {
+          // Redirect to country-specific homepage
+          const countryCode = countryData.code.toLowerCase();
+          
+          // Check for redirect path first
+          const redirectPath = localStorage.getItem('redirectAfterLogin');
+          if (redirectPath) {
+            localStorage.removeItem('redirectAfterLogin'); // Clear the stored path
+            router.push(redirectPath);
+          } else {
+            // Redirect to country-specific homepage
+            router.push(`/${countryCode}`);
+          }
+        } else {
+          // Fallback to default redirect
+          router.push('/');
+        }
       } else {
-        router.push('/'); // Default redirect to home
+        // Fallback to default redirect
+        router.push('/');
       }
 
       toast.success(t('login.success'));

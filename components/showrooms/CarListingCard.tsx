@@ -14,6 +14,9 @@ interface CarListing {
   mileage?: number;
   images?: string[];
   condition?: string;
+  status?: string;
+  is_featured?: boolean;
+  source_table?: 'car_listings' | 'cars';
 }
 
 interface CarListingCardProps {
@@ -46,6 +49,27 @@ export default function CarListingCard({ listing }: CarListingCardProps) {
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
             <span className="text-gray-400">{t('common.noImage')}</span>
+          </div>
+        )}
+        
+        {/* Status Badge */}
+        {listing.status && (
+          <div className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${
+            (listing.source_table === 'car_listings' && listing.status === 'active') || 
+            (listing.source_table === 'cars' && listing.status === 'Approved')
+              ? 'bg-green-500 text-white'
+              : 'bg-yellow-500 text-white'
+          }`}>
+            {listing.source_table === 'car_listings' 
+              ? t(`car.status.${listing.status}`)
+              : t(`car.status.${listing.status.toLowerCase()}`)}
+          </div>
+        )}
+        
+        {/* Featured Badge */}
+        {listing.is_featured && (
+          <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium bg-qatar-maroon text-white">
+            {t('common.featured')}
           </div>
         )}
       </div>
@@ -83,7 +107,9 @@ export default function CarListingCard({ listing }: CarListingCardProps) {
           {/* Condition */}
           {listing.condition && (
             <div className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-              {t(`car.condition.${listing.condition.toLowerCase()}`)}
+              {listing.source_table === 'cars'
+                ? t(`car.condition.${listing.condition.toLowerCase()}`)
+                : t(`car.condition.${listing.condition}`)}
             </div>
           )}
         </div>

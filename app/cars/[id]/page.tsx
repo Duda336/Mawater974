@@ -21,13 +21,16 @@ import Image from 'next/image';
 import type { ExtendedCar } from '../../../types/supabase';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useAnalytics } from '../../../hooks/useAnalytics';
+import { useCountry } from '../../../contexts/CountryContext';
 
-export default function CarDetailsPage() {
+export default function CarDetailsPage({ params: propParams }: { params?: { id: string } } = {}) {
   const params = useParams();
   const router = useRouter();
+  const carId = propParams?.id || params.id;
   const { user } = useAuth();
   const { t, currentLanguage } = useLanguage();
   const { trackCarView, trackContactSeller } = useAnalytics();
+  const { formatPrice, countries } = useCountry();
   const [car, setCar] = useState<ExtendedCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +43,7 @@ export default function CarDetailsPage() {
   const [showFullImage, setShowFullImage] = useState(false);
   const [fullImageIndex, setFullImageIndex] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
+  const [carCountry, setCarCountry] = useState<any>(null);
 
   const handlePrevImage = () => {
     if (!car?.images) return;
@@ -116,7 +120,7 @@ export default function CarDetailsPage() {
             user:profiles(full_name, email, phone_number),
             images:car_images(url, is_main)
           `)
-          .eq('id', params.id)
+          .eq('id', carId)
           .single();
 
         if (carError) throw carError;
@@ -131,12 +135,18 @@ export default function CarDetailsPage() {
 
         setCar(carData);
 
+        // Find the country for this car
+        if (carData.country_id && countries.length > 0) {
+          const country = countries.find(c => c.id === carData.country_id);
+          setCarCountry(country);
+        }
+
         // Check if the car is in user's favorites
         if (user) {
           const { data: favorites, error: favoriteError } = await supabase
             .from('favorites')
             .select('*')
-            .eq('car_id', params.id)
+            .eq('car_id', carId)
             .eq('user_id', user.id);
 
           if (favoriteError) throw favoriteError;
@@ -152,10 +162,10 @@ export default function CarDetailsPage() {
       }
     };
 
-    if (params.id) {
+    if (carId) {
       fetchCarDetails();
     }
-  }, [params.id, user]);
+  }, [carId, user]);
 
   useEffect(() => {
     if (car) {
@@ -287,12 +297,11 @@ export default function CarDetailsPage() {
     }
   };
 
-  const formatPrice = (price: number) => {
-    const formattedNumber = new Intl.NumberFormat(currentLanguage === 'ar' ? 'ar-QA' : 'en-QA', {
-      maximumFractionDigits: 0
-    }).format(price);
-    
-    return `${formattedNumber} ${t('currency.qar')}`;
+  const handleContactSeller = () => {
+    if (car) {
+      trackContactSeller(car.id, car.user_id);
+    }
+    setShowContactInfo(true);
   };
 
   const formatDate = (dateString: string, format: string = 'long') => {
@@ -309,13 +318,6 @@ export default function CarDetailsPage() {
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  const handleContactSeller = () => {
-    if (car) {
-      trackContactSeller(car.id, car.user_id);
-    }
-    setShowContactInfo(true);
   };
 
   if (loading) {
@@ -462,7 +464,7 @@ export default function CarDetailsPage() {
                 </h1>
                 <div className="mt-2 flex items-center space-x-4 rtl:space-x-reverse mb-4">
                   <p className="text-2xl font-bold text-qatar-maroon">
-                    {formatPrice(car.price)}
+                    {carCountry ? formatPrice(car.price, currentLanguage) : `${car.price.toLocaleString()} ${carCountry?.currency_code || 'QAR'}`}
                   </p>
                 </div>
               </div>
@@ -673,7 +675,7 @@ export default function CarDetailsPage() {
                           {similarCar.brand.name} {similarCar.model.name} {similarCar.year}
                         </h3>
                         <p className="text-qatar-maroon font-bold mt-1">
-                          {formatPrice(similarCar.price)}
+                          {formatPrice(similarCar.price, currentLanguage)}
                         </p>
                         <button
                           onClick={() => router.push(`/cars/${similarCar.id}`)}
@@ -711,7 +713,7 @@ export default function CarDetailsPage() {
                           {similarCar.brand.name} {similarCar.model.name} {similarCar.year}
                         </h3>
                         <p className="text-qatar-maroon font-bold mt-1">
-                          {formatPrice(similarCar.price)}
+                          {formatPrice(similarCar.price, currentLanguage)}
                         </p>
                         <button
                           onClick={() => router.push(`/cars/${similarCar.id}`)}

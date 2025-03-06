@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import toast from 'react-hot-toast';
+import AdminNavbar from '../../../components/admin/AdminNavbar';
 
 interface ExtendedCar extends Car {
   brand: {
@@ -474,6 +475,7 @@ export default function AdminCarsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
+      <AdminNavbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">

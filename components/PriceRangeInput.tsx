@@ -1,4 +1,6 @@
 import React from 'react';
+import { useCountry } from '../contexts/CountryContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface PriceRangeInputProps {
   minPrice?: number;
@@ -11,6 +13,9 @@ const PriceRangeInput: React.FC<PriceRangeInputProps> = ({
   maxPrice = 10000000,
   onPriceChange,
 }) => {
+  const { currentCountry } = useCountry();
+  const { currentLanguage } = useLanguage();
+  
   const formatPrice = (price: number) => {
     try {
       return price.toLocaleString();
@@ -24,7 +29,7 @@ const PriceRangeInput: React.FC<PriceRangeInputProps> = ({
       <div className="flex items-center gap-4">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-            Min Price
+            Min Price ({currentCountry?.currency_code || 'QAR'})
           </label>
           <input
             type="number"
@@ -43,7 +48,7 @@ const PriceRangeInput: React.FC<PriceRangeInputProps> = ({
         </div>
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-900 dark:text-white mb-2">
-            Max Price
+            Max Price ({currentCountry?.currency_code || 'QAR'})
           </label>
           <input
             type="number"
@@ -63,8 +68,8 @@ const PriceRangeInput: React.FC<PriceRangeInputProps> = ({
       </div>
       <div className="text-sm text-gray-600 dark:text-gray-400 text-center border-t border-gray-100 dark:border-gray-700 pt-2 mt-2">
         {minPrice === maxPrice 
-          ? `Up to ${formatPrice(maxPrice)} QAR`
-          : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} QAR`
+          ? `Up to ${formatPrice(maxPrice)} ${currentCountry?.currency_code || 'QAR'}`
+          : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)} ${currentCountry?.currency_code || 'QAR'}`
         }
       </div>
     </div>

@@ -14,6 +14,7 @@ import { faCarSide } from '@fortawesome/free-solid-svg-icons';
 import { faSearch, faCamera, faChartLine, faHeadset } from '@fortawesome/free-solid-svg-icons';
 import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 
 type Car = Database['public']['Tables']['cars']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
@@ -69,25 +70,13 @@ const conditions = ['New', 'Excellent', 'Good', 'Not Working'];
 const colors =['White', 'Black', 'Silver', 'Gray', 'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Brown', 'Purple', 'Gold', 'Beige', 'Maroon', 'Navy', 'Bronze', 'Other'];
 const cylinderOptions = ['Electric', '3', '4', '5', '6', '8', '10', '12', '16'];
 
-// Location options with translation keys
-const locations = [
-  { key: 'doha', value: 'Doha' },
-  { key: 'alwakrah', value: 'Al Wakrah' },
-  { key: 'alkhor', value: 'Al Khor' },
-  { key: 'lusail', value: 'Lusail' },
-  { key: 'alrayyan', value: 'Al Rayyan' },
-  { key: 'ummsalal', value: 'Umm Salal' },
-  { key: 'aldaayen', value: 'Al Daayen' },
-  { key: 'alshamal', value: 'Al Shamal' },
-  { key: 'alshahaniya', value: 'Al Shahaniya' }
-];
-
 export default function SellPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
   const { t } = useLanguage();
+  const { currentCountry, getCitiesByCountry } = useCountry();
 
   const features = useMemo(() => ({
     free: [
@@ -118,6 +107,7 @@ export default function SellPage() {
   const [loading, setLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
+  const [cities, setCities] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [carData, setCarData] = useState({
     brand_id: '',
@@ -304,6 +294,17 @@ export default function SellPage() {
     }
   }, [formData.brand]);
 
+  useEffect(() => {
+    if (currentCountry) {
+      // Get cities for the current country
+      const countryCities = getCitiesByCountry(currentCountry.id);
+      setCities(countryCities.map(city => ({
+        key: city.name.toLowerCase().replace(/\s+/g, ''),
+        value: city.name
+      })));
+    }
+  }, [currentCountry, getCitiesByCountry]);
+
   const handleContinue = () => {
     // Store the selected plan in localStorage or context
     localStorage.setItem('selectedListingPlan', selectedPlan);
@@ -412,11 +413,11 @@ export default function SellPage() {
               htmlFor="price" 
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              {t('sell.basic.price')} *
+              {t('sell.basic.price')} ({currentCountry?.currency_code || 'QAR'}) *
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">
-                {t('currency.qar')}
+                {currentCountry?.currency_symbol || 'QAR'}
               </span>
               <input
                 type="text"
@@ -656,9 +657,9 @@ export default function SellPage() {
                          focus:border-qatar-maroon transition duration-200 ease-in-out"
             >
               <option value="">{t('sell.details.location.select')}</option>
-              {locations.map(location => (
-                <option key={location.key} value={location.value}>
-                  {t(`locations.${location.key}`)}
+              {cities.map(city => (
+                <option key={city.key} value={city.value}>
+                  {city.value}
                 </option>
               ))}
             </select>
@@ -781,7 +782,7 @@ export default function SellPage() {
                           focus:outline-none focus:ring-2 focus:ring-qatar-maroon/50"
                       >
                         <div className="flex items-center justify-center gap-1 rtl:flex-row-reverse">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
                             <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
                           </svg>
@@ -870,7 +871,7 @@ export default function SellPage() {
           >
             <div className="flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
               </svg>
               {allImages.length >= 10 ? t('sell.images.maxReached') : t('sell.images.addMore')}
             </div>
@@ -915,7 +916,7 @@ export default function SellPage() {
       },
       { 
         label: t('sell.details.location'), 
-        value: formData.location ? t(`locations.${locations.find(l => l.value === formData.location)?.key}`) : null 
+        value: formData.location || null 
       },
       { label: t('sell.details.description'), value: formData.description },
     ];
@@ -1026,10 +1027,11 @@ export default function SellPage() {
         <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded-md">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   fillRule="evenodd"
-                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" />
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                />
               </svg>
             </div>
             <div className="ml-3">  
@@ -1128,8 +1130,23 @@ export default function SellPage() {
         location: formData.location,
         description: formData.description,
         user_id: user.id,
+        country_id: currentCountry.id,
         status: 'Pending',
       };
+
+      // Only add currency_code if it exists in the database schema
+      try {
+        const { data: schemaCheck, error: schemaError } = await supabase
+          .from('cars')
+          .select('currency_code')
+          .limit(1);
+        
+        if (!schemaError) {
+          carSubmitData.currency_code = currentCountry.currency_code;
+        }
+      } catch (error) {
+        console.log('Currency code field might not exist yet, continuing without it');
+      }
 
       console.log('Submitting car data:', carSubmitData);
 
@@ -1221,7 +1238,11 @@ export default function SellPage() {
       toast.success(t('sell.messages.success'));
       
       // Redirect to the listings page after successful submission
-      router.push('/cars');
+      if (currentCountry) {
+        router.push(`/${currentCountry.code.toLowerCase()}/cars`);
+      } else {
+        router.push('/cars');
+      }
     } catch (error: any) {
       console.error('Error in form submission:', error);
       setError(error.message || t('sell.messages.error'));
@@ -1694,7 +1715,7 @@ export default function SellPage() {
                     type="button"
                     onClick={handleNext}
                     disabled={!validateStep()}
-                    className={`px-6 py-2 text-sm font-medium bg-qatar-maroon text-white rounded-md hover:bg-qatar-maroon/90 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`px-6 py-2 rounded-md text-sm font-medium bg-qatar-maroon text-white hover:bg-qatar-maroon/90 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {t('sell.nav.next')}
                   </button>
