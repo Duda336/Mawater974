@@ -4,20 +4,31 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import { useCountry } from '@/contexts/CountryContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog } from '@headlessui/react';
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
 interface CarListingFormProps {
-  showroomId: number;
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: () => void;
+  showroomId?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSubmit?: () => Promise<void>;
+  onCancel?: () => void;
+  onSuccess?: () => void;
 }
 
-export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess }: CarListingFormProps) {
+export default function CarListingForm({ 
+  showroomId, 
+  isOpen = true, 
+  onClose, 
+  onSubmit,
+  onCancel,
+  onSuccess 
+}: CarListingFormProps) {
   const { t, language } = useLanguage();
   const { supabase } = useSupabase();
+  const { user, profile } = useAuth();
   const { countries, cities, currentCountry, getCitiesByCountry } = useCountry();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
@@ -39,7 +50,7 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
     fuel_type: 'petrol',
     body_type: '',
     condition: 'new',
-    country_id: 0,
+    country_id: profile?.country_id || currentCountry?.id || 0,
     city_id: 0
   });
 
@@ -48,20 +59,10 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
     if (currentCountry) {
       setFormData(prev => ({
         ...prev,
-        country_id: currentCountry.id
+        country_id: profile?.country_id || currentCountry.id
       }));
-      
-      const countryCities = getCitiesByCountry(currentCountry.id);
-      setAvailableCities(countryCities);
-      
-      if (countryCities.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          city_id: countryCities[0].id
-        }));
-      }
     }
-  }, [currentCountry, getCitiesByCountry]);
+  }, [currentCountry, profile?.country_id]);
 
   // Update available cities when country changes
   const handleCountryChange = (countryId: number) => {
@@ -98,50 +99,53 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
     setLoading(true);
 
     try {
-      // Upload images
-      const imageUrls = [];
-      for (const image of images) {
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${showroomId}/${fileName}`;
+      // Upload images first
+      const imageUrls = await Promise.all(
+        images.map(async (image) => {
+          const fileName = `${Date.now()}-${image.name}`;
+          const { data, error } = await supabase.storage
+            .from('car-images')
+            .upload(fileName, image);
 
-        const { error: uploadError } = await supabase.storage
-          .from('car-images')
-          .upload(filePath, image);
+          if (error) throw error;
+          return supabase.storage.from('car-images').getPublicUrl(data.path).data.publicUrl;
+        })
+      );
 
-        if (uploadError) throw uploadError;
+      // Create the car listing
+      const { data: carData, error: carError } = await supabase
+        .from('cars')
+        .insert([
+          {
+            user_id: user?.id,
+            showroom_id: showroomId,
+            ...formData,
+            images: imageUrls,
+            thumbnail: imageUrls[0] || null,
+            status: 'Pending'
+          }
+        ])
+        .select()
+        .single();
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('car-images')
-          .getPublicUrl(filePath);
+      if (carError) throw carError;
 
-        imageUrls.push(publicUrl);
-      }
-
-      // Create car listing
-      const { error } = await supabase
-        .from('car_listings')
-        .insert({
-          showroom_id: showroomId,
-          ...formData,
-          price: parseFloat(formData.price),
-          mileage: formData.mileage ? parseInt(formData.mileage) : null,
-          images: imageUrls,
-          status: 'active',
-          country_id: formData.country_id || null,
-          city_id: formData.city_id || null
-        });
-
-      if (error) throw error;
-
-      onSuccess();
-      onClose();
+      // Call the appropriate success callback
+      if (onSuccess) onSuccess();
+      if (onSubmit) await onSubmit();
+      
+      // Close the form if in modal mode
+      if (onClose) onClose();
     } catch (error) {
-      console.error('Error creating car listing:', error);
-      alert(t('errors.createListing'));
+      console.error('Error submitting car listing:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    if (onCancel) onCancel();
+    if (onClose) onClose();
   };
 
   return (
@@ -471,6 +475,13 @@ export default function CarListingForm({ showroomId, isOpen, onClose, onSuccess 
                 className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
               >
                 {loading ? t('common.saving') : t('common.save')}
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 py-2 bg-gray-100 text-gray-500 rounded-md hover:bg-gray-200"
+              >
+                {t('common.cancel')}
               </button>
             </div>
           </form>

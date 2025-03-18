@@ -5,6 +5,7 @@ import { useSupabase } from './SupabaseContext';
 import { useAuth } from './AuthContext';
 import { getUserCountry } from '@/utils/geoLocation';
 import { Country, City } from '@/types/supabase';
+import { useLanguage } from './LanguageContext';
 
 interface CurrencyRate {
   from_currency: string;
@@ -58,7 +59,7 @@ const defaultCountries: Country[] = [
     id: 2,
     code: 'SA',
     name: 'Saudi Arabia',
-    name_ar: 'المملكة العربية السعودية',
+    name_ar: 'السعودية',
     currency_code: 'SAR',
     currency_symbol: 'ر.س',
     currency_name: 'Saudi Riyal',
@@ -71,8 +72,8 @@ const defaultCountries: Country[] = [
   {
     id: 3,
     code: 'AE',
-    name: 'United Arab Emirates',
-    name_ar: 'الإمارات العربية المتحدة',
+    name: 'UAE',
+    name_ar: 'الإمارات',
     currency_code: 'AED',
     currency_symbol: 'د.إ',
     currency_name: 'UAE Dirham',
@@ -172,6 +173,7 @@ const defaultCities: City[] = [
 export function CountryProvider({ children }: { children: React.ReactNode }) {
   const { supabase } = useSupabase();
   const { user, profile } = useAuth();
+  const { t, language } = useLanguage();
   const [countries, setCountries] = useState<Country[]>([]);
   const [cities, setCities] = useState<City[]>([]);
   const [currentCountry, setCurrentCountry] = useState<Country | null>(null);
@@ -386,20 +388,24 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
 
   // Function to format price based on current country's currency
   const formatPrice = (price: number, language?: string): string => {
-    if (!currentCountry) return `${price.toLocaleString()} QAR`;
+    if (!currentCountry) return `${price.toLocaleString()} ${t('currency.qar')}`;
     
     // Format the number according to the language
     const formattedNumber = price.toLocaleString(
       language === 'ar' ? 'ar' : 'en'
     );
     
+    // Get translated currency code
+    const currencyKey = `currency.${currentCountry.currency_code.toLowerCase()}`;
+    const translatedCurrency = t(currencyKey);
+    
     // For Arabic, place the currency code after the number
     if (language === 'ar') {
-      return `${formattedNumber} ${currentCountry.currency_code}`;
+      return `${formattedNumber} ${translatedCurrency}`;
     }
     
     // For English, place the currency code before the number
-    return `${currentCountry.currency_symbol} ${formattedNumber}`;
+    return `${translatedCurrency} ${formattedNumber}`;
   };
 
   // Function to convert price between currencies

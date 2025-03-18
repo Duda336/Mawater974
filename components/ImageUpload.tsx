@@ -1,135 +1,122 @@
-'use client';
-
-import { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { useSupabase } from '@/contexts/SupabaseContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import toast from 'react-hot-toast';
 import Image from 'next/image';
-import { supabase } from '../lib/supabase';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
-interface ImageUploadProps {
-  carId: number;
-  currentImageUrl: string | null;
-  onImageUploaded: (url: string) => void;
+export interface ImageUploadProps {
+  maxFiles?: number;
+  initialImages?: string[];
+  onUpload: (urls: string[]) => void;
 }
 
-async function uploadCarImage(file: File, carId: number, isMain: boolean = false) {
-  const fileExt = file.name.split('.').pop();
-  const filePath = `${carId}/${Date.now()}.${fileExt}`;
-
-  const { data, error: uploadError } = await supabase.storage
-    .from('car-images')
-    .upload(filePath, file);
-
-  if (uploadError) {
-    throw uploadError;
-  }
-
-  // Get public URL
-  const { data: { publicUrl } } = await supabase.storage
-    .from('car-images')
-    .getPublicUrl(filePath);
-
-  // Insert into car_images table with is_main flag
-  const { error: insertError } = await supabase
-    .from('car_images')
-    .insert({
-      car_id: carId,
-      url: publicUrl,
-      is_main: isMain
-    });
-
-  if (insertError) {
-    throw insertError;
-  }
-
-  return publicUrl;
-}
-
-export default function ImageUpload({ carId, currentImageUrl, onImageUploaded }: ImageUploadProps) {
+export default function ImageUpload({ maxFiles = 5, initialImages = [], onUpload }: ImageUploadProps) {
+  const { supabase } = useSupabase();
+  const { t } = useLanguage();
+  const [uploadedImages, setUploadedImages] = useState<string[]>(initialImages);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (uploadedImages.length + acceptedFiles.length > maxFiles) {
+      toast.error(t('upload.maxFiles', { count: maxFiles }));
+      return;
+    }
+
+    setUploading(true);
+    const newImages: string[] = [];
+
     try {
-      const file = e.target.files?.[0];
-      if (!file) return;
+      for (const file of acceptedFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setError('Please upload an image file');
-        return;
+        const { error: uploadError } = await supabase.storage
+          .from('car-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('car-images')
+          .getPublicUrl(filePath);
+
+        newImages.push(publicUrl);
       }
 
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        setError('Image size should be less than 10MB');
-        return;
-      }
-
-      setUploading(true);
-      setError(null);
-
-      // Check if this is the first image
-      const { data: currentImages } = await supabase
-        .from('car_images')
-        .select('id')
-        .eq('car_id', carId);
-
-      const isFirstImage = !currentImages || currentImages.length === 0;
-
-      // Upload the image with appropriate main flag
-      const url = await uploadCarImage(file, carId, isFirstImage);
-      onImageUploaded(url);
-
-    } catch (err) {
-      console.error('Error uploading image:', err);
-      setError('Failed to upload image. Please try again.');
+      const updatedImages = [...uploadedImages, ...newImages];
+      setUploadedImages(updatedImages);
+      onUpload(updatedImages);
+      toast.success(t('upload.success'));
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      toast.error(t('upload.error'));
     } finally {
       setUploading(false);
     }
+  }, [uploadedImages, maxFiles, supabase, t, onUpload]);
+
+  const removeImage = (indexToRemove: number) => {
+    const updatedImages = uploadedImages.filter((_, index) => index !== indexToRemove);
+    setUploadedImages(updatedImages);
+    onUpload(updatedImages);
   };
 
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.webp']
+    },
+    disabled: uploading || uploadedImages.length >= maxFiles
+  });
+
   return (
-    <div>
-      <label className="cursor-pointer inline-block">
-        <div className="relative w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-qatar-maroon transition-colors">
-          {currentImageUrl ? (
-            <Image
-              src={currentImageUrl}
-              alt="Current image"
-              fill
-              className="object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+    <div className="space-y-4">
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+          ${isDragActive ? 'border-qatar-maroon bg-qatar-maroon/10' : 'border-gray-300 dark:border-gray-600'}
+          ${uploading || uploadedImages.length >= maxFiles ? 'opacity-50 cursor-not-allowed' : 'hover:border-qatar-maroon hover:bg-qatar-maroon/5'}`}
+      >
+        <input {...getInputProps()} />
+        {uploading ? (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('upload.uploading')}</p>
+        ) : uploadedImages.length >= maxFiles ? (
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('upload.maxReached')}</p>
+        ) : (
+          <div>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {isDragActive ? t('upload.drop') : t('upload.dragDrop')}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t('upload.formats')}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {uploadedImages.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {uploadedImages.map((url, index) => (
+            <div key={url} className="relative group aspect-w-16 aspect-h-9">
+              <Image
+                src={url}
+                alt={`Uploaded image ${index + 1}`}
+                fill
+                className="rounded-lg object-cover"
+              />
+              <button
+                onClick={() => removeImage(index)}
+                className="absolute top-2 right-2 p-1 bg-white/80 dark:bg-black/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+                <XMarkIcon className="h-4 w-4 text-gray-700 dark:text-gray-300" />
+              </button>
             </div>
-          )}
-          <input
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-            accept="image/*"
-            disabled={uploading}
-          />
-          {uploading && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            </div>
-          )}
+          ))}
         </div>
-      </label>
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+      )}
     </div>
   );
 }

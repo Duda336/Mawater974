@@ -12,11 +12,13 @@ interface PhoneInputProps {
   onChange: (value: string) => void;
   onCountryChange: (countryId: number, phoneCode: string) => void;
   label?: string;
+  labelSuffix?: React.ReactNode;
   placeholder?: string;
   required?: boolean;
   error?: string;
   className?: string;
   initialCountryId?: number;
+  selectedCountryCode?: string;
 }
 
 // Phone number validation patterns for different countries
@@ -33,32 +35,44 @@ export default function PhoneInput({
   onChange,
   onCountryChange,
   label,
+  labelSuffix,
   placeholder,
   required = false,
   error,
   className = '',
-  initialCountryId
+  initialCountryId,
+  selectedCountryCode
 }: PhoneInputProps) {
   const { countries, currentCountry } = useCountry();
   const { t, language } = useLanguage();
   const [selectedCountry, setSelectedCountry] = useState(
     initialCountryId 
       ? countries.find(c => c.id === initialCountryId) 
-      : currentCountry
+      : null
   );
 
   useEffect(() => {
-    if (!selectedCountry && countries.length > 0) {
+    if (!selectedCountry && countries.length > 0 && initialCountryId) {
       const country = initialCountryId 
         ? countries.find(c => c.id === initialCountryId) 
-        : currentCountry || countries[0];
+        : null;
       
       setSelectedCountry(country);
       if (country && onCountryChange) {
         onCountryChange(country.id, country.phone_code);
       }
     }
-  }, [countries, currentCountry, initialCountryId, onCountryChange, selectedCountry]);
+  }, [countries, initialCountryId, onCountryChange, selectedCountry]);
+
+  // Update selected country when selectedCountryId changes from parent
+  useEffect(() => {
+    if (initialCountryId && countries.length > 0) {
+      const country = countries.find(c => c.id === initialCountryId);
+      if (country && country.id !== selectedCountry?.id) {
+        setSelectedCountry(country);
+      }
+    }
+  }, [initialCountryId, countries, selectedCountry]);
 
   const handleCountryChange = (country) => {
     setSelectedCountry(country);
@@ -85,92 +99,107 @@ export default function PhoneInput({
     
     // Apply max length based on country
     const { maxLength } = getPhonePattern();
-    if (newValue.length <= maxLength) {
-      onChange(newValue);
-    }
+    const truncatedValue = newValue.slice(0, maxLength);
+    
+    onChange(truncatedValue);
   };
 
-  if (!selectedCountry) return null;
+  // Display the phone code in the dropdown button
+  const displayPhoneCode = selectedCountryCode || (selectedCountry ? selectedCountry.phone_code : '');
 
   return (
     <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          {label} {required && <span className="text-red-500">*</span>}
+        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          {label}
+          {labelSuffix}
+          {required && !labelSuffix && <span className="text-red-500">*</span>}
         </label>
       )}
-      <div className="relative flex">
-        <div className="inline-flex">
-          <Listbox value={selectedCountry} onChange={handleCountryChange}>
-            <div className="relative">
-              <Listbox.Button 
-                className={`relative w-full cursor-pointer rounded-l-md border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-3 py-2 text-gray-500 dark:text-gray-400 sm:text-sm flex items-center ${required ? 'border-red-500' : ''}`}
-                data-country-id={selectedCountry.id}
-                data-phone-code={selectedCountry.phone_code}
-              >
-                <span className="block truncate font-medium">
-                  {selectedCountry.phone_code}
+      <div className="relative mt-1">
+        <div className="flex rounded-md shadow-sm">
+          <div className="relative w-24 flex-shrink-0">
+            <Listbox value={selectedCountry} onChange={handleCountryChange}>
+              <div className="relative">
+                <Listbox.Button 
+                  className="relative w-full cursor-default rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-3 pr-10 text-left shadow-sm focus:border-qatar-maroon focus:outline-none focus:ring-1 focus:ring-qatar-maroon sm:text-sm"
+                  data-phone-code={selectedCountry?.phone_code}
+                >
+                  <span className="block truncate font-medium">
+                    {selectedCountry 
+                      ? displayPhoneCode
+                      : t('signup.selectCountry')}
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon
+                      className="h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-auto min-w-[150px] overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    {countries.map((country) => (
+                      <Listbox.Option
+                        key={country.id}
+                        className={({ active }) =>
+                          `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
+                            active ? 'bg-primary/10 text-primary dark:bg-primary/20' : 'text-gray-900 dark:text-white'
+                          }`
+                        }
+                        value={country}
+                        data-country-id={country.id}
+                        data-phone-code={country.phone_code}
+                      >
+                        {({ selected }) => (
+                          <>
+                            <div className="flex items-center">
+                              <span
+                                className={`block truncate ${
+                                  selected ? 'font-medium' : 'font-normal'
+                                }`}
+                              >
+                                {country.phone_code} {language === 'ar' ? country.name_ar : country.name}
+                              </span>
+                            </div>
+                            {selected ? (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+          </div>
+          <div className="relative flex flex-grow items-stretch focus-within:z-10">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              {displayPhoneCode && (
+                <span className="text-gray-500 sm:text-sm">
+                  {displayPhoneCode}
                 </span>
-                <span className="pointer-events-none ml-1">
-                  <ChevronUpDownIcon
-                    className="h-4 w-4 text-gray-400 dark:text-gray-500"
-                    aria-hidden="true"
-                  />
-                </span>
-              </Listbox.Button>
-              <Transition
-                as={Fragment}
-                leave="transition ease-in duration-100"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-auto min-w-[150px] overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                  {countries.map((country) => (
-                    <Listbox.Option
-                      key={country.id}
-                      className={({ active }) =>
-                        `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
-                          active ? 'bg-primary/10 text-primary dark:bg-primary/20' : 'text-gray-900 dark:text-white'
-                        }`
-                      }
-                      value={country}
-                      data-country-id={country.id}
-                      data-phone-code={country.phone_code}
-                    >
-                      {({ selected }) => (
-                        <>
-                          <div className="flex items-center">
-                            <span
-                              className={`block truncate ${
-                                selected ? 'font-medium' : 'font-normal'
-                              }`}
-                            >
-                              {country.phone_code} {language === 'ar' ? country.name_ar : country.name}
-                            </span>
-                          </div>
-                          {selected ? (
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
-                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                            </span>
-                          ) : null}
-                        </>
-                      )}
-                    </Listbox.Option>
-                  ))}
-                </Listbox.Options>
-              </Transition>
+              )}
             </div>
-          </Listbox>
+            <input
+              type="tel"
+              value={value}
+              onChange={handlePhoneChange}
+              required={required}
+              maxLength={getPhonePattern().maxLength}
+              className={`appearance-none rounded-none rounded-r-md relative block w-full ${displayPhoneCode ? 'pl-12' : 'pl-3'} py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200 ${error ? 'border-red-500' : ''}`}
+              placeholder={placeholder || getPhonePattern().placeholder}
+            />
+          </div>
         </div>
-        <input
-          type="tel"
-          value={value}
-          onChange={handlePhoneChange}
-          required={required}
-          maxLength={getPhonePattern().maxLength}
-          className="appearance-none rounded-none rounded-r-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
-          placeholder={placeholder || getPhonePattern().placeholder}
-        />
       </div>
       {error && (
         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>

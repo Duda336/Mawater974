@@ -6,13 +6,12 @@ import { User } from '@supabase/supabase-js';
 
 interface UserProfile {
   id: string;
-  user_type?: 'private' | 'dealer';
+  role: 'normal_user' | 'dealer' | 'admin';
   full_name?: string | null;
-  name?: string | null;  // Keep for backward compatibility
+  name?: string | null;
   phone_number?: string | null;
-  phone?: string | null;  // Keep for backward compatibility
+  phone?: string | null;
   email: string | null;
-  role?: string;
   country_id?: number | null;
 }
 
@@ -126,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
             if (newProfileData) {
               setProfile(newProfileData);
-              return;
             }
           }
         }
@@ -135,17 +133,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // If user is a dealer, fetch dealership profile
-      if (profileData?.user_type === 'dealer') {
+      if (profileData?.role === 'dealer') {
         const { data: dealershipData, error: dealershipError } = await supabase
-          .from('dealership_profiles')
+          .from('dealerships')
           .select('*')
           .eq('user_id', userId)
+          .eq('status', 'approved')
           .single();
 
         if (dealershipError && dealershipError.code !== 'PGRST116') {
-          throw dealershipError;
+          console.error('Error fetching dealership:', dealershipError);
         }
-        setDealershipProfile(dealershipData);
+        setDealershipProfile(dealershipData || null);
+      } else {
+        setDealershipProfile(null);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -180,7 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         profile,
         dealershipProfile,
-        isDealer: profile?.user_type === 'dealer',
+        isDealer: !!profile?.role && profile.role === 'dealer',
         isLoading,
         signIn,
         signOut,

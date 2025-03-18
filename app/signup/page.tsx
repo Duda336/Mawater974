@@ -9,6 +9,7 @@ import SocialLogin from '../../components/auth/SocialLogin';
 import PasswordStrengthIndicator from '../../components/auth/PasswordStrengthIndicator';
 import PhoneInput from '../../components/PhoneInput';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useCountry } from '../../contexts/CountryContext';
 
 export default function SignUp() {
   const { t } = useLanguage();
@@ -19,9 +20,27 @@ export default function SignUp() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
-  const [selectedCountryCode, setSelectedCountryCode] = useState<string>('+974');
+  const [selectedCountryCode, setSelectedCountryCode] = useState<string>('');
   const { language } = useLanguage();
   const router = useRouter();
+  const { countries, currentCountry } = useCountry();
+
+  useEffect(() => {
+    // Don't set default country automatically - let user select
+    if (currentCountry && !selectedCountryId && false) { // Disabled auto-selection
+      setSelectedCountryId(currentCountry.id);
+      setSelectedCountryCode(currentCountry.phone_code);
+    }
+  }, [currentCountry, selectedCountryId]);
+
+  // When country changes from dropdown, update the phone code
+  const handleCountryChange = (countryId: number) => {
+    setSelectedCountryId(countryId);
+    const country = countries.find(c => c.id === countryId);
+    if (country) {
+      setSelectedCountryCode(country.phone_code);
+    }
+  };
 
   const validateForm = () => {
     if (!fullName.trim()) {
@@ -171,7 +190,7 @@ export default function SignUp() {
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('signup.fullName')}
+                {t('signup.fullName')} <span className="text-gray-700 dark:text-gray-300">*</span>
               </label>
               <input
                 id="full-name"
@@ -187,7 +206,7 @@ export default function SignUp() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('signup.email')}
+                {t('signup.email')} <span className="text-gray-700 dark:text-gray-300">*</span>
               </label>
               <input
                 id="email"
@@ -200,9 +219,35 @@ export default function SignUp() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+            
+            {/* Country Selection */}
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('signup.country')} <span className="text-gray-700 dark:text-gray-300">*</span>
+              </label>
+              <select
+                id="country"
+                name="country"
+                required
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
+                value={selectedCountryId || ''}
+                onChange={(e) => {
+                  const countryId = parseInt(e.target.value);
+                  handleCountryChange(countryId);
+                }}
+              >
+                <option value="">{t('signup.selectCountry')}</option>
+                {countries.map(country => (
+                  <option key={country.id} value={country.id}>
+                    {language === 'ar' ? country.name_ar : country.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <PhoneInput
-              label={t('signup.phone')}
+              label={`${t('signup.phone')} `}
+              labelSuffix={<span className="text-gray-700 dark:text-gray-300">*</span>}
               value={phoneNumber}
               onChange={setPhoneNumber}
               onCountryChange={(countryId, phoneCode) => {
@@ -211,11 +256,13 @@ export default function SignUp() {
               }}
               required
               placeholder={t('signup.phonePlaceholder')}
+              initialCountryId={selectedCountryId || undefined}
+              selectedCountryCode={selectedCountryCode}
             />
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('signup.password')}
+                {t('signup.password')} <span className="text-gray-700 dark:text-gray-300">*</span>
               </label>
               <input
                 id="password"

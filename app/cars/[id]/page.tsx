@@ -15,10 +15,11 @@ import {
   KeyIcon,
   BeakerIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  FlagIcon
 } from '@heroicons/react/24/solid';
 import Image from 'next/image';
-import type { ExtendedCar } from '../../../types/supabase';
+import type { ExtendedCar, Country, City, Comment } from '../../../types/supabase';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { useAnalytics } from '../../../hooks/useAnalytics';
 import { useCountry } from '../../../contexts/CountryContext';
@@ -30,20 +31,29 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
   const { user } = useAuth();
   const { t, currentLanguage } = useLanguage();
   const { trackCarView, trackContactSeller } = useAnalytics();
-  const { formatPrice, countries } = useCountry();
+  const { formatPrice, countries, currentCountry } = useCountry();
   const [car, setCar] = useState<ExtendedCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isUpdatingFavorite, setIsUpdatingFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [fullImageIndex, setFullImageIndex] = useState(0);
+  const [showFullImage, setShowFullImage] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
   const [similarCars, setSimilarCars] = useState<ExtendedCar[]>([]);
   const [featuredSimilarCars, setFeaturedSimilarCars] = useState<ExtendedCar[]>([]);
-  const [showFullImage, setShowFullImage] = useState(false);
-  const [fullImageIndex, setFullImageIndex] = useState(0);
-  const [isOwner, setIsOwner] = useState(false);
-  const [carCountry, setCarCountry] = useState<any>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [reportError, setReportError] = useState(false);
+  const [carCountry, setCarCountry] = useState<Country | null>(null);
+  const [carCity, setCarCity] = useState<City | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   const handlePrevImage = () => {
     if (!car?.images) return;
@@ -99,7 +109,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
 
   useEffect(() => {
     if (user && car) {
-      setIsOwner(user.id === car.user_id);
+      const isOwner = user.id === car.user_id;
     }
   }, [user, car]);
 
@@ -115,10 +125,12 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
           .from('cars')
           .select(`
             *,
-            brand:brands(*),
-            model:models(*),
+            brand:brands(id, name, name_ar),
+            model:models(id, name, name_ar),
             user:profiles(full_name, email, phone_number),
-            images:car_images(url, is_main)
+            images:car_images(url, is_main),
+            country:countries(id, name, name_ar, code, currency_code),
+            city:cities(id, name, name_ar)
           `)
           .eq('id', carId)
           .single();
@@ -134,12 +146,8 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
         }
 
         setCar(carData);
-
-        // Find the country for this car
-        if (carData.country_id && countries.length > 0) {
-          const country = countries.find(c => c.id === carData.country_id);
-          setCarCountry(country);
-        }
+        setCarCountry(carData.country || null);
+        setCarCity(carData.city || null);
 
         // Check if the car is in user's favorites
         if (user) {
@@ -169,7 +177,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
 
   useEffect(() => {
     if (car) {
-      trackCarView(car.id, car.name);
+      trackCarView(car.id.toString(), car.name || '');
     }
   }, [car]);
 
@@ -178,17 +186,18 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
       if (!car) return;
 
       try {
-        // Fetch featured similar cars
+        // Fetch featured similar cars from the same country
         const { data: featuredData, error: featuredError } = await supabase
           .from('cars')
           .select(`
             *,
-            brand:brands!inner(*),
-            model:models!inner(*),
+            brand:brands!inner(id, name, name_ar),
+            model:models!inner(id, name, name_ar),
             user:profiles!inner(full_name, email, phone_number),
             images:car_images(url)
           `)
           .eq('brand_id', car.brand_id)
+          .eq('country_id', car.country?.id) // Filter by the same country
           .neq('id', car.id)
           .eq('status', 'Approved')
           .eq('is_featured', true)
@@ -198,17 +207,18 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
           console.error('Error fetching featured similar cars:', featuredError);
         }
 
-        // Fetch normal similar cars
+        // Fetch normal similar cars from the same country
         const { data: normalData, error: normalError } = await supabase
           .from('cars')
           .select(`
             *,
-            brand:brands!inner(*),
-            model:models!inner(*),
+            brand:brands!inner(id, name, name_ar),
+            model:models!inner(id, name, name_ar),
             user:profiles!inner(full_name, email, phone_number),
             images:car_images(url)
           `)
           .eq('brand_id', car.brand_id)
+          .eq('country_id', car.country?.id) // Filter by the same country
           .neq('id', car.id)
           .eq('status', 'Approved')
           .eq('is_featured', false)
@@ -250,6 +260,35 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
     }
   }, [car]);
 
+  useEffect(() => {
+    const fetchComments = async () => {
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          user:user_id (
+            id,
+            full_name,
+            email,
+            phone_number
+          )
+        `)
+        .eq('car_id', carId)
+        .order('created_at', { ascending: false });
+
+      if (commentsError) {
+        console.error('Error fetching comments:', commentsError);
+        return;
+      }
+
+      setComments(commentsData || []);
+    };
+
+    if (carId) {
+      fetchComments();
+    }
+  }, [carId]);
+
   const handleFavoriteClick = async () => {
     if (!user || !car || isUpdatingFavorite) return;
 
@@ -284,11 +323,11 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
   const handleShare = async () => {
     try {
       await navigator.share({
-        title: `${car?.brand.name} ${car?.model.name} (${car?.year})`,
+        title: `${car?.brand.name} ${car?.model.name}${car?.exact_model ? ` - ${car?.exact_model}` : ''} (${car?.year})`,
         text: t('car.details.share.title', { 
           year: car?.year,
           brand: car?.brand.name,
-          model: car?.model.name
+          model: `${car?.model.name}${car?.exact_model ? ` - ${car?.exact_model}` : ''}`
         }),
         url: window.location.href
       });
@@ -299,7 +338,12 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
 
   const handleContactSeller = () => {
     if (car) {
-      trackContactSeller(car.id, car.user_id);
+      trackContactSeller(
+        (car.id as number).toString(), 
+        `${car.brand?.name} ${car.model?.name}`, 
+        car.is_dealer ? 'dealer' : 'private', 
+        'button'
+      );
     }
     setShowContactInfo(true);
   };
@@ -318,6 +362,75 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const handleSubmitReport = async () => {
+    if (!reportReason || !car || !user) return;
+
+    setIsSubmittingReport(true);
+    try {
+      const { error } = await supabase
+        .from('car_reports')
+        .insert([{ 
+          car_id: parseInt(carId as string), // Convert string ID to integer
+          user_id: user.id,
+          reason: reportReason, 
+          description: reportDescription,
+          status: 'Pending',
+          country_code: carCountry?.code || currentCountry?.code || 'QA' // Include country code for filtering reports by country
+        }]);
+
+      if (error) throw error;
+
+      setReportSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting report:', error);
+      setReportError(true);
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (!newComment.trim()) return;
+
+    setIsSubmittingComment(true);
+    try {
+      const { data: comment, error } = await supabase
+        .from('comments')
+        .insert([
+          {
+            car_id: Number(carId),
+            user_id: user.id,
+            content: newComment.trim(),
+          }
+        ])
+        .select(`
+          *,
+          user:user_id (
+            id,
+            full_name,
+            email,
+            phone_number
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setComments(prev => [comment, ...prev]);
+      setNewComment('');
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+    } finally {
+      setIsSubmittingComment(false);
+    }
   };
 
   if (loading) {
@@ -365,7 +478,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
             <li>/</li>
             <li><button onClick={() => router.push(`/cars?brand=${car?.brand.name}`)} className="hover:text-qatar-maroon">{car?.brand.name}</button></li>
             <li>/</li>
-            <li className="text-gray-900 dark:text-white">{car?.model.name}</li>
+            <li className="text-gray-900 dark:text-white">{car?.model.name}{car?.exact_model ? ` - ${car?.exact_model}` : ''}</li>
           </ol>
         </nav>
 
@@ -380,34 +493,45 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                 className="w-full h-full object-cover rounded-lg cursor-pointer"
                 onClick={() => openFullImage(currentImageIndex)}
               />
-              <button
-                onClick={handlePrevImage}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-              >
-                <ChevronLeftIcon className="h-6 w-6" />
-              </button>
-              <button
-                onClick={handleNextImage}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
-              >
-                <ChevronRightIcon className="h-6 w-6" />
-              </button>
+              {car.is_featured && (
+                <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-qatar-maroon/90 text-white text-xs font-medium rounded-lg shadow-lg">
+                  {t('cars.featured.badge')}
+                </div>
+              )}
+              {(car?.images?.length || 0) > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevImage}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                  >
+                    <ChevronLeftIcon className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={handleNextImage}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                  >
+                    <ChevronRightIcon className="h-6 w-6" />
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Thumbnail Grid */}
-            <div className="grid grid-cols-4 gap-4 mb-8">
-              {car.images.map((image, index) => (
-                <img
-                  key={index}
-                  src={image.url}
-                  alt={`${car.brand?.name} ${car.model?.name} thumbnail ${index + 1}`}
-                  className={`w-full aspect-[4/3] object-cover rounded-lg cursor-pointer ${
-                    currentImageIndex === index ? 'ring-2 ring-qatar-maroon' : ''
-                  }`}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-              ))}
-            </div>
+            {car.images && car.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-4 mb-8">
+                {car.images.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image.url}
+                    alt={`${car.brand?.name} ${car.model?.name} thumbnail ${index + 1}`}
+                    className={`w-full aspect-[4/3] object-cover rounded-lg cursor-pointer ${
+                      currentImageIndex === index ? 'ring-2 ring-qatar-maroon' : ''
+                    }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Full Screen Image Viewer */}
             {showFullImage && (
@@ -460,10 +584,10 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {car.brand.name} {car.model.name} {car.year}
+                  {currentLanguage === 'ar' && car.brand?.name_ar ? car.brand.name_ar : car.brand.name} {currentLanguage === 'ar' && car.model?.name_ar ? car.model.name_ar : car.model.name}{car.exact_model ? ` - ${car.exact_model}` : ''} {car.year}
                 </h1>
                 <div className="mt-2 flex items-center space-x-4 rtl:space-x-reverse mb-4">
-                  <p className="text-2xl font-bold text-qatar-maroon">
+                  <p className="text-2xl font-bold text-qatar-maroon" dir="ltr">
                     {carCountry ? formatPrice(car.price, currentLanguage) : `${car.price.toLocaleString()} ${carCountry?.currency_code || 'QAR'}`}
                   </p>
                 </div>
@@ -488,6 +612,12 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                 >
                   <ShareIcon className="h-6 w-6" />
                 </button>
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="p-2 rounded-full text-gray-400 hover:text-qatar-maroon"
+                >
+                  <FlagIcon className="h-6 w-6" />
+                </button>
               </div>
             </div>
 
@@ -500,10 +630,24 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               </div>
               <div className="flex flex-col">
                 <p className="font-semibold text-gray-900 dark:text-white">{car.user.full_name}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('car.details.seller')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {car.is_dealer ? t('car.details.dealer') : t('car.details.privateSeller')}
+                </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {t('car.details.listed')} {formatDate(car.created_at, 'dd/MM/yyyy')}
                 </p>
+              </div>
+              <div className="ml-auto">
+                {car.user.phone_number && (
+                  <a
+                    href={`tel:${car.user.phone_number}`}
+                    className="flex items-center space-x-2 text-qatar-maroon hover:text-qatar-maroon/80"
+                    dir="ltr"
+                  >
+                    <PhoneIcon className="h-5 w-5" />
+                    <span className="font-ltr" style={{ direction: 'ltr', unicodeBidi: 'embed' }}>{car.user.phone_number}</span>
+                  </a>
+                )}
               </div>
             </div>
 
@@ -544,11 +688,15 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.828 10H7v2H5v2H0v-2a2 2 0 012-2h14a2 2 0 012 2v2h-3v2h1.828a2 2 0 01.073 1.054l-2 6a2 2 0 01-.889.938l-3 1a2 2 0 01-2.828 0l-3-1a2 2 0 01-.889-.938l-2-6a2 2 0 010-2.828l2-6a2 2 0 012.828 0l2 6a2 2 0 01.073-1.054z" />
                   </svg>
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.condition')}</span>
                 </div>
-                <p className="text-gray-900 dark:text-white font-semibold">{t(`cars.condition.${car.condition.toLowerCase()}`)}</p>
+                <p className="text-gray-900 dark:text-white font-semibold">
+                  {car.condition === 'Not Working' 
+                    ? t('cars.condition.notWorking')
+                    : t(`cars.condition.${car.condition.toLowerCase()}`)}
+                </p>
               </div>
 
               {/* Color */}
@@ -594,7 +742,9 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.location')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
-                  {t(`car.details.location.${car.location.replace(/\s/g, '')}`) || car.location}
+                  {carCity 
+                    ? (currentLanguage === 'ar' && carCity.name_ar ? carCity.name_ar : carCity.name)
+                    : (car?.location ? car.location : t('common.notSpecified'))}
                 </p>
               </div>
             </div>
@@ -607,38 +757,59 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               </p>
             </div>
 
-            {/* Contact Section */}
-            <div className="border-t dark:border-gray-700 pt-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('car.details.contactSeller')}</h2>
-              {showContactInfo ? (
-                <div className="space-y-3">
-                  {car.user.phone_number && (
-                    <a
-                      href={`tel:${car.user.phone_number}`}
-                      className="flex items-center space-x-2 text-qatar-maroon hover:text-qatar-maroon/80"
-                    >
-                      <PhoneIcon className="h-5 w-5" />
-                      <span>{car.user.phone_number}</span>
-                    </a>
-                  )}
-                  {car.user.email && (
-                    <a
-                      href={`mailto:${car.user.email}`}
-                      className="flex items-center space-x-2 text-qatar-maroon hover:text-qatar-maroon/80"
-                    >
-                      <EnvelopeIcon className="h-5 w-5" />
-                      <span>{car.user.email}</span>
-                    </a>
-                  )}
-                </div>
-              ) : (
+            {/* Comments */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{t('car.details.comments')}</h2>
+              <div className="space-y-4">
+                {comments.length === 0 ? (
+                  <p className="text-gray-500 dark:text-gray-400">{t('car.details.noComments')}</p>
+                ) : (
+                  comments.map(comment => (
+                    <div key={comment.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                      <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                        <div className="flex-shrink-0 w-8 h-8 bg-qatar-maroon text-white rounded-full flex items-center justify-center text-sm font-medium">
+                          {comment.user.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse mb-1">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{comment.user.full_name}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                              {new Date(comment.created_at).toLocaleDateString(currentLanguage === 'ar' ? 'ar-QA' : 'en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-300 break-words">{comment.content}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form onSubmit={handleSubmitComment} className="mt-4">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  rows={4}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-qatar-maroon focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+                  placeholder={t('car.details.leaveComment')}
+                />
                 <button
-                  onClick={handleContactSeller}
-                  className="w-full py-3 bg-qatar-maroon text-white rounded-lg hover:bg-qatar-maroon/90 transition-colors"
+                  type="submit"
+                  disabled={isSubmittingComment}
+                  className="mt-3 w-full py-2 px-4 bg-qatar-maroon text-white text-sm font-medium rounded-lg hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  {t('car.details.showContact')}
+                  {isSubmittingComment ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : null}
+                  {t('car.details.postComment')}
                 </button>
-              )}
+              </form>
             </div>
           </div>
         </div>
@@ -664,7 +835,9 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                       </div>
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={similarCar.images[0] || '/placeholder-car.svg'}
+                          src={similarCar.images && similarCar.images.length > 0 ? 
+                            (typeof similarCar.images[0] === 'string' ? similarCar.images[0] : similarCar.images[0].url) 
+                            : '/placeholder-car.svg'}
                           alt={`${similarCar.brand.name} ${similarCar.model.name}`}
                           fill
                           className="object-cover"
@@ -672,7 +845,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {similarCar.brand.name} {similarCar.model.name} {similarCar.year}
+                          {currentLanguage === 'ar' && similarCar.brand?.name_ar ? similarCar.brand.name_ar : similarCar.brand.name} {currentLanguage === 'ar' && similarCar.model?.name_ar ? similarCar.model.name_ar : similarCar.model.name} {similarCar.year}
                         </h3>
                         <p className="text-qatar-maroon font-bold mt-1">
                           {formatPrice(similarCar.price, currentLanguage)}
@@ -702,7 +875,9 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                     >
                       <div className="relative aspect-[4/3]">
                         <Image
-                          src={similarCar.images[0] || '/placeholder-car.svg'}
+                          src={similarCar.images && similarCar.images.length > 0 ? 
+                            (typeof similarCar.images[0] === 'string' ? similarCar.images[0] : similarCar.images[0].url) 
+                            : '/placeholder-car.svg'}
                           alt={`${similarCar.brand.name} ${similarCar.model.name}`}
                           fill
                           className="object-cover"
@@ -710,7 +885,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-gray-900 dark:text-white">
-                          {similarCar.brand.name} {similarCar.model.name} {similarCar.year}
+                          {currentLanguage === 'ar' && similarCar.brand?.name_ar ? similarCar.brand.name_ar : similarCar.brand.name} {currentLanguage === 'ar' && similarCar.model?.name_ar ? similarCar.model.name_ar : similarCar.model.name} {similarCar.year}
                         </h3>
                         <p className="text-qatar-maroon font-bold mt-1">
                           {formatPrice(similarCar.price, currentLanguage)}
@@ -730,6 +905,117 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
           </div>
         )}
       </div>
+
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 opacity-75 dark:bg-gray-900 dark:opacity-90" onClick={() => !isSubmittingReport && setShowReportModal(false)}></div>
+            </div>
+
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 sm:mx-0 sm:h-10 sm:w-10">
+                    <FlagIcon className="h-6 w-6 text-red-600 dark:text-red-300" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                      {t('car.details.report')}
+                    </h3>
+                    <div className="mt-4 space-y-4">
+                      {reportSubmitted ? (
+                        <div className="text-green-600 dark:text-green-400">
+                          {t('car.details.reportSuccess')}
+                        </div>
+                      ) : reportError ? (
+                        <div className="text-red-600 dark:text-red-400">
+                          {t('car.details.reportError')}
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <label htmlFor="report-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {t('car.details.reportReason')}
+                            </label>
+                            <select
+                              id="report-reason"
+                              value={reportReason}
+                              onChange={(e) => setReportReason(e.target.value)}
+                              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                              disabled={isSubmittingReport}
+                            >
+                              <option value="">{t('common.select')}</option>
+                              <option value="spam">{t('car.details.reportReasons.spam')}</option>
+                              <option value="fraud">{t('car.details.reportReasons.fraud')}</option>
+                              <option value="inappropriate">{t('car.details.reportReasons.inappropriate')}</option>
+                              <option value="duplicate">{t('car.details.reportReasons.duplicate')}</option>
+                              <option value="wrong_info">{t('car.details.reportReasons.wrong_info')}</option>
+                              <option value="other">{t('car.details.reportReasons.other')}</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label htmlFor="report-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {t('car.details.reportDescription')}
+                            </label>
+                            <textarea
+                              id="report-description"
+                              value={reportDescription}
+                              onChange={(e) => setReportDescription(e.target.value)}
+                              rows={4}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-qatar-maroon focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                              disabled={isSubmittingReport}
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                {reportSubmitted || reportError ? (
+                  <button
+                    type="button"
+                    className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-qatar-maroon text-base font-medium text-white hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon sm:ml-3 sm:w-auto sm:text-sm"
+                    onClick={() => setShowReportModal(false)}
+                  >
+                    {t('common.close')}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-qatar-maroon text-base font-medium text-white hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon sm:ml-3 sm:w-auto sm:text-sm"
+                      onClick={handleSubmitReport}
+                      disabled={!reportReason || isSubmittingReport}
+                    >
+                      {isSubmittingReport ? (
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : null}
+                      {t('car.details.reportSubmit')}
+                    </button>
+                    <button
+                      type="button"
+                      className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-500"
+                      onClick={() => setShowReportModal(false)}
+                      disabled={isSubmittingReport}
+                    >
+                      {t('common.cancel')}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

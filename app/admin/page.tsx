@@ -6,26 +6,34 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Database, Profile, CarBrand, CarModel } from '../../types/supabase';
+import { Database, Profile, CarBrand, CarModel, Car } from '../../types/supabase';
 import ImageUpload from '../../components/ImageUpload';
 import PlaceholderCar from '../../components/PlaceholderCar';
 import DatabaseManager from '../../components/admin/DatabaseManager';
 import AdminNavbar from '../../components/admin/AdminNavbar';
+import { UsersIcon, ShoppingBagIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
-type Car = Database['public']['Tables']['cars']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
 type Model = Database['public']['Tables']['models']['Row'];
 
-interface ExtendedCar extends Car {
+interface CarDetails extends Car {
   brand: Brand;
   model: Model;
   seller: Profile;
   images: string[];
   thumbnail: string;
+  status: CarStatus;
+  is_featured: boolean;
+  user: Profile;
 }
 
+interface ExtendedCar extends CarDetails {}
+
 interface Analytics {
+  totalUsers: number;
   totalCars: number;
+  totalDealers: number;
   pendingCars: number;
   activeCars: number;
   soldCars: number;
@@ -33,7 +41,6 @@ interface Analytics {
   featuredPercentage: number;
   totalRevenue: number;
   averagePrice: number;
-  totalUsers: number;
   adminUsers: number;
   normalUsers: number;
   recentActivity: {
@@ -64,23 +71,18 @@ interface UserWithStats extends Profile {
   total_ads: number;
 }
 
-interface CarDetails extends Car {
-  brand: Brand;
-  model: Model;
-  seller: Profile;
-  images: string[];
-  thumbnail: string;
-}
-
 type ViewMode = 'grid' | 'list';
+
 type CarStatus = 'Pending' | 'Approved' | 'Rejected' | 'Sold';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'analytics' | 'users' | 'database'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'users' | 'database' | 'cars'>('analytics');
   const [analytics, setAnalytics] = useState<Analytics>({
+    totalUsers: 0,
     totalCars: 0,
+    totalDealers: 0,
     pendingCars: 0,
     activeCars: 0,
     soldCars: 0,
@@ -88,7 +90,6 @@ export default function AdminDashboard() {
     featuredPercentage: 0,
     totalRevenue: 0,
     averagePrice: 0,
-    totalUsers: 0,
     adminUsers: 0,
     normalUsers: 0,
     recentActivity: [],
@@ -100,10 +101,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedTab, setSelectedTab] = useState('cars');
-  const [carListings, setCarListings] = useState<ExtendedCar[]>([]);
   const [carListingsStatus, setCarListingsStatus] = useState<CarStatus>('Pending');
+  const [carListings, setCarListings] = useState<ExtendedCar[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorCar, setErrorCar] = useState<string | null>(null);
   const [selectedCar, setSelectedCar] = useState<CarDetails | null>(null);
@@ -249,37 +248,9 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchCarListings = async (status: 'Pending' | 'Approved' | 'Rejected' | 'Sold') => {
-    setIsLoading(true);
-    setErrorCar(null);
+  const handleCarAction = async (carId: number, newStatus: CarStatus) => {
     try {
-      const { data, error } = await supabase
-        .from('cars')
-        .select(`
-          *,
-          brand:brands(id, name),
-          model:models(id, name),
-          user:profiles(id, full_name, email, phone_number),
-          images:car_images(url, is_main)
-        `)
-        .eq('status', status)
-        .order('created_at', { ascending: sortOrder === 'oldest' });
-
-      if (error) throw error;
-
-      setCarListings(data);
-    } catch (error: any) {
-      console.error('Error fetching car listings:', error);
-      setErrorCar(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCarAction = async (carId: number, newStatus: 'Approved' | 'Rejected') => {
-    try {
-      // Update car status
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('cars')
         .update({ 
           status: newStatus,
@@ -287,10 +258,15 @@ export default function AdminDashboard() {
         })
         .eq('id', carId);
 
-      if (updateError) throw updateError;
+      if (error) throw error;
+
+      // Update local state
+      setCars(prevCars => prevCars.map(car => 
+        car.id === carId ? { ...car, status: newStatus } : car
+      ));
 
       // Log admin action
-      const { error: logError } = await supabase
+      await supabase
         .from('admin_logs')
         .insert([{
           admin_id: user?.id,
@@ -306,11 +282,6 @@ export default function AdminDashboard() {
           created_at: new Date().toISOString()
         }]);
 
-      if (logError) throw logError;
-
-      // Update local state
-      setCarListings(prevListings => prevListings.filter(car => car.id !== carId));
-      
       // Show success message
       // toast.success(`Car listing ${newStatus.toLowerCase()} successfully`);
 
@@ -335,6 +306,33 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error('Error updating car status:', error);
       // toast.error(error.message || 'Failed to update car status');
+    }
+  };
+
+  const fetchCarListings = async (status: CarStatus) => {
+    setIsLoading(true);
+    setErrorCar(null);
+    try {
+      const { data, error } = await supabase
+        .from('cars')
+        .select(`
+          *,
+          brand:brands(*),
+          model:models(*),
+          user:profiles!user_id(*),
+          images,
+          thumbnail
+        `)
+        .eq('status', status);
+
+      if (error) throw error;
+
+      setCarListings(data || []);
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+      setErrorCar('Failed to fetch cars');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -420,12 +418,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCarStatusChange = async (carId: number, newStatus: 'Approved' | 'Rejected' | 'Sold') => {
+  const handleCarStatusChange = async (carId: number, action: CarStatus) => {
     try {
       const { error } = await supabase
         .from('cars')
         .update({ 
-          status: newStatus,
+          status: action,
           updated_at: new Date().toISOString()
         })
         .eq('id', carId);
@@ -433,41 +431,28 @@ export default function AdminDashboard() {
       if (error) throw error;
 
       // Update local state
-      setCars(prevCars => 
-        prevCars.map(car => 
-          car.id === carId ? { ...car, status: newStatus } : car
-        )
-      );
+      setCarListings(prevListings => prevListings.map(car => 
+        car.id === carId ? { ...car, status: action } as ExtendedCar : car
+      ));
 
       // Log admin action
-      await supabase.from('admin_logs').insert([{
-        admin_id: user!.id,
-        action_type: 'update_car_status',
-        table_name: 'cars',
-        record_id: carId,
-        changes: { status: newStatus }
-      }]);
+      await supabase
+        .from('admin_logs')
+        .insert([{
+          admin_id: user?.id,
+          action_type: 'car_status_update',
+          target_id: carId,
+          details: `Car status updated to ${action}`,
+          created_at: new Date().toISOString()
+        }]);
 
-      // Show success message
-      // toast.success(`Car ${newStatus.toLowerCase()} successfully`);
-
-      // Send notification to the seller
-      const car = cars.find(c => c.id === carId);
-      if (car?.seller?.id) {
-        await supabase
-          .from('notifications')
-          .insert([{
-            user_id: car.seller.id,
-            type: 'car_status_update',
-            title: `Car Listing ${newStatus}`,
-            message: `Your car listing (${car.brand?.name} ${car.model?.name}) has been ${newStatus.toLowerCase()}.`,
-            created_at: new Date().toISOString()
-          }]);
-      }
-
-    } catch (error: any) {
+      toast.success(`Car status updated to ${action} successfully`);
+      
+      // Refresh data
+      fetchCarListings(carListingsStatus);
+    } catch (error) {
       console.error('Error updating car status:', error);
-      // toast.error(error.message || 'Failed to update car status');
+      toast.error('Failed to update car status');
     }
   };
 
@@ -482,7 +467,7 @@ export default function AdminDashboard() {
 
       // Log admin action
       await supabase.from('admin_logs').insert([{
-        admin_id: user!.id,
+        admin_id: user?.id,
         action_type: 'update_user_role',
         table_name: 'profiles',
         record_id: parseInt(userId),
@@ -563,7 +548,9 @@ export default function AdminDashboard() {
 
       // Process analytics data
       const analyticsData: Analytics = {
+        totalUsers: usersData?.length || 0,
         totalCars: carsData?.length || 0,
+        totalDealers: 0,
         pendingCars: carsData?.filter(car => car.status === 'Pending').length || 0,
         activeCars: carsData?.filter(car => car.status === 'Approved').length || 0,
         soldCars: carsData?.filter(car => car.status === 'Sold').length || 0,
@@ -571,21 +558,11 @@ export default function AdminDashboard() {
         featuredPercentage: (carsData?.filter(car => car.is_featured).length || 0) / carsData?.length * 100 || 0,
         totalRevenue: carsData?.reduce((sum, car) => sum + (car.price || 0), 0) || 0,
         averagePrice: carsData?.reduce((sum, car) => sum + (car.price || 0), 0) / carsData?.length || 0,
-        totalUsers: usersData?.length || 0,
         adminUsers: usersData?.filter(user => user.role === 'admin').length || 0,
         normalUsers: (usersData?.length || 0) - (usersData?.filter(user => user.role === 'admin').length || 0),
         recentActivity: [],
         carsByBrand: [],
-        pendingCarsList: carsData
-          .filter(car => car.status === 'Pending')
-          .map(car => ({
-            id: car.id,
-            brand: car.brand?.name || 'Unknown',
-            model: car.model?.name || 'Unknown',
-            year: car.year,
-            price: car.price,
-            seller: car.seller?.full_name || 'Unknown'
-          }))
+        pendingCarsList: []
       };
 
       // Calculate cars by brand with detailed statistics
@@ -789,12 +766,12 @@ export default function AdminDashboard() {
       );
     }
 
-    const handleQuickAction = async (carId: number, action: 'approve' | 'reject') => {
+    const handleQuickAction = async (carId: number, action: CarStatus) => {
       try {
         const { error } = await supabase
           .from('cars')
           .update({ 
-            status: action === 'approve' ? 'Approved' : 'Rejected',
+            status: action,
             updated_at: new Date().toISOString()
           })
           .eq('id', carId);
@@ -907,58 +884,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Quick Actions for Pending Cars */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Cars Quick Actions</h3>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Car</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {analytics?.pendingCarsList.map((car) => (
-                  <tr key={car.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{car.year} {car.brand} {car.model}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">QAR {car.price.toLocaleString()}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{car.seller}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => handleQuickAction(car.id, 'approve')}
-                        className="text-green-600 hover:text-green-900 mr-4"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleQuickAction(car.id, 'reject')}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Reject
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {analytics?.pendingCarsList.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                      No pending cars
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+
 
         {/* Pending Cars List */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-6">
@@ -1052,12 +978,11 @@ export default function AdminDashboard() {
                   onClick={() => toggleBrandExpansion(item.brand)}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5"></div>
                     <div>
-                      <span className="text-sm font-medium text-gray-900">{item.brand}</span>
-                      <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-sm font-medium text-gray-900">{item.brand}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         ({item.count} cars)
-                      </span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -1216,7 +1141,6 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <div className="w-5 h-5"></div>
                     Pending
                   </button>
                   <button
@@ -1230,7 +1154,6 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <div className="w-5 h-5"></div>
                     Approved
                   </button>
                   <button
@@ -1244,7 +1167,6 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <div className="w-5 h-5"></div>
                     Rejected
                   </button>
                   <button
@@ -1258,7 +1180,6 @@ export default function AdminDashboard() {
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                     }`}
                   >
-                    <div className="w-5 h-5"></div>
                     Sold
                   </button>
                 </div>
@@ -1333,17 +1254,15 @@ export default function AdminDashboard() {
                     {car.status === 'Pending' && (
                       <>
                         <button
-                          onClick={() => handleCarAction(car.id, 'Approved')}
+                          onClick={() => handleCarStatusChange(car.id, 'Approved')}
                           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-600 hover:bg-green-600 hover:text-white rounded-md transition-colors duration-200"
                         >
-                          <div className="w-5 h-5"></div>
                           Approve
                         </button>
                         <button
-                          onClick={() => handleCarAction(car.id, 'Rejected')}
+                          onClick={() => handleCarStatusChange(car.id, 'Rejected')}
                           className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white rounded-md transition-colors duration-200"
                         >
-                          <div className="w-5 h-5"></div>
                           Reject
                         </button>
                       </>
@@ -1548,17 +1467,15 @@ export default function AdminDashboard() {
               {car.status === 'Pending' && (
                 <>
                   <button
-                    onClick={() => handleCarAction(car.id, 'Approved')}
+                    onClick={() => handleCarStatusChange(car.id, 'Approved')}
                     className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-green-600 hover:bg-green-600 hover:text-white rounded-md transition-colors duration-200"
                   >
-                    <div className="w-5 h-5"></div>
                     Approve
                   </button>
                   <button
-                    onClick={() => handleCarAction(car.id, 'Rejected')}
+                    onClick={() => handleCarStatusChange(car.id, 'Rejected')}
                     className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white rounded-md transition-colors duration-200"
                   >
-                    <div className="w-5 h-5"></div>
                     Reject
                   </button>
                 </>
@@ -1633,7 +1550,7 @@ export default function AdminDashboard() {
                   {car.status !== 'Sold' && (
                     <>
                       <button
-                        onClick={() => handleCarAction(car.id, 'Approved')}
+                        onClick={() => handleCarStatusChange(car.id, 'Approved')}
                         disabled={car.status === 'Approved'}
                         className={`p-1.5 rounded-md ${
                           car.status === 'Approved'
@@ -1645,7 +1562,7 @@ export default function AdminDashboard() {
                         <div className="w-5 h-5"></div>
                       </button>
                       <button
-                        onClick={() => handleCarAction(car.id, 'Rejected')}
+                        onClick={() => handleCarStatusChange(car.id, 'Rejected')}
                         disabled={car.status === 'Rejected'}
                         className={`p-1.5 rounded-md ${
                           car.status === 'Rejected'
@@ -1660,7 +1577,7 @@ export default function AdminDashboard() {
                   )}
                   {car.status === 'Approved' && (
                     <button
-                      onClick={() => handleCarAction(car.id, 'Sold')}
+                      onClick={() => handleCarStatusChange(car.id, 'Sold')}
                       className="p-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                       title="Mark as Sold"
                     >
@@ -1791,22 +1708,98 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminNavbar />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {!isAdmin ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Checking admin privileges...</h2>
-              <p className="text-gray-500 dark:text-gray-400">Please wait while we verify your access.</p>
+      <main className="py-10 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Total Users */}
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <UsersIcon className="h-6 w-6 text-qatar-maroon" aria-hidden="true" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Users</dt>
+                      <dd className="text-lg font-semibold text-gray-900 dark:text-white">{analytics?.totalUsers || 0}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Cars */}
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <ShoppingBagIcon className="h-6 w-6 text-qatar-maroon" aria-hidden="true" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Cars</dt>
+                      <dd className="text-lg font-semibold text-gray-900 dark:text-white">{analytics?.totalCars || 0}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Dealers */}
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <UserGroupIcon className="h-6 w-6 text-qatar-maroon" aria-hidden="true" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Dealers</dt>
+                      <dd className="text-lg font-semibold text-gray-900 dark:text-white">{analytics?.totalDealers || 0}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Cars */}
+            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Pending Cars</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {analytics?.pendingCars || 0}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {analytics?.pendingCars || 0} pending / {analytics?.activeCars || 0} active / {analytics?.soldCars || 0} sold
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-full bg-qatar-maroon bg-opacity-10">
+                    <div className="h-8 w-8"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        ) : (
-          <div>
-            {activeTab === 'analytics' && renderAnalytics()}
-            {activeTab === 'users' && renderUsers()}
-            {activeTab === 'database' && renderDatabase()}
-          </div>
-        )}
-      </div>
+          {!isAdmin ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Checking admin privileges...</h2>
+                <p className="text-gray-500 dark:text-gray-400">Please wait while we verify your access.</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {activeTab === 'analytics' && renderAnalytics()}
+              {activeTab === 'users' && renderUsers()}
+              {activeTab === 'database' && renderDatabase()}
+              {activeTab === 'cars' && renderCarManagement()}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

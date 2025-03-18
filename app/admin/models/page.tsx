@@ -18,7 +18,7 @@ export default function ModelsManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingModel, setEditingModel] = useState<Model | null>(null);
-  const [newModel, setNewModel] = useState({ name: '', brand_id: '' });
+  const [newModel, setNewModel] = useState({ name: '', name_ar: '', brand_id: '' });
 
   useEffect(() => {
     const checkAdminAndFetchBrands = async () => {
@@ -111,6 +111,7 @@ export default function ModelsManagement() {
         .from('models')
         .insert([{
           name: newModel.name.trim(),
+          name_ar: newModel.name_ar.trim(),
           brand_id: selectedBrand
         }])
         .select();
@@ -118,7 +119,7 @@ export default function ModelsManagement() {
       if (error) throw error;
 
       setModels([...models, data[0]]);
-      setNewModel({ name: '', brand_id: '' });
+      setNewModel({ name: '', name_ar: '', brand_id: '' });
       toast.success('Model added successfully');
     } catch (error) {
       console.error('Error adding model:', error);
@@ -130,7 +131,10 @@ export default function ModelsManagement() {
     try {
       const { error } = await supabase
         .from('models')
-        .update({ name: model.name })
+        .update({ 
+          name: model.name,
+          name_ar: model.name_ar
+        })
         .eq('id', model.id);
 
       if (error) throw error;
@@ -217,13 +221,20 @@ export default function ModelsManagement() {
             {/* Add New Model Form */}
             <div className="mb-8">
               <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Add New Model</h2>
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <input
                   type="text"
-                  placeholder="Model Name"
+                  placeholder="Model Name (English)"
                   value={newModel.name}
                   onChange={(e) => setNewModel({ ...newModel, name: e.target.value })}
-                  className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+                  className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light min-w-[200px]"
+                />
+                <input
+                  type="text"
+                  placeholder="Model Name (Arabic)"
+                  value={newModel.name_ar}
+                  onChange={(e) => setNewModel({ ...newModel, name_ar: e.target.value })}
+                  className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light min-w-[200px]"
                 />
                 <button
                   onClick={handleAddModel}
@@ -237,15 +248,26 @@ export default function ModelsManagement() {
             {/* Models Table */}
             <div className="overflow-x-auto">
               {loading ? (
-                <div className="flex justify-center py-8">
-                  <LoadingSpinner />
-                </div>
+                <tr>
+                  <td colSpan={3} className="px-6 py-4 text-center">
+                    <LoadingSpinner />
+                  </td>
+                </tr>
+              ) : models.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                    No models found for this brand
+                  </td>
+                </tr>
               ) : (
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-900/50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Model Name
+                        Model Name (English)
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Model Name (Arabic)
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
@@ -255,18 +277,28 @@ export default function ModelsManagement() {
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {models.map((model) => (
                       <tr key={model.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                           {editingModel?.id === model.id ? (
                             <input
                               type="text"
                               value={editingModel.name}
-                              onChange={(e) =>
-                                setEditingModel({ ...editingModel, name: e.target.value })
-                              }
-                              className="border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+                              onChange={(e) => setEditingModel({ ...editingModel, name: e.target.value })}
+                              className="w-full border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                             />
                           ) : (
-                            model.name
+                            <span>{model.name}</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                          {editingModel?.id === model.id ? (
+                            <input
+                              type="text"
+                              value={editingModel.name_ar || ''}
+                              onChange={(e) => setEditingModel({ ...editingModel, name_ar: e.target.value })}
+                              className="w-full border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            />
+                          ) : (
+                            <span className="font-arabic">{model.name_ar || '-'}</span>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

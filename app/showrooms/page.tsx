@@ -3,20 +3,31 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSupabase } from '@/contexts/SupabaseContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Showroom, DealershipType } from '@/types/showroom';
 import ShowroomCard from '@/components/showrooms/ShowroomCard';
 import DealershipRegistrationModal from '@/components/showrooms/DealershipRegistrationModal';
 import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { useCountry } from '@/contexts/CountryContext';
+import { City } from '@/types/supabase';
 
 export default function ShowroomsPage() {
-  const { t, language } = useLanguage();
+  const { t, language, currentLanguage } = useLanguage();
   const { supabase } = useSupabase();
+  const { user } = useAuth();
+  const { currentCountry, getCitiesByCountry } = useCountry();
   const [showrooms, setShowrooms] = useState<Showroom[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [selectedDealershipType, setSelectedDealershipType] = useState<DealershipType | ''>('');
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+
+  // Show registration modal when user clicks register
+  const handleRegisterClick = () => {
+    setIsRegistrationModalOpen(true);
+  };
+  const [cities, setCities] = useState<City[]>([]);
 
   const fetchShowrooms = async () => {
     try {
@@ -28,8 +39,16 @@ export default function ShowroomsPage() {
       // Fetch approved dealerships from the dealerships table
       const { data, error } = await supabase
         .from('dealerships')
-        .select('*')
+        .select(`
+          *,
+          cities:city_id (
+            id,
+            name,
+            name_ar
+          )
+        `)
         .eq('status', 'approved')
+        .eq('country_id', currentCountry.id)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -40,14 +59,15 @@ export default function ShowroomsPage() {
       const transformedData = data.map(dealership => ({
         id: dealership.id,
         name: dealership.business_name,
-        name_ar: dealership.business_name_ar || dealership.business_name,
+        name_ar: dealership.business_name_ar,
         description: dealership.description,
-        description_ar: dealership.description_ar || dealership.description,
+        description_ar: dealership.description_ar,
         logo: dealership.logo_url,
-        coverImage: dealership.cover_image_url || dealership.logo_url,
-        location: dealership.location,
-        location_ar: dealership.location_ar,
-        rating: 0, // Default value as we don't have ratings yet
+        coverImage: dealership.cover_image_url,
+        location: dealership.cities?.name || dealership.location || '',
+        location_ar: dealership.cities?.name_ar || dealership.location_ar || '',
+        city_id: dealership.city_id,
+        rating: dealership.rating || 0,
         reviewCount: 0, // Default value as we don't have reviews yet
         featured: dealership.featured || false, // Use the featured field from the database
         contactInfo: {
@@ -71,6 +91,14 @@ export default function ShowroomsPage() {
     fetchShowrooms();
   }, []);
 
+  useEffect(() => {
+    if (currentCountry) {
+      // Get cities for the current country
+      const countryCities = getCitiesByCountry(currentCountry.id);
+      setCities(countryCities);
+    }
+  }, [currentCountry, getCitiesByCountry]);
+
   const filteredShowrooms = showrooms.filter(showroom => {
     const searchText = searchQuery.toLowerCase();
     const nameMatch = language === 'ar' 
@@ -82,7 +110,7 @@ export default function ShowroomsPage() {
       : showroom.description.toLowerCase().includes(searchText);
     
     const matchesSearch = nameMatch || descriptionMatch;
-    const matchesLocation = !selectedLocation || showroom.location === selectedLocation;
+    const matchesLocation = !selectedLocation || showroom.city_id?.toString() === selectedLocation;
     const matchesDealershipType = !selectedDealershipType || showroom.dealershipType === selectedDealershipType;
     
     return matchesSearch && matchesLocation && matchesDealershipType;
@@ -96,7 +124,7 @@ export default function ShowroomsPage() {
           {t('showroom.title')}
         </h1>
         <button
-          onClick={() => setIsRegistrationModalOpen(true)}
+          onClick={handleRegisterClick}
           className="bg-qatar-maroon text-white px-6 py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors"
         >
           {t('showroom.registerDealership')}
@@ -124,14 +152,11 @@ export default function ShowroomsPage() {
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 focus:ring-qatar-maroon focus:border-qatar-maroon dark:bg-gray-700 dark:text-white appearance-none"
             >
               <option value="">{t('showroom.allLocations')}</option>
-              <option value="Doha">{t('showroom.locations.doha')}</option>
-              <option value="Al Wakrah">{t('showroom.locations.alWakrah')}</option>
-              <option value="Al Khor">{t('showroom.locations.alKhor')}</option>
-              <option value="Umm Salal">{t('showroom.locations.umSalal')}</option>
-              <option value="Al Rayyan">{t('showroom.locations.alRayyan')}</option>
-              <option value="Al Shamal">{t('showroom.locations.alShamal')}</option>
-              <option value="Al Daayen">{t('showroom.locations.alDaayen')}</option>
-              <option value="Lusail">{t('showroom.locations.lusail')}</option>
+              {cities.map(city => (
+                <option key={city.id} value={city.id.toString()}>
+                  {currentLanguage === 'ar' ? city.name_ar : city.name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="relative">

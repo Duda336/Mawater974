@@ -17,7 +17,7 @@ export default function BrandsManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
-  const [newBrand, setNewBrand] = useState({ name: '', logo_url: '' });
+  const [newBrand, setNewBrand] = useState({ name: '', name_ar: '', logo_url: '' });
 
   useEffect(() => {
     const checkAdminAndFetchData = async () => {
@@ -76,6 +76,7 @@ export default function BrandsManagement() {
         .from('brands')
         .insert([{
           name: newBrand.name.trim(),
+          name_ar: newBrand.name_ar.trim(),
           logo_url: newBrand.logo_url.trim()
         }])
         .select();
@@ -83,7 +84,7 @@ export default function BrandsManagement() {
       if (error) throw error;
 
       setBrands([...brands, data[0]]);
-      setNewBrand({ name: '', logo_url: '' });
+      setNewBrand({ name: '', name_ar: '', logo_url: '' });
       toast.success('Brand added successfully');
     } catch (error) {
       console.error('Error adding brand:', error);
@@ -97,6 +98,7 @@ export default function BrandsManagement() {
         .from('brands')
         .update({
           name: brand.name,
+          name_ar: brand.name_ar,
           logo_url: brand.logo_url
         })
         .eq('id', brand.id);
@@ -164,20 +166,27 @@ export default function BrandsManagement() {
         {/* Add New Brand Form */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Add New Brand</h2>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <input
               type="text"
-              placeholder="Brand Name"
+              placeholder="Brand Name (English)"
               value={newBrand.name}
               onChange={(e) => setNewBrand({ ...newBrand, name: e.target.value })}
-              className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+              className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light min-w-[200px]"
+            />
+            <input
+              type="text"
+              placeholder="Brand Name (Arabic)"
+              value={newBrand.name_ar}
+              onChange={(e) => setNewBrand({ ...newBrand, name_ar: e.target.value })}
+              className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light min-w-[200px]"
             />
             <input
               type="text"
               placeholder="Logo URL"
               value={newBrand.logo_url}
               onChange={(e) => setNewBrand({ ...newBrand, logo_url: e.target.value })}
-              className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+              className="flex-1 border dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light min-w-[200px]"
             />
             <button
               onClick={handleAddBrand}
@@ -194,7 +203,10 @@ export default function BrandsManagement() {
             <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Brand Name
+                  Brand Name (English)
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Brand Name (Arabic)
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Logo URL
@@ -212,13 +224,23 @@ export default function BrandsManagement() {
                       <input
                         type="text"
                         value={editingBrand.name}
-                        onChange={(e) =>
-                          setEditingBrand({ ...editingBrand, name: e.target.value })
-                        }
-                        className="border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+                        onChange={(e) => setEditingBrand({ ...editingBrand, name: e.target.value })}
+                        className="w-full border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
                       />
                     ) : (
-                      brand.name
+                      <span>{brand.name}</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    {editingBrand?.id === brand.id ? (
+                      <input
+                        type="text"
+                        value={editingBrand.name_ar || ''}
+                        onChange={(e) => setEditingBrand({ ...editingBrand, name_ar: e.target.value })}
+                        className="w-full border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+                      />
+                    ) : (
+                      <span className="font-arabic">{brand.name_ar || '-'}</span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -226,10 +248,8 @@ export default function BrandsManagement() {
                       <input
                         type="text"
                         value={editingBrand.logo_url}
-                        onChange={(e) =>
-                          setEditingBrand({ ...editingBrand, logo_url: e.target.value })
-                        }
-                        className="border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
+                        onChange={(e) => setEditingBrand({ ...editingBrand, logo_url: e.target.value })}
+                        className="w-full border dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-qatar-maroon dark:focus:ring-qatar-maroon-light"
                       />
                     ) : (
                       <div className="flex items-center">

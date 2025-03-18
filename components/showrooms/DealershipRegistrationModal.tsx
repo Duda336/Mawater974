@@ -5,8 +5,10 @@ import { Dialog } from '@headlessui/react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import Image from 'next/image';
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { City } from '@/types/supabase';
 
 interface DealershipRegistrationModalProps {
   isOpen: boolean;
@@ -17,13 +19,15 @@ export default function DealershipRegistrationModal({
   isOpen,
   onClose,
 }: DealershipRegistrationModalProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { supabase } = useSupabase();
   const { user } = useAuth();
+  const { currentCountry, countries, getCitiesByCountry } = useCountry();
   const [loading, setLoading] = useState(false);
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [cities, setCities] = useState<City[]>([]);
   const [formData, setFormData] = useState({
     business_name: '',
     business_name_ar: '',
@@ -32,70 +36,103 @@ export default function DealershipRegistrationModal({
     location: '',
     location_ar: '',
     dealership_type: '' as 'Official' | 'Private' | '',
-    business_type: '' as 'showroom' | 'service Center' | 'spare Parts Dealership' | '',
+    business_type: '' as 'showroom' | 'service_center' | 'spare_parts_dealership' | '',
+    country_id: currentCountry?.id || null,
+    city_id: '',
   });
+
+  // Load cities based on selected country
+  useEffect(() => {
+    const loadCities = async () => {
+      if (formData.country_id) {
+        const countryCities = await getCitiesByCountry(formData.country_id);
+        setCities(countryCities);
+      }
+    };
+    
+    loadCities();
+  }, [formData.country_id, getCitiesByCountry]);
 
   // Check if user already has a pending request
   useEffect(() => {
-    if (user) {
+    let mounted = true;
+
+    const checkExistingRequest = async () => {
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('dealerships')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (!mounted) return;
+
+      if (error) {
+        console.error('Error checking request status:', error);
+        return;
+      }
+
+      // If no data or empty array, user has no requests
+      if (!data || data.length === 0) {
+        return;
+      }
+
+      const latestRequest = data[0];
+      
+      if (latestRequest.status === 'pending') {
+        alert(t('dealership.alreadyPending'));
+        onClose();
+      } else if (latestRequest.status === 'rejected') {
+        // For rejected requests, we'll show a message but allow them to submit again
+        const confirmResubmit = window.confirm(t('dealership.previouslyRejected'));
+        if (!confirmResubmit) {
+          onClose();
+        } else {
+          // If they want to resubmit, we'll pre-fill the form with their previous data
+          // but exclude sensitive fields like logo
+          setFormData({
+            business_name: latestRequest.business_name || '',
+            business_name_ar: latestRequest.business_name_ar || '',
+            description: latestRequest.description || '',
+            description_ar: latestRequest.description_ar || '',
+            location: latestRequest.location || '',
+            location_ar: latestRequest.location_ar || '',
+            dealership_type: latestRequest.dealership_type || '',
+            business_type: latestRequest.business_type || '',
+            country_id: latestRequest.country_id || null,
+            city_id: latestRequest.city_id || '',
+          });
+        }
+      } else if (latestRequest.status === 'approved') {
+        alert(t('dealership.alreadyApproved'));
+        onClose();
+      }
+    };
+
+    if (user && isOpen) {
       checkExistingRequest();
     }
-  }, [user]);
 
-  const checkExistingRequest = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('dealerships')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    if (error) {
-      console.error('Error checking request status:', error);
-      return;
-    }
-
-    // If no data or empty array, user has no requests
-    if (!data || data.length === 0) {
-      return;
-    }
-
-    const latestRequest = data[0];
-    
-    if (latestRequest.status === 'pending') {
-      alert(t('dealership.alreadyPending'));
-      onClose();
-    } else if (latestRequest.status === 'rejected') {
-      // For rejected requests, we'll show a message but allow them to submit again
-      const confirmResubmit = window.confirm(t('dealership.previouslyRejected'));
-      if (!confirmResubmit) {
-        onClose();
-      } else {
-        // If they want to resubmit, we'll pre-fill the form with their previous data
-        // but exclude sensitive fields like logo
-        setFormData({
-          business_name: latestRequest.business_name || '',
-          business_name_ar: latestRequest.business_name_ar || '',
-          description: latestRequest.description || '',
-          description_ar: latestRequest.description_ar || '',
-          location: latestRequest.location || '',
-          location_ar: latestRequest.location_ar || '',
-          dealership_type: latestRequest.dealership_type || '',
-          business_type: latestRequest.business_type || '',
-        });
-      }
-    } else if (latestRequest.status === 'approved') {
-      alert(t('dealership.alreadyApproved'));
-      onClose();
-    }
-  };
+    return () => {
+      mounted = false;
+    };
+  }, [user, isOpen, t, onClose, supabase]);
 
   const handleRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
       alert(t('auth.required'));
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.business_name || !formData.business_name_ar || 
+        !formData.description || !formData.description_ar || 
+        !formData.dealership_type || !formData.business_type ||
+        !formData.country_id || !formData.city_id) {
+      alert(t('dealership.fillAllFields'));
       return;
     }
 
@@ -155,6 +192,14 @@ export default function DealershipRegistrationModal({
       if (existingData && existingData.length > 0 && existingData[0].status === 'rejected') {
         dealershipId = existingData[0].id;
         
+        // Find the selected city name for the location field
+        const selectedCity = cities.find(city => city.id.toString() === formData.city_id);
+        const cityName = selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name) : '';
+        
+        // Combine city name with additional location details
+        const combinedLocation = `${cityName}${formData.location ? `, ${formData.location}` : ''}`;
+        const combinedLocationAr = `${selectedCity?.name_ar || ''}${formData.location_ar ? `, ${formData.location_ar}` : ''}`;
+        
         const { error: updateError } = await supabase
           .from('dealerships')
           .update({
@@ -162,10 +207,11 @@ export default function DealershipRegistrationModal({
             business_name_ar: formData.business_name_ar,
             description: formData.description,
             description_ar: formData.description_ar,
-            location: formData.location,
-            location_ar: formData.location_ar,
+            location: combinedLocation,
+            location_ar: combinedLocationAr,
             dealership_type: formData.dealership_type,
             business_type: formData.business_type,
+            country_id: formData.country_id,
             logo_url: logoUrl,
             status: 'pending',
             reviewer_id: null,
@@ -181,6 +227,14 @@ export default function DealershipRegistrationModal({
         }
       } else {
         // Create a new dealership request
+        // Find the selected city name for the location field
+        const selectedCity = cities.find(city => city.id.toString() === formData.city_id);
+        const cityName = selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name) : '';
+        
+        // Combine city name with additional location details
+        const combinedLocation = `${cityName}${formData.location ? `, ${formData.location}` : ''}`;
+        const combinedLocationAr = `${selectedCity?.name_ar || ''}${formData.location_ar ? `, ${formData.location_ar}` : ''}`;
+        
         const { error: requestError } = await supabase
           .from('dealerships')
           .insert({
@@ -189,10 +243,11 @@ export default function DealershipRegistrationModal({
             business_name_ar: formData.business_name_ar,
             description: formData.description,
             description_ar: formData.description_ar,
-            location: formData.location,
-            location_ar: formData.location_ar,
+            location: combinedLocation,
+            location_ar: combinedLocationAr,
             dealership_type: formData.dealership_type,
             business_type: formData.business_type,
+            country_id: formData.country_id,
             logo_url: logoUrl,
             status: 'pending',
           });
@@ -376,9 +431,54 @@ export default function DealershipRegistrationModal({
 
             {/* Location */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Country */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('dealership.location')} (English)
+                  {t('dealership.country')}
+                </label>
+                <select
+                  value={formData.country_id || ''}
+                  name="country_id"
+                  onChange={(e) => setFormData(prev => ({ ...prev, country_id: e.target.value ? parseInt(e.target.value) : null, city_id: '' }))}
+                  className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  required
+                >
+                  <option value="">{t('dealership.selectCountry')}</option>
+                  {countries.map(country => (
+                    <option key={country.id} value={country.id}>
+                      {language === 'ar' ? country.name_ar : country.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* City */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('dealership.city')}
+                </label>
+                <select
+                  value={formData.city_id}
+                  name="city_id"
+                  onChange={(e) => setFormData(prev => ({ ...prev, city_id: e.target.value }))}
+                  className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  required
+                >
+                  <option value="">{t('dealership.selectCity')}</option>
+                  {cities.map(city => (
+                    <option key={city.id} value={city.id}>
+                      {language === 'ar' ? city.name_ar : city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Additional Location Details */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('dealership.locationDetails')} (English)
                 </label>
                 <input
                   type="text"
@@ -390,7 +490,7 @@ export default function DealershipRegistrationModal({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {t('dealership.location')} (Arabic)
+                  {t('dealership.locationDetails')} (Arabic)
                 </label>
                 <input
                   type="text"
@@ -428,7 +528,7 @@ export default function DealershipRegistrationModal({
                 <select
                   value={formData.business_type}
                   name="business_type"
-                  onChange={(e) => setFormData(prev => ({ ...prev, business_type: e.target.value as 'Dealership' | 'Service Center' | 'Spare Parts Dealership' | '' }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, business_type: e.target.value as 'showroom' | 'service_center' | 'spare_parts_dealership' | '' }))}
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 >

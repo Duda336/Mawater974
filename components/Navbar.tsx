@@ -164,10 +164,11 @@ export default function Navbar() {
   ];
 
   const userMenuItems = [
-    { name: t('user.myProfile'), href: '/profile', icon: UserCircleIcon },
-    ...(isAdmin ? [{ name: t('user.adminDashboard'), href: '/admin', icon: ClipboardDocumentListIcon }] : []),
-    { name: t('user.myAds'), href: '/my-ads', icon: ClipboardDocumentListIcon },
-    { name: t('user.favorites'), href: '/favorites', icon: HeartIcon },
+    { name: t('user.myProfile'), href: `/${currentCountry?.code.toLowerCase()}/profile`, icon: UserCircleIcon },
+    ...(isAdmin ? [{ name: t('user.adminDashboard'), href: `/${currentCountry?.code.toLowerCase()}/admin`, icon: ClipboardDocumentListIcon }] : []),
+    ...(isDealer ? [{ name: t('user.dealerDashboard'), href: `/${currentCountry?.code.toLowerCase()}/dealer-dashboard`, icon: ClipboardDocumentListIcon }] : []),
+    { name: t('user.myAds'), href: `/${currentCountry?.code.toLowerCase()}/my-ads`, icon: ClipboardDocumentListIcon },
+    { name: t('user.favorites'), href: `/${currentCountry?.code.toLowerCase()}/favorites`, icon: HeartIcon },
   ];
 
   if (!mounted) {
@@ -319,7 +320,7 @@ export default function Navbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <Link
-                              href="/dashboard"
+                              href={`/${currentCountry?.code.toLowerCase()}/dealer-dashboard`}
                               className={`${
                                 active ? 'bg-gray-100 dark:bg-gray-700' : ''
                               } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}

@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Car } from '../types/supabase';
+import { Car, ExtendedCar, City } from '../types/supabase';
 import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { SparklesIcon } from '@heroicons/react/24/solid';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useCountry } from '../contexts/CountryContext';
 import { useRouter } from 'next/navigation';
@@ -15,10 +16,10 @@ import ImageCarousel from './ImageCarousel';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface CarCardProps {
-  car: any;
+  car: ExtendedCar;
   onFavoriteToggle?: (carId: number) => void;
   isFavorite?: boolean;
-  onSelect?: (car: any) => void;
+  onSelect?: (car: ExtendedCar) => void;
   isSelected?: boolean;
   featured?: boolean;
 }
@@ -68,7 +69,7 @@ export default function CarCard({
         <div className="relative aspect-[16/9]">
           <ImageCarousel
             images={car.images || [{ url: '/placeholder-car.jpg' }]}
-            alt={`${car.brand?.name || 'Car'} ${car.model?.name || ''}`}
+            alt={`${language === 'ar' && car.brand?.name_ar ? car.brand.name_ar : car.brand?.name || 'Car'} ${language === 'ar' && car.model?.name_ar ? car.model.name_ar : car.model?.name || ''}`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>
@@ -78,9 +79,11 @@ export default function CarCard({
             <div className="flex items-center justify-between">
               <div className="flex items-baseline gap-2">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {car.brand?.name}
+                  {language === 'ar' && car.brand?.name_ar ? car.brand.name_ar : car.brand?.name}
                 </h3>
-                <span className="text-lg text-gray-500 dark:text-gray-400">{car.model?.name}</span>
+                <span className="text-lg text-gray-500 dark:text-gray-400">
+                  {language === 'ar' && car.model?.name_ar ? car.model.name_ar : car.model?.name}{car.exact_model ? ` - ${car.exact_model}` : ''}
+                </span>
               </div>
               
               {/* Favorite Button */}
@@ -92,7 +95,7 @@ export default function CarCard({
                     : 'bg-transparent border-gray-200 dark:border-gray-600 text-gray-400 hover:border-qatar-maroon hover:text-qatar-maroon'
                   }
                   transform active:scale-95 hover:scale-105`}
-                aria-label={isFavorite ? t('cars.favorite.remove') : t('cars.favorite.add')}
+                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
               >
                 {isFavorite ? (
                   <HeartSolid className="h-4 w-4" />
@@ -105,24 +108,39 @@ export default function CarCard({
             <div className="flex items-center gap-2 mt-1 text-sm text-gray-500 dark:text-gray-400">
               <span>{car.year}</span>
               <span>•</span>
-              <span>{car.condition}</span>
+              <span>
+                {car.condition === 'Not Working' 
+                  ? t('cars.condition.notWorking')
+                  : t(`cars.condition.${car.condition?.toLowerCase()}`) || car.condition}
+              </span>
             </div>
 
             <div className="mt-3">
-              <span className="text-2xl font-semibold text-qatar-maroon">
+              <span className="text-2xl font-semibold text-qatar-maroon" dir="ltr">
                 {formatPrice(car.price || 0, currentLanguage)}
               </span>
             </div>
 
             <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-2 flex-1">
-                <span>{car.mileage?.toLocaleString() || '0'} km</span>
+                <span dir="ltr">{car.mileage?.toLocaleString() || '0'} {t('cars.mileage.unit')}</span>
                 <span>•</span>
-                <span>{car.fuel_type}</span>
+                <span>{t(`cars.fuelType.${car.fuel_type?.toLowerCase()}`) || car.fuel_type}</span>
                 <span>•</span>
-                <span>{car.gearbox_type}</span>
+                <span>{t(`cars.transmission.${car.gearbox_type?.toLowerCase()}`) || car.gearbox_type}</span>
               </div>
             </div>
+
+            {(car.city || car.location) && (
+              <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <MapPinIcon className="h-4 w-4 mr-1" />
+                <span>
+                  {car.city 
+                    ? (language === 'ar' ? car.city.name_ar : car.city.name)
+                    : car.location}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

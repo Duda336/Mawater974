@@ -46,9 +46,10 @@ export default function FavoritesPage() {
         .from('cars')
         .select(`
           *,
-          brand:brands(id, name),
-          model:models(id, name),
+          brand:brands(id, name, name_ar),
+          model:models(id, name, name_ar),
           user:profiles(id, full_name),
+          city:cities(id, name, name_ar),
           images:car_images(url, is_main)
         `)
         .in('id', carIds);

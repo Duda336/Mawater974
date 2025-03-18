@@ -2,19 +2,34 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import {
+  HomeIcon,
+  UserIcon,
+  UsersIcon,
+  ServerIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  Bars3Icon,
+  XMarkIcon
+} from '@heroicons/react/24/outline';
 
 export default function AdminNavbar() {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
     { name: 'Analytics', href: '/admin' },
     { name: 'Country Analytics', href: '/admin/country-analytics' },
     { name: 'Cars', href: '/admin/cars' },
+    { name: 'Reports', href: '/admin/reports' },
     { name: 'Users', href: '/admin/users' },
     { name: 'Database', href: '/admin/database' },
     { name: 'Brands', href: '/admin/brands' },
     { name: 'Models', href: '/admin/models' },
+    { name: 'Locations', href: '/admin/locations' },
     { name: 'Dealership Requests', href: '/admin/dealership-requests' },
+    { name: 'Contact Messages', href: '/admin/contact-messages' },
   ];
 
   const isActive = (path: string) => {
@@ -31,7 +46,7 @@ export default function AdminNavbar() {
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
               <Link href="/admin" className="text-xl font-bold text-qatar-maroon dark:text-qatar-maroon-light">
-                Admin Dashboard
+                Admin
               </Link>
             </div>
             <nav className="ml-6 flex space-x-4 overflow-x-auto hide-scrollbar">
@@ -50,11 +65,17 @@ export default function AdminNavbar() {
               ))}
             </nav>
           </div>
-          <div className="flex items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              Admin
-            </span>
-          </div>
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-qatar-maroon"
+          >
+            <span className="sr-only">Open main menu</span>
+            {isOpen ? (
+              <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+            )}
+          </button>
         </div>
       </div>
     </div>

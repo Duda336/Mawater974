@@ -31,6 +31,7 @@ interface FormData {
   price: string;
   brand: string;  // Brand ID as string
   model: string;  // Model ID as string
+  exact_model: string; // Exact model text field
   year: string;
   mileage: string;
   fuel_type: string;
@@ -40,6 +41,8 @@ interface FormData {
   color: string;
   cylinders: string;
   location: string;
+  city_id: number | null;
+  country_id: number | null; // Added country_id field
   images: File[];
 }
 
@@ -48,6 +51,7 @@ const initialFormData: FormData = {
   price: '',
   brand: '',
   model: '',
+  exact_model: '',
   year: '',
   mileage: '',
   fuel_type: '',
@@ -57,6 +61,8 @@ const initialFormData: FormData = {
   color: '',
   cylinders: '',
   location: '',
+  city_id: null,
+  country_id: null, // Initialize country_id as null
   images: [],
 };
 
@@ -75,8 +81,9 @@ export default function SellPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit');
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
   const { currentCountry, getCitiesByCountry } = useCountry();
+  const cities = currentCountry ? getCitiesByCountry(currentCountry.id) : [];
 
   const features = useMemo(() => ({
     free: [
@@ -107,11 +114,11 @@ export default function SellPage() {
   const [loading, setLoading] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
-  const [cities, setCities] = useState<any[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [carData, setCarData] = useState({
     brand_id: '',
     model_id: '',
+    exact_model: '',
     year: new Date().getFullYear(),
     mileage: '',
     price: '',
@@ -256,6 +263,7 @@ export default function SellPage() {
       setCarData({
         brand_id: data.brand_id,
         model_id: data.model_id,
+        exact_model: data.exact_model,
         year: data.year,
         mileage: data.mileage,
         price: data.price,
@@ -293,17 +301,6 @@ export default function SellPage() {
       fetchModels(formData.brand);
     }
   }, [formData.brand]);
-
-  useEffect(() => {
-    if (currentCountry) {
-      // Get cities for the current country
-      const countryCities = getCitiesByCountry(currentCountry.id);
-      setCities(countryCities.map(city => ({
-        key: city.name.toLowerCase().replace(/\s+/g, ''),
-        value: city.name
-      })));
-    }
-  }, [currentCountry, getCitiesByCountry]);
 
   const handleContinue = () => {
     // Store the selected plan in localStorage or context
@@ -345,7 +342,7 @@ export default function SellPage() {
               <option value="">{t('sell.basic.brand.select')}</option>
               {brands.map(brand => (
                 <option key={brand.id} value={brand.id}>
-                  {brand.name}
+                  {currentLanguage === 'ar' && brand.name_ar ? brand.name_ar : brand.name}
                 </option>
               ))}
             </select>
@@ -374,10 +371,32 @@ export default function SellPage() {
               <option value="">{t('sell.basic.model.select')}</option>
               {models.map(model => (
                 <option key={model.id} value={model.id}>
-                  {model.name}
+                  {currentLanguage === 'ar' && model.name_ar ? model.name_ar : model.name}
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Exact Model */}
+          <div>
+            <label 
+              htmlFor="exact_model" 
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              {t('sell.basic.exactModel') || 'Exact Model'} 
+              <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">({t('sell.basic.optional') || 'Optional'})</span>
+            </label>
+            <input
+              type="text"
+              id="exact_model"
+              name="exact_model"
+              value={formData.exact_model}
+              onChange={(e) => handleInputChange(e)}
+              placeholder={t('sell.basic.exactModel.placeholder') || 'Specify exact model (e.g., 320i, Camry SE)'}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+                         text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
+                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+            />
           </div>
 
           {/* Year */}
@@ -644,22 +663,33 @@ export default function SellPage() {
               htmlFor="location" 
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              {t('sell.details.location')} *
+              {t('common.location')} *
             </label>
             <select
               id="location"
               name="location"
-              value={formData.location}
-              onChange={(e) => handleInputChange(e)}
+              value={formData.city_id?.toString() || ''}
+              onChange={(e) => {
+                const cityId = parseInt(e.target.value);
+                const selectedCity = cities.find(city => city.id === cityId);
+                if (selectedCity) {
+                  setFormData({
+                    ...formData,
+                    location: selectedCity.name,
+                    city_id: selectedCity.id,
+                    country_id: currentCountry?.id || null
+                  });
+                }
+              }}
               required
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
                          focus:border-qatar-maroon transition duration-200 ease-in-out"
             >
-              <option value="">{t('sell.details.location.select')}</option>
+              <option value="">{t('common.location.select')}</option>
               {cities.map(city => (
-                <option key={city.key} value={city.value}>
-                  {city.value}
+                <option key={city.id} value={city.id}>
+                  {currentLanguage === 'ar' ? city.name_ar : city.name}
                 </option>
               ))}
             </select>
@@ -783,8 +813,16 @@ export default function SellPage() {
                       >
                         <div className="flex items-center justify-center gap-1 rtl:flex-row-reverse">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
-                            <path fillRule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"
+                              clipRule="evenodd"
+                            />
+                            <path
+                              fillRule="evenodd"
+                              d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                           {t('sell.images.setMainBtn')}
                         </div>
@@ -808,7 +846,10 @@ export default function SellPage() {
                     >
                       <div className="flex items-center justify-center gap-1 rtl:flex-row-reverse">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0111 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v3a1 1 0 002 0V8a1 1 0 00-1-1z" />
+                          <path
+                            fillRule="evenodd"
+                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0111 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v3a1 1 0 002 0V8a1 1 0 00-1-1z"
+                          />
                         </svg>
                         {t('sell.images.removeBtn')}
                       </div>
@@ -834,12 +875,12 @@ export default function SellPage() {
                 viewBox="0 0 24 24" 
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                ></path>
+                />
               </svg>
               <p className="mb-2 text-sm text-gray-400 group-hover:text-white transition-colors">
                 <span className="font-semibold group-hover:text-qatar-maroon">{t('sell.images.drag')}</span>
@@ -863,15 +904,14 @@ export default function SellPage() {
         <div className="mt-6 text-center">
           <label 
             htmlFor="file-upload" 
-            className={`inline-block px-6 py-3 border border-transparent rounded-md text-base font-medium text-white transition-all duration-300 ${
-              allImages.length >= 10 
-                ? 'bg-gray-600 cursor-not-allowed' 
-                : 'bg-[#2a3441] hover:bg-[#323d4d] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon'
-            }`}
+            className={`inline-block px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <div className="flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
+                <path
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                />
               </svg>
               {allImages.length >= 10 ? t('sell.images.maxReached') : t('sell.images.addMore')}
             </div>
@@ -902,9 +942,10 @@ export default function SellPage() {
     const previewItems = [
       { label: t('sell.basic.brand'), value: selectedBrand?.name },
       { label: t('sell.basic.model'), value: selectedModel?.name },
+      { label: t('sell.basic.exactModel') || 'Exact Model', value: formData.exact_model || null },
       { label: t('sell.basic.year'), value: formData.year },
-      { label: t('sell.basic.price'), value: formData.price },
-      { label: t('sell.details.mileage'), value: formData.mileage },
+      { label: t('sell.basic.price'), value: formData.price ? `${currentCountry?.currency_symbol || 'QAR'} ${formData.price}` : null },
+      { label: t('sell.details.mileage'), value: formData.mileage ? `${formData.mileage} ${t('cars.km')}` : null },
       { label: t('sell.details.fuelType'), value: formData.fuel_type ? t(`cars.fuelType.${formData.fuel_type.toLowerCase()}`) : null },
       { label: t('sell.details.transmission'), value: formData.gearbox_type ? t(`cars.transmission.${formData.gearbox_type.toLowerCase()}`) : null },
       { label: t('sell.details.bodyType'), value: formData.body_type ? t(`cars.bodyType.${formData.body_type.toLowerCase()}`) : null },
@@ -925,7 +966,7 @@ export default function SellPage() {
       <div className="space-y-8 bg-white dark:bg-gray-800 shadow-lg dark:shadow-xl rounded-xl p-6 md:p-10">
         {/* Preview Header */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             {t('sell.review.title')}
           </h2>
           <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -1027,7 +1068,7 @@ export default function SellPage() {
         <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded-md">
           <div className="flex">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
@@ -1108,6 +1149,11 @@ export default function SellPage() {
       toast.error(t('sell.messages.login'));
       return;
     }
+
+    if (!formData.city_id || !formData.location) {
+      toast.error(t('sell.messages.selectCity'));
+      return;
+    }
     
     setIsSubmitting(true);
     setError(null);
@@ -1115,9 +1161,10 @@ export default function SellPage() {
     try {
       console.log('Preparing car data...');
       // Prepare the car data with correct field names
-      const carSubmitData = {
+      const carSubmitData: any = {
         brand_id: parseInt(formData.brand),
         model_id: parseInt(formData.model),
+        exact_model: formData.exact_model,
         year: parseInt(formData.year),
         price: parseInt(formData.price.replace(/[^0-9]/g, '')),
         mileage: parseInt(formData.mileage),
@@ -1131,6 +1178,7 @@ export default function SellPage() {
         description: formData.description,
         user_id: user.id,
         country_id: currentCountry.id,
+        city_id: formData.city_id,
         status: 'Pending',
       };
 
@@ -1257,13 +1305,28 @@ export default function SellPage() {
   ) => {
     const { name, value } = e.target;
     
-    if (name === 'price') {
-      const numericValue = value.replace(/[^0-9]/g, '');
-      const formattedValue = new Intl.NumberFormat().format(parseInt(numericValue) || 0);
-      setFormData(prev => ({ ...prev, [name]: formattedValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => {
+      const updatedData = { ...prev, [name]: value };
+      
+      // If changing location, also update city_id and ensure location matches city name
+      if (name === 'location' && value) {
+        const selectedCity = cities.find(city => city.value === value);
+        if (selectedCity) {
+          updatedData.city_id = selectedCity.id;
+          updatedData.location = selectedCity.label; // Use city name as location
+        }
+      }
+      
+      // Format price with commas
+      if (name === 'price') {
+        const numericValue = value.replace(/[^0-9]/g, '');
+        if (numericValue) {
+          updatedData.price = new Intl.NumberFormat().format(parseInt(numericValue));
+        }
+      }
+      
+      return updatedData;
+    });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1368,19 +1431,14 @@ export default function SellPage() {
                   <div className="bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-400 p-4 rounded-md">
                     <div className="flex">
                       <div className="flex-shrink-0">
-                        <svg
-                          className="h-5 w-5 text-yellow-400"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
+                        <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                           <path
                             fillRule="evenodd"
                             d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
                           />
                         </svg>
                       </div>
-                      <div className="ml-3">
+                      <div className="ml-3">  
                         <p className="text-sm text-yellow-700 dark:text-yellow-200">
                         {t('sell.messages.reviewTime')}
                         </p>
@@ -1567,7 +1625,7 @@ export default function SellPage() {
                     <span className="text-4xl font-extrabold text-gray-900 dark:text-white">
                       {t('sell.plan.featured.price')}
                     </span>
-                    <span className="text-base font-medium text-gray-500 dark:text-gray-300">
+                    <span className="text-base font-medium text-gray-500 dark:text-gray-400">
                       {t('sell.plan.featured.period')}
                     </span>
                   </p>

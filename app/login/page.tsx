@@ -161,7 +161,7 @@ export default function LoginPage() {
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('login.email')}
+                {t('login.email')} <span className="text-gray-700 dark:text-gray-300">*</span>
               </label>
               <input
                 id="email"
@@ -178,7 +178,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('login.password')}
+                {t('login.password')} <span className="text-gray-700 dark:text-gray-300">*</span>
               </label>
               <div className="relative">
                 <input

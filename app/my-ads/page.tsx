@@ -20,25 +20,30 @@ import {
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import EditCarModal from '@/components/EditCarModal';
 
 type Car = Database['public']['Tables']['cars']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
 type Model = Database['public']['Tables']['models']['Row'];
+type City = Database['public']['Tables']['cities']['Row'];
 
 interface ExtendedCar extends Car {
   brand: Brand;
   model: Model;
+  city: City;
+  location?: string;
   images: { url: string; is_main: boolean }[];
 }
 
 export default function MyAdsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [cars, setCars] = useState<ExtendedCar[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'sold'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'sold'>('all');
   const [selectedCar, setSelectedCar] = useState<ExtendedCar | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSoldModal, setShowSoldModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -60,49 +65,40 @@ export default function MyAdsPage() {
 
   const fetchUserCars = async () => {
     try {
-      if (!user?.id) {
-        console.error('No user ID available');
-        return;
-      }
-
-      const { data, error } = await supabase
+      setLoading(true);
+      const { data: cars, error } = await supabase
         .from('cars')
         .select(`
           *,
-          brand:brands(*),
-          model:models(*),
-          images:car_images(*)
+          brand:brands(id, name, name_ar),
+          model:models(id, name, name_ar),
+          city:cities(id, name, name_ar),
+          images:car_images(id, url, is_main)
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching cars:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!data) {
-        console.log('No cars found');
-        setCars([]);
-        return;
-      }
+      const filteredCars = cars?.filter(car => {
+        switch (filter) {
+          case 'pending':
+            return car.status.toLowerCase() === 'pending';
+          case 'approved':
+            return car.status.toLowerCase() === 'approved';
+          case 'rejected':
+            return car.status.toLowerCase() === 'rejected';
+          case 'sold':
+            return car.status.toLowerCase() === 'sold';
+          default:
+            return true;
+        }
+      });
 
-      // Transform the data to match ExtendedCar interface
-      const transformedCars = data.map(car => ({
-        ...car,
-        brand: car.brand,
-        model: car.model,
-        images: car.images.map(img => ({
-          url: img.url,
-          is_main: img.is_main
-        }))
-      }));
-
-      console.log('Fetched cars:', transformedCars);
-      setCars(transformedCars);
+      setCars(filteredCars || []);
     } catch (error) {
-      console.error('Error fetching user cars:', error);
-      toast.error(t('myAds.error.loadListings'));
+      console.error('Error fetching cars:', error);
+      toast.error(t('myAds.error.fetch'));
     } finally {
       setLoading(false);
     }
@@ -140,15 +136,12 @@ export default function MyAdsPage() {
         return <ClockIcon className="h-5 w-5 text-yellow-500" />;
       case 'Sold':
         return <TagIcon className="h-5 w-5 text-blue-500" />;
-      default:
+      case 'Rejected':
         return <XCircleIcon className="h-5 w-5 text-red-500" />;
+      default:
+        return <XCircleIcon className="h-5 w-5 text-gray-500" />;
     }
   };
-
-  const filteredCars = cars.filter(car => {
-    if (filter === 'all') return true;
-    return car.status.toLowerCase() === filter;
-  });
 
   const handleDelete = async () => {
     if (!selectedCar) return;
@@ -224,39 +217,13 @@ export default function MyAdsPage() {
     }
   };
 
-  const handleEdit = async (car: ExtendedCar) => {
-    try {
-      // If the car was approved, set it back to pending
-      if (car.status === 'Approved') {
-        const { error: updateError } = await supabase
-          .from('cars')
-          .update({ status: 'Pending' })
-          .eq('id', car.id);
+  const handleEditClick = (car: any) => {
+    setSelectedCar(car);
+    setIsEditModalOpen(true);
+  };
 
-        if (updateError) throw updateError;
-
-        // Create notification for status change
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: user?.id,
-            title: t('myAds.notifications.statusChange'),
-            message: t('myAds.notifications.pendingReview'),
-            type: 'status_change',
-            is_read: false,
-          });
-
-        if (notificationError) throw notificationError;
-
-        toast.success(t('myAds.success.pendingReview'));
-      }
-
-      // Navigate to edit page
-      router.push(`/sell?edit=${car.id}`);
-    } catch (error) {
-      console.error('Error updating car status:', error);
-      toast.error(t('myAds.error.statusUpdate'));
-    }
+  const handleEditComplete = () => {
+    fetchUserCars(); // Refresh the car listings
   };
 
   const handleSetMainPhoto = async (carId: number, imageUrl: string) => {
@@ -386,6 +353,16 @@ export default function MyAdsPage() {
                 {t('myAds.filter.approved')}
               </button>
               <button
+                onClick={() => setFilter('rejected')}
+                className={`${
+                  filter === 'rejected'
+                    ? 'border-qatar-maroon text-qatar-maroon'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+              >
+                {t('myAds.filter.rejected')}
+              </button>
+              <button
                 onClick={() => setFilter('sold')}
                 className={`${
                   filter === 'sold'
@@ -400,10 +377,10 @@ export default function MyAdsPage() {
         </div>
 
         {/* Car Listings */}
-        {!loading && filteredCars.length > 0 && (
+        {!loading && cars.length > 0 && (
           <div className="mt-8 px-4 sm:px-0">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredCars.map((car) => (
+              {cars.map((car) => (
                 <div
                   key={car.id}
                   className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden"
@@ -452,7 +429,9 @@ export default function MyAdsPage() {
                       </p>
                       <p>
                         <span className="font-medium">{t('myAds.car.location')}:</span>{' '}
-                        {t(`myAds.locations.${car.location.toLowerCase().replace(/\s+/g, '')}`)}
+                        {car.city 
+                          ? (language === 'ar' ? car.city.name_ar : car.city.name)
+                          : car.location || t('myAds.car.locationNotSpecified')}
                       </p>
                       <p>
                         <span className="font-medium">{t('myAds.car.posted')}:</span>{' '}
@@ -465,31 +444,28 @@ export default function MyAdsPage() {
                     </div>
                     <div className="mt-4 flex justify-end space-x-2">
                       <button
-                        onClick={() => handleEdit(car)}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+                        onClick={() => handleEditClick(car)}
+                        className="text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon"
                       >
-                        <PencilIcon className="-ml-0.5 mr-2 h-4 w-4" aria-hidden="true" />
-                        {t('myAds.actions.edit')}
+                        <PencilIcon className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => {
                           setSelectedCar(car);
                           setShowSoldModal(true);
                         }}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+                        className="text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon"
                       >
-                        <ShoppingBagIcon className="-ml-0.5 mr-2 h-4 w-4" aria-hidden="true" />
-                        {t('myAds.actions.markSold')}
+                        <ShoppingBagIcon className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => {
                           setSelectedCar(car);
                           setShowDeleteModal(true);
                         }}
-                        className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+                        className="text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon"
                       >
-                        <TrashIcon className="-ml-0.5 mr-2 h-4 w-4" aria-hidden="true" />
-                        {t('myAds.actions.delete')}
+                        <TrashIcon className="h-5 w-5" />
                       </button>
                     </div>
                   </div>
@@ -500,7 +476,7 @@ export default function MyAdsPage() {
         )}
 
         {/* No listings state */}
-        {!loading && filteredCars.length === 0 && (
+        {!loading && cars.length === 0 && (
           <div className="text-center py-12">
             <TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -614,6 +590,19 @@ export default function MyAdsPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Edit Modal */}
+        {selectedCar && (
+          <EditCarModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setSelectedCar(null);
+            }}
+            car={selectedCar}
+            onUpdate={handleEditComplete}
+          />
         )}
       </div>
     </div>
