@@ -1,3 +1,6 @@
+-- First drop the existing function if it exists
+DROP FUNCTION IF EXISTS public.approve_dealership(bigint, uuid, text);
+
 -- Update the approve_dealership function to also set the user's role to 'dealer'
 CREATE OR REPLACE FUNCTION public.approve_dealership(
   dealership_id bigint,

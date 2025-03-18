@@ -1,8 +1,8 @@
-export const GA_MEASUREMENT_ID = 'G-VPGL3CMS1K';
+export const GA_MEASUREMENT_ID = 'G-VPPL3CMS1K';
 
 // Custom dimensions
 export const GA_CUSTOM_DIMENSIONS = {
-  userType: 'user_type',
+  userRole: 'user_role',
   userLanguage: 'user_language',
   carCategory: 'car_category',
   searchResultCount: 'search_result_count',
@@ -89,6 +89,7 @@ export const USER_PROPERTIES = {
   preferredLanguage: 'preferred_language',
   region: 'region',
   deviceType: 'device_type',
+  userRole: 'role',
 };
 
 // E-commerce Item Categories
