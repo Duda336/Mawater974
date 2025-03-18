@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCountry } from '../../contexts/CountryContext';
@@ -28,6 +26,8 @@ import toast from 'react-hot-toast';
 import YearRangeInput from '@/components/YearRangeInput';
 import PriceRangeInput from '@/components/PriceRangeInput';
 import MileageRangeInput from '@/components/MileageRangeInput';
+import Link from 'next/link';
+import Filters from '@/components/Filters';
 
 type CarCondition = 'Good' | 'Excellent' | 'New' | 'Not Working';
 type BodyType = 'Sedan' | 'SUV' | 'Coupe' | 'Hatchback' | 'Wagon' | 'Van' | 'Truck' | 'Convertible' | 'Other';
@@ -84,7 +84,12 @@ interface Filters {
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
-export default function CarsPage() {
+const CarsPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const { t, language, currentLanguage } = useLanguage();
+  const { currentCountry, formatPrice } = useCountry();
   const [cars, setCars] = useState<CarWithLocation[]>([]);
   const [featuredCars, setFeaturedCars] = useState<CarWithLocation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,12 +113,6 @@ export default function CarsPage() {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<any[]>([]);
-  const { user } = useAuth();
-  const { t, language, currentLanguage } = useLanguage();
-  const { currentCountry, formatPrice } = useCountry();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
   const sortOptions = [
     { value: 'newest', label: t('cars.sort.newest') },
     { value: 'oldest', label: t('cars.sort.oldest') },
@@ -645,12 +644,10 @@ export default function CarsPage() {
         <div className="relative overflow-hidden mb-8 rounded-2xl mx-4">
           <div className="absolute inset-0 bg-gradient-to-r from-gray-900/95 to-gray-900/95 backdrop-blur-sm"></div>
           <div className="absolute inset-0">
-            <Image
+            <img
               src="/hero-cars.jpg"
               alt="Luxury Cars"
-              fill
               className="object-cover brightness-75"
-              priority
             />
           </div>
           <div className="relative max-w-4xl mx-auto text-center py-20 px-4">
@@ -1228,4 +1225,6 @@ export default function CarsPage() {
       </div>
     </div>
   );
-}
+};
+
+export default CarsPage;
