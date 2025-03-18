@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -63,25 +62,15 @@ export default function ContactForm() {
   };
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center mb-12"
-      >
+    <div className="container mx-auto px-4">
+      <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-2">{t('contact.title')}</h1>
         <p className="text-xl">{t('contact.subtitle')}</p>
-      </motion.div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {/* Contact Form */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className={`rounded-lg shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-        >
+        <div className={`rounded-lg shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
               <label htmlFor="name" className="block mb-2 font-medium">
@@ -150,15 +139,10 @@ export default function ContactForm() {
               )}
             </button>
           </form>
-        </motion.div>
+        </div>
 
         {/* Contact Information */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className={`rounded-lg shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-        >
+        <div className={`rounded-lg shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
           <h2 className="text-2xl font-bold mb-6">{t('contact.info.title')}</h2>
           
           <div className="space-y-6">
@@ -186,8 +170,8 @@ export default function ContactForm() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
