@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   typescript: {
     ignoreBuildErrors: true
   },
@@ -21,13 +21,6 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  },
-  generateBuildId: async () => {
-    return 'build-' + Date.now()
-  },
-  output: 'standalone',
-  experimental: {
-    missingSuspenseWithCSRError: false
   }
 };
 
