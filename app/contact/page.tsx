@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -11,9 +11,7 @@ import {
   faPhone,
   faClock
 } from '@fortawesome/free-solid-svg-icons';
-import ContactFormComponent from '@/components/ContactForm';
-
-export const runtime = 'edge';
+import ContactForm from '@/components/ContactForm';
 
 export default function ContactPage() {
   const { t, language } = useLanguage();
@@ -40,9 +38,7 @@ export default function ContactPage() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className={`rounded-lg shadow-lg p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
           >
-            <Suspense fallback={<div>Loading form...</div>}>
-              <ContactFormComponent />
-            </Suspense>
+            <ContactForm />
           </motion.div>
 
           <motion.div
