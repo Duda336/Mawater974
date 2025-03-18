@@ -12,7 +12,6 @@ import { LanguageProvider } from '../contexts/LanguageContext'
 import { CountryProvider } from '../contexts/CountryContext'
 import AnalyticsProvider from '../components/AnalyticsProvider'
 import { SupabaseProvider } from '@/contexts/SupabaseContext'
-import { Toaster } from 'react-hot-toast'
 
 // Initialize Font Awesome
 config.autoAddCss = false
@@ -21,6 +20,27 @@ const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
 })
+
+// Google Analytics Debug Script
+const gaDebugScript = `
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-VPPL3CMS1K');
+
+    window.addEventListener('load', function() {
+        console.log('Checking GA status...');
+        if (window.gtag) {
+            console.log('Google Analytics is loaded and ready');
+            window.gtag('event', 'test_event', {
+                'event_category': 'test',
+                'event_label': 'test'
+            });
+        } else {
+            console.log('Google Analytics is not loaded');
+        }
+    });
+`;
 
 // Script to prevent theme flash and handle initial theme
 const themeScript = `
@@ -74,6 +94,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <script dangerouslySetInnerHTML={{ __html: languageScript }} />
+        <script dangerouslySetInnerHTML={{ __html: gaDebugScript }} />
         <GoogleAnalytics gaId="G-VPPL3CMS1K" />
       </head>
       <body className={`${inter.className} antialiased`}>
@@ -90,7 +111,6 @@ export default function RootLayout({
                       </main>
                       <Footer />
                       <AIChatButton />
-                      <Toaster position="bottom-center" />
                     </div>
                   </AnalyticsProvider>
                 </Providers>
