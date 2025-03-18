@@ -81,6 +81,9 @@ interface Filters {
   sort?: 'newest' | 'oldest' | 'price_asc' | 'price_desc' | 'year_asc' | 'year_desc';
 }
 
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 export default function CarsPage() {
   const [cars, setCars] = useState<CarWithLocation[]>([]);
   const [featuredCars, setFeaturedCars] = useState<CarWithLocation[]>([]);
