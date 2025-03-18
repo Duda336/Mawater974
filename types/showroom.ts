@@ -12,6 +12,7 @@ export interface Showroom {
   coverImage?: string;
   location: string;
   location_ar?: string;
+  city_id?: number;
   rating?: number;
   reviewCount?: number;
   featured?: boolean;

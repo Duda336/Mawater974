@@ -326,6 +326,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      contact_messages: {
+        Row: {
+          id: number
+          name: string
+          email: string
+          message: string
+          user_id: string | null
+          country_id: number | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          email: string
+          message: string
+          user_id?: string | null
+          country_id?: number | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          email?: string
+          message?: string
+          user_id?: string | null
+          country_id?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -368,9 +403,10 @@ export type AdminLog = TableRow<'admin_logs'>
 export type Country = TableRow<'countries'>
 export type City = TableRow<'cities'>
 export type CurrencyRate = TableRow<'currency_rates'>
+export type ContactMessage = TableRow<'contact_messages'>
 
-export type CarBrand = Pick<Brand, 'id' | 'name' | 'logo_url'>
-export type CarModel = Pick<Model, 'id' | 'name'>
+export type CarBrand = Pick<Brand, 'id' | 'name' | 'logo_url'> & { name_ar?: string };
+export type CarModel = Pick<Model, 'id' | 'name'> & { name_ar?: string };
 
 export interface ExtendedCar extends Database['public']['Tables']['cars']['Row'] {
   brand: CarBrand;
@@ -378,6 +414,19 @@ export interface ExtendedCar extends Database['public']['Tables']['cars']['Row']
   user: Profile;
   country?: Country;
   city?: City;
+  location?: string;
+  is_dealer?: boolean;
+  name?: string;
+  exact_model?: string;
   images?: CarImage[];
   favorite?: boolean;
+  id: number;
+  year: number;
+  mileage: number;
+  price: number;
+  fuel_type: FuelType;
+  gearbox_type: GearboxType;
+  body_type: BodyType;
+  condition: CarCondition;
+  status: CarStatus;
 }
