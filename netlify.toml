@@ -3,13 +3,7 @@
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "18"
-  NEXT_TELEMETRY_DISABLED = "1"
+  NEXT_PRIVATE_TARGET = "serverless"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
