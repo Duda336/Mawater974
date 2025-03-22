@@ -12,7 +12,7 @@ import SearchBar from '@/components/SearchBar';
 
 export default function HomePage() {
   const { signOutMessage, setSignOutMessage } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, currentLanguage } = useLanguage();
   const { currentCountry } = useCountry();
   
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function HomePage() {
   
   // Get country-specific background image
   const getCountryBackground = () => {
-    if (!currentCountry) return '/qatar-skyline.jpg';
+    if (!currentCountry) return '/qatar-bg.jpg';
     
     switch (currentCountry.code.toLowerCase()) {
       case 'qa':
@@ -40,6 +40,14 @@ export default function HomePage() {
         return '/kuwait-bg.jpg';
       case 'sy':
         return '/syria-bg.jpg';
+      case 'om':
+        return '/oman-bg.jpg';
+      case 'eg':
+        return '/egypt-bg.jpg';
+      case 'bh':
+        return '/bahrain-bg.jpg';
+      case 'jo':
+        return '/jordan-bg.jpg';
       default:
         return '/qatar-bg.jpg';
     }
@@ -78,17 +86,21 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative max-w-7xl mx-auto px-4 py-24">
           <div className="flex flex-col lg:flex-row items-center gap-12">
-            {/* Text Content */}
-            <div className={`flex-1 text-center lg:text-${language === 'ar' ? 'right' : 'left'} w-full`}>
+                        {/* Text Content */}
+                        <div className={`flex-1 text-center lg:text-${language === 'ar' ? 'right' : 'left'} w-full`}>
               <div className={`${language === 'ar' ? 'rtl' : 'ltr'}`}>
                 <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col">
                   <span className="text-white inline-block">{t('home.hero.title1')}</span>
-                  <span className="text-primary inline-block mt-2">{getCountryTitle()}</span>
+                  <span className="text-primary inline-block mt-2">
+                    {t('home.hero.title2', { 
+                      country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
+                    })}
+                  </span>
                 </h1>
                 <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto lg:mr-0 lg:ml-0">
-                  {currentCountry ? 
-                    t('home.hero.description').replace('Qatar', language === 'ar' ? currentCountry.name_ar : currentCountry.name) : 
-                    t('home.hero.description')}
+                {t('home.hero.description', { 
+                    country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
+                  })}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href={`${countryPrefix}/cars`} className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">

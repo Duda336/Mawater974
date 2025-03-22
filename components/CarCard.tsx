@@ -61,8 +61,13 @@ export default function CarCard({
           ${isSelected ? 'border-qatar-maroon/100 shadow-lg shadow-qatar-maroon/50' : ''}`}
       >
         {featured && (
-          <div className="absolute top-3 left-3 z-20 px-2 py-1 bg-qatar-maroon text-white text-xs font-medium rounded-full">
+          <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-qatar-maroon text-white text-xs font-medium rounded-full">
             {t('cars.featured.badge')}
+          </div>
+        )}
+        {car.user?.role === 'dealer' && (
+          <div className="absolute top-2 right-2 z-20 px-2 py-1 bg-blue-500/90 text-white text-xs font-medium rounded-full">
+            {t('cars.dealer.badge') || 'Dealer'}
           </div>
         )}
         
@@ -74,14 +79,14 @@ export default function CarCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         </div>
 
-        <div className="p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white h-[180px] flex flex-col justify-between">
           <div className="flex flex-col">
             <div className="flex items-center justify-between">
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <div className="flex items-baseline gap-2 truncate">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                   {language === 'ar' && car.brand?.name_ar ? car.brand.name_ar : car.brand?.name}
                 </h3>
-                <span className="text-lg text-gray-500 dark:text-gray-400">
+                <span className="text-lg text-gray-500 dark:text-gray-400 truncate">
                   {language === 'ar' && car.model?.name_ar ? car.model.name_ar : car.model?.name}{car.exact_model ? ` - ${car.exact_model}` : ''}
                 </span>
               </div>
@@ -109,20 +114,20 @@ export default function CarCard({
               <span>{car.year}</span>
               <span>•</span>
               <span>
-                {car.condition === 'Not Working' 
-                  ? t('cars.condition.notWorking')
-                  : t(`cars.condition.${car.condition?.toLowerCase()}`) || car.condition}
+                {t(`cars.condition.${car.condition?.toLowerCase().replace(' ', '_')}`)}
               </span>
             </div>
+          </div>
 
-            <div className="mt-3">
+          <div className="flex flex-col gap-2">
+            <div>
               <span className="text-2xl font-semibold text-qatar-maroon" dir="ltr">
                 {formatPrice(car.price || 0, currentLanguage)}
               </span>
             </div>
 
-            <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
-              <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2 flex-1 truncate">
                 <span dir="ltr">{car.mileage?.toLocaleString() || '0'} {t('cars.mileage.unit')}</span>
                 <span>•</span>
                 <span>{t(`cars.fuelType.${car.fuel_type?.toLowerCase()}`) || car.fuel_type}</span>
@@ -132,9 +137,9 @@ export default function CarCard({
             </div>
 
             {(car.city || car.location) && (
-              <div className="flex items-center mt-2 text-sm text-gray-500 dark:text-gray-400">
-                <MapPinIcon className="h-4 w-4 mr-1" />
-                <span>
+              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 truncate">
+                <MapPinIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                <span className="truncate">
                   {car.city 
                     ? (language === 'ar' ? car.city.name_ar : car.city.name)
                     : car.location}

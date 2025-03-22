@@ -20,17 +20,20 @@ import {
 } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import EditCarModal from '@/components/EditCarModal';
 
 type Car = Database['public']['Tables']['cars']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
 type Model = Database['public']['Tables']['models']['Row'];
 type City = Database['public']['Tables']['cities']['Row'];
+type Country = Database['public']['Tables']['countries']['Row'];
 
 interface ExtendedCar extends Car {
-  brand: Brand;
-  model: Model;
-  city: City;
+  brand?: Brand;
+  model?: Model;
+  city?: City;
+  country?: Country;
   location?: string;
   images: { url: string; is_main: boolean }[];
 }
@@ -39,6 +42,7 @@ export default function MyAdsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const { t, language } = useLanguage();
+  const { currentCountry } = useCountry();
   const [cars, setCars] = useState<ExtendedCar[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected' | 'sold'>('all');
@@ -58,12 +62,12 @@ export default function MyAdsPage() {
 
   useEffect(() => {
     if (user) {
-      fetchUserCars();
+      fetchCars();
       fetchNotifications();
     }
-  }, [user]);
+  }, [user, filter]);
 
-  const fetchUserCars = async () => {
+  const fetchCars = async () => {
     try {
       setLoading(true);
       const { data: cars, error } = await supabase
@@ -73,29 +77,15 @@ export default function MyAdsPage() {
           brand:brands(id, name, name_ar),
           model:models(id, name, name_ar),
           city:cities(id, name, name_ar),
+          country:countries(id, name, name_ar, currency_code),
           images:car_images(id, url, is_main)
         `)
         .eq('user_id', user?.id)
+        .eq(filter !== 'all' ? 'status' : '', filter !== 'all' ? filter.charAt(0).toUpperCase() + filter.slice(1) : '')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      const filteredCars = cars?.filter(car => {
-        switch (filter) {
-          case 'pending':
-            return car.status.toLowerCase() === 'pending';
-          case 'approved':
-            return car.status.toLowerCase() === 'approved';
-          case 'rejected':
-            return car.status.toLowerCase() === 'rejected';
-          case 'sold':
-            return car.status.toLowerCase() === 'sold';
-          default:
-            return true;
-        }
-      });
-
-      setCars(filteredCars || []);
+      setCars(cars || []);
     } catch (error) {
       console.error('Error fetching cars:', error);
       toast.error(t('myAds.error.fetch'));
@@ -166,7 +156,7 @@ export default function MyAdsPage() {
 
       toast.success(t('myAds.success.deleted'));
       setShowDeleteModal(false);
-      fetchUserCars(); // Refresh the list
+      fetchCars(); // Refresh the list
     } catch (error) {
       console.error('Error deleting car:', error);
       toast.error(t('myAds.error.delete'));
@@ -205,7 +195,7 @@ export default function MyAdsPage() {
       toast.success(t('myAds.success.markedSold'));
       setShowSoldModal(false);
       await Promise.all([
-        fetchUserCars(), // Refresh the cars list
+        fetchCars(), // Refresh the cars list
         fetchNotifications(), // Refresh notifications
       ]);
     } catch (error) {
@@ -223,7 +213,7 @@ export default function MyAdsPage() {
   };
 
   const handleEditComplete = () => {
-    fetchUserCars(); // Refresh the car listings
+    fetchCars(); // Refresh the car listings
   };
 
   const handleSetMainPhoto = async (carId: number, imageUrl: string) => {
@@ -247,7 +237,7 @@ export default function MyAdsPage() {
       if (updateError) throw updateError;
 
       toast.success(t('myAds.success.mainPhoto'));
-      fetchUserCars(); // Refresh the list
+      fetchCars(); // Refresh the list
     } catch (error) {
       console.error('Error setting main photo:', error);
       toast.error(t('myAds.error.mainPhoto'));
@@ -279,204 +269,195 @@ export default function MyAdsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="h-64 bg-gray-200 dark:bg-gray-700 rounded" />
-              ))}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-xl h-48"></div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {/* Page header */}
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                {t('myAds.title')}
-              </h1>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {t('myAds.subtitle')}
-              </p>
-            </div>
-            <Link
-              href="/sell"
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
-            >
-              <PlusCircleIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />
-              {t('myAds.createListing')}
-            </Link>
-          </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t('myAds.title')}
+          </h1>
+          <Link
+            href={`/${currentCountry?.code.toLowerCase()}/sell`}
+            className="inline-flex items-center px-4 py-2 bg-qatar-maroon text-white rounded-lg hover:bg-qatar-maroon/90 transition-colors"
+          >
+            <PlusCircleIcon className="h-5 w-5 mr-2" />
+            {t('myAds.createListing')}
+          </Link>
         </div>
 
-        {/* Filters */}
-        <div className="px-4 sm:px-0">
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-              <button
-                onClick={() => setFilter('all')}
-                className={`${
-                  filter === 'all'
-                    ? 'border-qatar-maroon text-qatar-maroon'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-              >
-                {t('myAds.filter.all')}
-              </button>
-              <button
-                onClick={() => setFilter('pending')}
-                className={`${
-                  filter === 'pending'
-                    ? 'border-qatar-maroon text-qatar-maroon'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-              >
-                {t('myAds.filter.pending')}
-              </button>
-              <button
-                onClick={() => setFilter('approved')}
-                className={`${
-                  filter === 'approved'
-                    ? 'border-qatar-maroon text-qatar-maroon'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-              >
-                {t('myAds.filter.approved')}
-              </button>
-              <button
-                onClick={() => setFilter('rejected')}
-                className={`${
-                  filter === 'rejected'
-                    ? 'border-qatar-maroon text-qatar-maroon'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-              >
-                {t('myAds.filter.rejected')}
-              </button>
-              <button
-                onClick={() => setFilter('sold')}
-                className={`${
-                  filter === 'sold'
-                    ? 'border-qatar-maroon text-qatar-maroon'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:hover:text-gray-300'
-                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-              >
-                {t('myAds.filter.sold')}
-              </button>
-            </nav>
-          </div>
+        {/* Status Filters */}
+        <div className="flex flex-wrap gap-2 sm:gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+          <button
+            onClick={() => setFilter('all')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              filter === 'all'
+                ? 'bg-qatar-maroon text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <TruckIcon className="h-5 w-5 mr-2" />
+            {t('myAds.filters.all')}
+          </button>
+          <button
+            onClick={() => setFilter('pending')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              filter === 'pending'
+                ? 'bg-qatar-maroon text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <ClockIcon className="h-5 w-5 mr-2" />
+            {t('myAds.filters.pending')}
+          </button>
+          <button
+            onClick={() => setFilter('approved')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              filter === 'approved'
+                ? 'bg-qatar-maroon text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <CheckCircleIcon className="h-5 w-5 mr-2" />
+            {t('myAds.filters.approved')}
+          </button>
+          <button
+            onClick={() => setFilter('rejected')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              filter === 'rejected'
+                ? 'bg-qatar-maroon text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <XCircleIcon className="h-5 w-5 mr-2" />
+            {t('myAds.filters.rejected')}
+          </button>
+          <button
+            onClick={() => setFilter('sold')}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              filter === 'sold'
+                ? 'bg-qatar-maroon text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <TagIcon className="h-5 w-5 mr-2" />
+            {t('myAds.filters.sold')}
+          </button>
         </div>
 
         {/* Car Listings */}
-        {!loading && cars.length > 0 && (
-          <div className="mt-8 px-4 sm:px-0">
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {cars.map((car) => (
-                <div
-                  key={car.id}
-                  className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden"
-                >
-                  {/* Car Image and Status */}
-                  <div className="aspect-w-16 aspect-h-9 relative h-48">
-                    {car.images && car.images.length > 0 ? (
-                      <Image
-                        src={car.images.find(img => img.is_main)?.url || car.images[0].url}
-                        alt={`${car.brand.name} ${car.model.name}`}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        priority={false}
-                        className="object-cover"
-                        unoptimized={true}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                        <TruckIcon className="h-12 w-12 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium shadow-lg" style={{
-                      backgroundColor: car.status === 'Approved' ? 'rgba(34, 197, 94, 0.9)' : 
-                                     car.status === 'Pending' ? 'rgba(234, 179, 8, 0.9)' :
-                                     car.status === 'Sold' ? 'rgba(59, 130, 246, 0.9)' :
-                                     'rgba(239, 68, 68, 0.9)',
-                      color: 'white'
-                    }}>
-                      {t(`myAds.status.${car.status}`)}
+        {cars.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {cars.map((car) => (
+              <div
+                key={car.id}
+                className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden"
+              >
+                {/* Car Image and Status */}
+                <div className="aspect-w-16 aspect-h-9 relative h-48">
+                  {car.images && car.images.length > 0 ? (
+                    <Image
+                      src={car.images.find(img => img.is_main)?.url || car.images[0].url}
+                      alt={`${car.brand.name} ${car.model.name}`}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={false}
+                      className="object-cover"
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                      <TruckIcon className="h-12 w-12 text-gray-400" />
                     </div>
-                  </div>
-
-                  {/* Car Details */}
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {car.brand.name} {car.model.name}
-                    </h3>
-                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                      <p>
-                        <span className="font-medium">{t('myAds.car.price')}:</span>{' '}
-                        {car.price.toLocaleString()} QAR
-                      </p>
-                      <p>
-                        <span className="font-medium">{t('myAds.car.mileage')}:</span>{' '}
-                        {car.mileage.toLocaleString()} km
-                      </p>
-                      <p>
-                        <span className="font-medium">{t('myAds.car.location')}:</span>{' '}
-                        {car.city 
-                          ? (language === 'ar' ? car.city.name_ar : car.city.name)
-                          : car.location || t('myAds.car.locationNotSpecified')}
-                      </p>
-                      <p>
-                        <span className="font-medium">{t('myAds.car.posted')}:</span>{' '}
-                        {new Date(car.created_at).toLocaleDateString()}
-                      </p>
-                      <p>
-                        <span className="font-medium">{t('myAds.car.views')}:</span>{' '}
-                        {car.views || 0}
-                      </p>
-                    </div>
-                    <div className="mt-4 flex justify-end space-x-2">
-                      <button
-                        onClick={() => handleEditClick(car)}
-                        className="text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon"
-                      >
-                        <PencilIcon className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedCar(car);
-                          setShowSoldModal(true);
-                        }}
-                        className="text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon"
-                      >
-                        <ShoppingBagIcon className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedCar(car);
-                          setShowDeleteModal(true);
-                        }}
-                        className="text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium shadow-lg" style={{
+                    backgroundColor: car.status === 'Approved' ? 'rgba(34, 197, 94, 0.9)' : 
+                                   car.status === 'Pending' ? 'rgba(234, 179, 8, 0.9)' :
+                                   car.status === 'Sold' ? 'rgba(59, 130, 246, 0.9)' :
+                                   'rgba(239, 68, 68, 0.9)',
+                    color: 'white'
+                  }}>
+                    {t(`myAds.status.${car.status}`)}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Car Details */}
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {car.brand.name} {car.model.name}
+                  </h3>
+                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                    <p>
+                      <span className="font-medium">{t('myAds.car.price')}:</span>{' '}
+                      {car.price.toLocaleString('en-US')} {t(`common.currency.${car.country?.currency_code || 'QAR'}`)}
+                    </p>
+                    <p>
+                      <span className="font-medium">{t('myAds.car.mileage')}:</span>{' '}
+                      {car.mileage.toLocaleString()}  {t('cars.mileage.unit')}
+                    </p>
+                    <p>
+                      <span className="font-medium">{t('myAds.car.location')}:</span>{' '}
+                      {car.city 
+                        ? (language === 'ar' ? car.city.name_ar : car.city.name)
+                        : car.location || t('myAds.car.locationNotSpecified')}
+                    </p>
+                    <p>
+                      <span className="font-medium">{t('myAds.car.posted')}:</span>{' '}
+                      {new Date(car.created_at).toLocaleDateString()}
+                    </p>
+                    <p>
+                      <span className="font-medium">{t('myAds.car.views')}:</span>{' '}
+                      {car.views || 0}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-.5">
+                    <button
+                      onClick={() => handleEditClick(car)}
+                      className="flex items-center px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
+                    >
+                      <PencilIcon className="h-4 w-4 mr-1.5" />
+                      {t('myAds.actions.edit')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCar(car);
+                        setShowSoldModal(true);
+                      }}
+                      className="flex items-center px-4 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
+                    >
+                      <ShoppingBagIcon className="h-4 w-4 mr-1.5" />
+                      {t('myAds.actions.markSold')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedCar(car);
+                        setShowDeleteModal(true);
+                      }}
+                      className="flex items-center px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
+                    >
+                      <TrashIcon className="h-4 w-4 mr-1.5" />
+                      {t('myAds.actions.delete')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* No listings state */}
-        {!loading && cars.length === 0 && (
+        {cars.length === 0 && (
           <div className="text-center py-12">
             <TruckIcon className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -484,7 +465,7 @@ export default function MyAdsPage() {
             </h3>
             <div className="mt-6">
               <Link
-                href="/sell"
+                href={`/${currentCountry?.code.toLowerCase()}/sell`}
                 className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
               >
                 <PlusCircleIcon className="-ml-1 mr-2 h-5 w-5" aria-hidden="true" />

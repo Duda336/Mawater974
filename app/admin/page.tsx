@@ -906,7 +906,7 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{car.year} {car.brand} {car.model}</div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">{car.year} {car.brand} {car.model}</div>
                         </div>
                       </div>
                     </td>
@@ -979,7 +979,7 @@ export default function AdminDashboard() {
                 >
                   <div className="flex items-center space-x-3">
                     <div>
-                      <div className="text-sm font-medium text-gray-900">{item.brand}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{item.brand}</div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         ({item.count} cars)
                       </div>
@@ -1708,81 +1708,8 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminNavbar />
       
-      <main className="py-10 bg-gray-50 dark:bg-gray-900">
+      <main className="py-2 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Total Users */}
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <UsersIcon className="h-6 w-6 text-qatar-maroon" aria-hidden="true" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Users</dt>
-                      <dd className="text-lg font-semibold text-gray-900 dark:text-white">{analytics?.totalUsers || 0}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Total Cars */}
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <ShoppingBagIcon className="h-6 w-6 text-qatar-maroon" aria-hidden="true" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Cars</dt>
-                      <dd className="text-lg font-semibold text-gray-900 dark:text-white">{analytics?.totalCars || 0}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Total Dealers */}
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <UserGroupIcon className="h-6 w-6 text-qatar-maroon" aria-hidden="true" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Dealers</dt>
-                      <dd className="text-lg font-semibold text-gray-900 dark:text-white">{analytics?.totalDealers || 0}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Pending Cars */}
-            <div className="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Pending Cars</p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {analytics?.pendingCars || 0}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {analytics?.pendingCars || 0} pending / {analytics?.activeCars || 0} active / {analytics?.soldCars || 0} sold
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-full bg-qatar-maroon bg-opacity-10">
-                    <div className="h-8 w-8"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
           {!isAdmin ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center">

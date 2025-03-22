@@ -122,17 +122,19 @@ export default function PhoneInput({
             <Listbox value={selectedCountry} onChange={handleCountryChange}>
               <div className="relative">
                 <Listbox.Button 
-                  className="relative w-full cursor-default rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-3 pr-10 text-left shadow-sm focus:border-qatar-maroon focus:outline-none focus:ring-1 focus:ring-qatar-maroon sm:text-sm"
+                  className={`relative w-full cursor-default border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-3 pr-10 text-left shadow-sm focus:border-qatar-maroon focus:outline-none focus:ring-1 focus:ring-qatar-maroon sm:text-sm ${
+                    language === 'ar' ? 'rounded-r-md' : 'rounded-l-md'
+                  }`}
                   data-phone-code={selectedCountry?.phone_code}
                 >
-                  <span className="block truncate font-medium">
+                  <span className="block truncate font-medium text-gray-900 dark:text-white">
                     {selectedCountry 
-                      ? displayPhoneCode
+                      ? `${selectedCountry.phone_code}`
                       : t('signup.selectCountry')}
                   </span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon
-                      className="h-5 w-5 text-gray-400"
+                      className="h-5 w-5 text-gray-400 dark:text-gray-300"
                       aria-hidden="true"
                     />
                   </span>
@@ -149,7 +151,7 @@ export default function PhoneInput({
                         key={country.id}
                         className={({ active }) =>
                           `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
-                            active ? 'bg-primary/10 text-primary dark:bg-primary/20' : 'text-gray-900 dark:text-white'
+                            active ? 'bg-qatar-maroon/10 text-qatar-maroon dark:bg-qatar-maroon/20' : 'text-gray-900 dark:text-white'
                           }`
                         }
                         value={country}
@@ -161,14 +163,14 @@ export default function PhoneInput({
                             <div className="flex items-center">
                               <span
                                 className={`block truncate ${
-                                  selected ? 'font-medium' : 'font-normal'
+                                  selected ? 'font-medium text-qatar-maroon' : 'font-normal'
                                 }`}
                               >
                                 {country.phone_code} {language === 'ar' ? country.name_ar : country.name}
                               </span>
                             </div>
                             {selected ? (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-qatar-maroon">
                                 <CheckIcon className="h-5 w-5" aria-hidden="true" />
                               </span>
                             ) : null}
@@ -184,7 +186,7 @@ export default function PhoneInput({
           <div className="relative flex flex-grow items-stretch focus-within:z-10">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
               {displayPhoneCode && (
-                <span className="text-gray-500 sm:text-sm">
+                <span className="text-gray-500 dark:text-gray-400 sm:text-sm">
                   {displayPhoneCode}
                 </span>
               )}
@@ -195,7 +197,9 @@ export default function PhoneInput({
               onChange={handlePhoneChange}
               required={required}
               maxLength={getPhonePattern().maxLength}
-              className={`appearance-none rounded-none rounded-r-md relative block w-full ${displayPhoneCode ? 'pl-12' : 'pl-3'} py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200 ${error ? 'border-red-500' : ''}`}
+              className={`appearance-none rounded-none relative block w-full pl-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200 ${
+                language === 'ar' ? 'rounded-l-md' : 'rounded-r-md'
+              } ${error ? 'border-red-500' : ''}`}
               placeholder={placeholder || getPhonePattern().placeholder}
             />
           </div>

@@ -146,6 +146,11 @@ export default function SellPage() {
 
   const steps = [
     { 
+      id: 'plan-selection', 
+      name: t('sell.plan.title'), 
+      description: t('sell.plan.subtitle')
+    },
+    { 
       id: 'step1', 
       name: t('sell.steps.basicInfo'), 
       description: t('sell.steps.basicInfo.desc')
@@ -430,14 +435,16 @@ export default function SellPage() {
           <div>
             <label 
               htmlFor="price" 
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               {t('sell.basic.price')} ({currentCountry?.currency_code || 'QAR'}) *
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">
-                {currentCountry?.currency_symbol || 'QAR'}
-              </span>
+              {currentLanguage === 'en' && (
+                <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400">
+                  {t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}
+                </span>
+              )}
               <input
                 type="text"
                 id="price"
@@ -445,12 +452,19 @@ export default function SellPage() {
                 value={formData.price}
                 onChange={(e) => handleInputChange(e)}
                 required
+                min="0"
+                max="999999999"
                 placeholder={t('sell.basic.price.placeholder')}
-                className="w-full pl-12 px-4 py-2.5 border border-gray-300 dark:border-gray-600 
+                className={`w-full ${currentLanguage === 'en' ? 'pr-16' : 'pl-16'} px-4 py-2.5 border border-gray-300 dark:border-gray-600 
                            bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg 
                            shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 focus:border-qatar-maroon 
-                           transition duration-200 ease-in-out"
+                           transition duration-200 ease-in-out`}
               />
+              {currentLanguage === 'ar' && (
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">
+                  {t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -474,19 +488,20 @@ export default function SellPage() {
           {/* Mileage */}
           <div>
             <label 
-              htmlFor="mileage" 
+              htmlFor="mileage"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               {t('sell.details.mileage')} *
             </label>
             <input
-              type="number"
+              type="text"
               id="mileage"
               name="mileage"
               value={formData.mileage}
               onChange={(e) => handleInputChange(e)}
               required
               min="0"
+              max="9999999"
               placeholder={t('sell.details.mileage.placeholder')}
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
@@ -596,7 +611,7 @@ export default function SellPage() {
               <option value="">{t('sell.details.condition.select')}</option>
               {conditions.map(condition => (
                 <option key={condition} value={condition}>
-                  {t(`cars.condition.${condition === 'Not Working' ? 'notWorking' : condition.toLowerCase()}`)}
+                  {t(`cars.condition.${condition?.toLowerCase().replace(' ', '_')}`)}
                 </option>
               ))}
             </select>
@@ -913,18 +928,18 @@ export default function SellPage() {
                   d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 01-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
                 />
               </svg>
-              {allImages.length >= 10 ? t('sell.images.maxReached') : t('sell.images.addMore')}
-            </div>
-          </label>
-          <input
-            id="file-upload"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageChange}
-            className="hidden"
-            disabled={allImages.length >= 10}
-          />
+                {allImages.length >= 10 ? t('sell.images.maxReached') : t('sell.images.addMore')}
+              </div>
+            </label>
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="hidden"
+              disabled={allImages.length >= 10}
+            />
         </div>
 
         {/* Photo Count */}
@@ -944,12 +959,12 @@ export default function SellPage() {
       { label: t('sell.basic.model'), value: selectedModel?.name },
       { label: t('sell.basic.exactModel') || 'Exact Model', value: formData.exact_model || null },
       { label: t('sell.basic.year'), value: formData.year },
-      { label: t('sell.basic.price'), value: formData.price ? `${currentCountry?.currency_symbol || 'QAR'} ${formData.price}` : null },
+      { label: t('sell.basic.price'), value: formData.price ? `${formData.price} ${t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}` : null },
       { label: t('sell.details.mileage'), value: formData.mileage ? `${formData.mileage} ${t('cars.km')}` : null },
       { label: t('sell.details.fuelType'), value: formData.fuel_type ? t(`cars.fuelType.${formData.fuel_type.toLowerCase()}`) : null },
       { label: t('sell.details.transmission'), value: formData.gearbox_type ? t(`cars.transmission.${formData.gearbox_type.toLowerCase()}`) : null },
       { label: t('sell.details.bodyType'), value: formData.body_type ? t(`cars.bodyType.${formData.body_type.toLowerCase()}`) : null },
-      { label: t('sell.details.condition'), value: formData.condition ? t(`cars.condition.${formData.condition === 'Not Working' ? 'notWorking' : formData.condition.toLowerCase()}`) : null },
+      { label: t('sell.details.condition'), value: formData.condition ? t(`cars.condition.${formData.condition?.toLowerCase().replace(' ', '_')}`) : null },
       { label: t('sell.details.color'), value: formData.color ? t(`cars.colors.${formData.color.toLowerCase()}`) : null },
       { 
         label: t('sell.details.cylinders'), 
@@ -1088,6 +1103,8 @@ export default function SellPage() {
 
   const validateStep = () => {
     switch (currentStep) {
+      case 'plan-selection':
+        return selectedPlan !== null;
       case 'step1':
         return formData.brand && formData.model && formData.year && formData.price;
       case 'step2':
@@ -1109,52 +1126,42 @@ export default function SellPage() {
     }
   };
 
-  const handleNext = () => {
-    if (currentStep === 'plan-selection' && selectedPlan) {
-      setCurrentStep('step1');
-    } else if (currentStep === 'step1') {
-      setCurrentStep('step2');
-    } else if (currentStep === 'step2') {
-      setCurrentStep('step3');
-    } else if (currentStep === 'step3') {
-      setCurrentStep('step4');
+  const handleNext = async () => {
+    if (validateStep()) {
+      if (currentStep === 'plan-selection') {
+        setCurrentStep('step1');
+      } else if (currentStep === 'step3' && currentStepIndex < totalSteps - 1) {
+        setCurrentStep('step4');
+      } else if (currentStep === 'step2') {
+        setCurrentStep('step3');
+      } else if (currentStep === 'step1') {
+        setCurrentStep('step2');
+      }
     }
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => {
-      if (prev === 'step1') {
-        return 'plan-selection';
-      } else if (prev === 'step2') {
-        return 'step1';
-      } else if (prev === 'step3') {
-        return 'step2';
-      } else if (prev === 'step4') {
-        return 'step3';
-      }
-      return prev;
-    });
+    if (currentStep === 'step4') {
+      setCurrentStep('step3');
+    } else if (currentStep === 'step3') {
+      setCurrentStep('step2');
+    } else if (currentStep === 'step2') {
+      setCurrentStep('step1');
+    } else if (currentStep === 'step1') {
+      setCurrentStep('plan-selection');
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Form submission started');
-    
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+
     if (!isConfirmed) {
-      toast.error(t('sell.messages.confirm'));
+      toast.error(t('sell.messages.confirmRequired'));
       return;
     }
 
-    if (!user) {
-      toast.error(t('sell.messages.login'));
-      return;
-    }
-
-    if (!formData.city_id || !formData.location) {
-      toast.error(t('sell.messages.selectCity'));
-      return;
-    }
-    
     setIsSubmitting(true);
     setError(null);
 
@@ -1167,7 +1174,7 @@ export default function SellPage() {
         exact_model: formData.exact_model,
         year: parseInt(formData.year),
         price: parseInt(formData.price.replace(/[^0-9]/g, '')),
-        mileage: parseInt(formData.mileage),
+        mileage: parseInt(formData.mileage.replace(/[^0-9]/g, '')),
         fuel_type: formData.fuel_type,
         gearbox_type: formData.gearbox_type,
         body_type: formData.body_type,
@@ -1324,7 +1331,15 @@ export default function SellPage() {
           updatedData.price = new Intl.NumberFormat().format(parseInt(numericValue));
         }
       }
-      
+
+      // Format mileage with commas
+      if (name === 'mileage') {
+        const numericValue = value.replace(/[^0-9]/g, '');
+        if (numericValue) {
+          updatedData.mileage = new Intl.NumberFormat().format(parseInt(numericValue));
+        }
+      }
+        
       return updatedData;
     });
   };
@@ -1698,7 +1713,7 @@ export default function SellPage() {
               <div 
                 className="absolute top-4 left-0 h-1 bg-qatar-maroon rounded-full transition-all duration-500 ease-in-out"
                 style={{ 
-                  width: `${((['step1', 'step2', 'step3', 'step4'].indexOf(currentStep)) / 3) * 100}%`,
+                  width: `${((['plan-selection', 'step1', 'step2', 'step3', 'step4'].indexOf(currentStep)) / 4) * 100}%`,
                   boxShadow: '0 0 10px rgba(158, 27, 52, 0.3)' 
                 }}
               />
@@ -1757,47 +1772,39 @@ export default function SellPage() {
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-8 flex justify-between items-center">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className={`px-6 py-2 text-sm font-medium rounded-md border-2 border-qatar-maroon/50 text-qatar-maroon hover:bg-qatar-maroon/10 hover:border-qatar-maroon transition-all duration-300 ${
-                    currentStep === 'plan-selection' ? 'hidden' : ''
-                  }`}
+                  className="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 
+                    text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white 
+                    dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none 
+                    focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
                 >
-                  {t('sell.nav.previous')}
+                  {t('common.back')}
                 </button>
 
-                {currentStep !== 'step4' ? (
+                {currentStep === 'step4' ? (
                   <button
                     type="button"
-                    onClick={handleNext}
-                    disabled={!validateStep()}
-                    className={`px-6 py-2 rounded-md text-sm font-medium bg-qatar-maroon text-white hover:bg-qatar-maroon/90 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    onClick={handleSubmit}
+                    disabled={!isConfirmed || isSubmitting}
+                    className={`inline-flex items-center px-6 py-3 border border-transparent text-base 
+                      font-medium rounded-md text-white bg-qatar-maroon hover:bg-qatar-maroon-dark 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon
+                      ${(!isConfirmed || isSubmitting) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {t('sell.nav.next')}
+                    {isSubmitting ? t('common.submitting') : t('sell.review.submit')}
                   </button>
                 ) : (
                   <button
-                    type="submit"
-                    disabled={isSubmitting || !isConfirmed}
-                    className={`
-                      px-6 py-2 rounded-md text-sm font-medium transition-all duration-300
-                      ${isSubmitting || !isConfirmed
-                        ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                        : 'bg-qatar-maroon text-white hover:bg-qatar-maroon/90 shadow-lg hover:shadow-qatar-maroon/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon'
-                      }
-                    `}
+                    type="button"
+                    onClick={handleNext}
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base 
+                      font-medium rounded-md text-white bg-qatar-maroon hover:bg-qatar-maroon-dark 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
                   >
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        {t('sell.review.submitting')}
-                      </div>
-                    ) : t('sell.review.submit')}
+                    {t('common.next')}
                   </button>
                 )}
               </div>

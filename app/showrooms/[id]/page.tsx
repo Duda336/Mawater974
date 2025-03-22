@@ -183,11 +183,12 @@ export default function ShowroomPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Hero Section */}
-      <div className="relative w-full h-64 md:h-80 lg:h-96 mb-8 rounded-lg overflow-hidden">
-        {/* Dealer Dashboard Link */}
-        {profile?.role === 'dealer' && isOwner && (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900"> 
+      <div className="container mx-auto px-4 py-8 ">
+        {/* Hero Section */}
+        <div className="relative w-full h-64 md:h-80 lg:h-96 mb-8 rounded-lg overflow-hidden">
+          {/* Dealer Dashboard Link */}
+          {profile?.role === 'dealer' && isOwner && (
           <Link
             href={`/${showroom.country.code.toLowerCase()}/dealer-dashboard`}
             className="absolute top-4 right-4 z-10 bg-qatar-maroon text-white px-4 py-2 rounded-lg hover:bg-qatar-maroon/90 transition-colors flex items-center gap-2"
@@ -258,11 +259,11 @@ export default function ShowroomPage() {
               <PhoneIcon className="h-5 w-5" />
               <span>{t('showroom.phone')}: </span>
               <a href={`tel:${dealerInfo.phone_number}`} className="hover:text-primary">
-                <span dir="ltr" className="text-left">{dealerInfo.phone_number}</span>
+                <span dir="ltr" className="text-left">{dealerInfo.phone_number.replace(/^(\+\d{1,3})(\d+)/, '$1-$2')}</span>
               </a>
             </div>
           )}
-          
+
           {dealerInfo?.email && (
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
               <EnvelopeIcon className="h-5 w-5" />
@@ -284,6 +285,17 @@ export default function ShowroomPage() {
                   : showroom.business_type === 'spare parts dealership'
                     ? t('showroom.businessTypes.spare parts dealership')
                     : t('showroom.businessTypes.showroom')
+              }
+            </span>
+          </div>
+          
+          {/* Dealership Type */}
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+            <span className="font-medium">{t('showroom.dealershipType')}: </span>
+            <span>
+              {showroom.dealership_type === 'Private'
+                ? t('showroom.dealershipTypes.private')
+                : t('showroom.dealershipTypes.official')
               }
             </span>
           </div>
@@ -342,5 +354,6 @@ export default function ShowroomPage() {
         </div>
       )}
     </div>
+  </div>
   );
 }

@@ -15,9 +15,9 @@ export default function ShowroomCard({ showroom }: ShowroomCardProps) {
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 ${showroom.featured ? 'ring-2 ring-qatar-maroon' : ''}`}>
       <div className="relative h-48">
-        {showroom.coverImage ? (
+        {showroom.logo ? (
           <Image
-            src={showroom.coverImage}
+            src={showroom.logo}
             alt={language === 'ar' ? showroom.name_ar || showroom.name : showroom.name}
             fill
             className="object-cover"
@@ -34,23 +34,6 @@ export default function ShowroomCard({ showroom }: ShowroomCardProps) {
             {t('showroom.featured')}
           </div>
         )}
-        <div className="absolute bottom-4 left-4">
-          <div className="h-16 w-16 bg-white dark:bg-gray-800 rounded-lg p-2">
-            {showroom.logo ? (
-              <Image
-                src={showroom.logo}
-                alt={`${language === 'ar' ? showroom.name_ar || showroom.name : showroom.name} logo`}
-                width={48}
-                height={48}
-                className="object-contain"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                <span className="text-gray-400 dark:text-gray-500 text-xs">{t('showroom.logo')}</span>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       <div className="p-4">

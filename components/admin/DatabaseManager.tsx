@@ -16,7 +16,7 @@ const TABLES = [
   'models',
   'profiles',
   'favorites',
-  'car_images',
+  'dealerships',
   // Add any other tables here
 ];
 

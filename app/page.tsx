@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide, faTag, faSearch } from '@fortawesome/free-solid-svg-icons';
-import SearchBar from '../components/SearchBar';
+import SearchBar from '@/components/SearchBar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
@@ -14,7 +14,7 @@ import { useCountry } from '@/contexts/CountryContext';
 
 export default function Home() {
   const { signOutMessage, setSignOutMessage } = useAuth();
-  const { t, language } = useLanguage();
+  const { t, language, currentLanguage } = useLanguage();
   const router = useRouter();
   const { currentCountry, isLoading } = useCountry();
 
@@ -61,10 +61,16 @@ export default function Home() {
               <div className={`${language === 'ar' ? 'rtl' : 'ltr'}`}>
                 <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col">
                   <span className="text-white inline-block">{t('home.hero.title1')}</span>
-                  <span className="text-primary inline-block mt-2">{t('home.hero.title2')}</span>
+                  <span className="text-primary inline-block mt-2">
+                    {t('home.hero.title2', { 
+                      country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
+                    })}
+                  </span>
                 </h1>
                 <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto lg:mr-0 lg:ml-0">
-                  {t('home.hero.description')}
+                {t('home.hero.description', { 
+                    country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
+                  })}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link href="/cars" className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">

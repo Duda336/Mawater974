@@ -4,7 +4,7 @@ import { useState, useEffect, Fragment } from 'react';
 import { useCountry } from '@/contexts/CountryContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckIcon, ChevronUpDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, ChevronDownIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -63,8 +63,8 @@ export default function CountrySelector() {
               </span>
             </div>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400 dark:text-gray-500"
+              <ChevronDownIcon
+                className="h-4 w-4 text-gray-400 dark:text-gray-500"
                 aria-hidden="true"
               />
             </span>
@@ -75,7 +75,7 @@ export default function CountrySelector() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-34 overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
               {countries.map((country) => (
                 <Listbox.Option
                   key={country.id}

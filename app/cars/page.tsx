@@ -73,6 +73,7 @@ interface Filters {
   maxMileage?: number;
   brand_id?: number;
   model?: string;
+  exact_model?: string;
   condition?: CarCondition[];
   body_type?: BodyType[];
   fuel_type?: FuelType[];
@@ -122,11 +123,12 @@ export default function CarsPage() {
 
   useEffect(() => {
     fetchBrands();
-    fetchCars();
+   /*fetchCars();*/
+ 
     if (user) {
       fetchUserFavorites();
     }
-  }, [user, filters]);
+  }, [user, filters, searchInput, currentCountry]);
 
   useEffect(() => {
     setShowCompareBar(selectedCars.length > 0);
@@ -247,10 +249,14 @@ export default function CarsPage() {
       
       const matchesBrand = !filters.brand_id || car.brand_id === filters.brand_id;
       const matchesModel = !filters.model || car.model.name.toLowerCase().includes(filters.model.toLowerCase());
+      const matchesExactModel = !filters.exact_model || car.exact_model?.toLowerCase().includes(filters.exact_model.toLowerCase());
       const matchesSearch = !searchInput || 
         car.name.toLowerCase().includes(searchInput.toLowerCase()) ||
         car.brand.name.toLowerCase().includes(searchInput.toLowerCase()) ||
-        car.model.name.toLowerCase().includes(searchInput.toLowerCase());
+        car.model.name.toLowerCase().includes(searchInput.toLowerCase()) ||
+        (car.exact_model && car.exact_model.toLowerCase().includes(searchInput.toLowerCase())) ||
+        (car.color && car.color.toLowerCase().includes(searchInput.toLowerCase())) ||
+        car.year.toString().includes(searchInput);
       
       const matchesPrice = (!filters.minPrice || car.price >= filters.minPrice) &&
         (!filters.maxPrice || car.price <= filters.maxPrice);
@@ -262,7 +268,7 @@ export default function CarsPage() {
         (!filters.maxMileage || car.mileage <= filters.maxMileage);
 
       return matchesCondition && matchesBodyType && matchesFuelType && matchesGearbox &&
-        matchesSellerType && matchesBrand && matchesModel && matchesSearch &&
+        matchesSellerType && matchesBrand && matchesModel && matchesExactModel && matchesSearch &&
         matchesPrice && matchesYear && matchesMileage;
     };
 
@@ -500,7 +506,12 @@ export default function CarsPage() {
   };
 
   const handleSearch = () => {
-    setFilters(prev => ({ ...prev, search: searchInput }));
+    if (searchInput.trim()) {
+      // Add search term to active filters if not already present
+      if (!activeFilters.includes(searchInput.trim())) {
+        setActiveFilters(prev => [...prev, searchInput.trim()]);
+      }
+    }
   };
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -564,12 +575,13 @@ export default function CarsPage() {
   };
 
   const clearAllFilters = () => {
-    setFilters({});
+    setFilters({ sort: filters.sort });
     setSelectedBodyTypes([]);
     setSelectedFuelTypes([]);
     setSelectedConditions([]);
     setSelectedSellerTypes([]);
-    toast.success(t('cars.filters.clear'));
+    setActiveFilters([]);
+    setSearchInput('');
   };
 
   useEffect(() => {
@@ -631,8 +643,64 @@ export default function CarsPage() {
   const handleBrandChange = (brandId: number | undefined) => {
     setFilters(prev => ({
       ...prev,
-      brand_id: brandId
+      brand_id: brandId,
+      model: undefined, // Reset model when brand changes
+      exact_model: undefined // Reset exact model when brand changes
     }));
+    
+    // Update active filters
+    if (brandId) {
+      const brand = brands.find(b => b.id === brandId);
+      const brandName = currentLanguage === 'ar' && brand?.name_ar ? brand.name_ar : brand?.name;
+      if (!activeFilters.includes(brandName)) {
+        setActiveFilters(prev => [...prev, brandName]);
+      }
+    }
+  };
+
+  const handleModelChange = (modelName: string | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      model: modelName,
+      exact_model: undefined // Reset exact model when model changes
+    }));
+    
+    // Update active filters
+    if (modelName && !activeFilters.includes(modelName)) {
+      setActiveFilters(prev => [...prev, modelName]);
+    }
+  };
+
+  const handleExactModelChange = (exactModel: string | undefined) => {
+    setFilters(prev => ({
+      ...prev,
+      exact_model: exactModel
+    }));
+    
+    // Update active filters
+    if (exactModel && !activeFilters.includes(exactModel)) {
+      setActiveFilters(prev => [...prev, exactModel]);
+    }
+  };
+
+  const removeFilter = (filter: string) => {
+    setActiveFilters(prev => prev.filter(f => f !== filter));
+    
+    if (filter === searchInput) {
+      setSearchInput('');
+    } else {
+      const brand = brands.find(b => 
+        (currentLanguage === 'ar' && b.name_ar === filter) || b.name === filter
+      );
+      
+      if (brand) {
+        setFilters(prev => ({ ...prev, brand_id: undefined }));
+      } else if (filter === filters.model) {
+        setFilters(prev => ({ ...prev, model: undefined }));
+      } else if (filter === filters.exact_model) {
+        setFilters(prev => ({ ...prev, exact_model: undefined }));
+      }
+    }
   };
 
   return (
@@ -651,11 +719,11 @@ export default function CarsPage() {
             />
           </div>
           <div className="relative max-w-4xl mx-auto text-center py-20 px-4">
-            <h1 className="text-4xl font-bold text-white mb-4 tracking-tight drop-shadow-lg">
+            <h1 className="text-4xl font-bold text-gray-100 mb-4 tracking-tight drop-shadow-lg">
               {t('cars.welcome.title')}
             </h1>
             <p className="text-lg font-normal text-gray-100 max-w-2xl mx-auto leading-relaxed tracking-wide drop-shadow">
-              {t('cars.welcome.description')}
+              {t('cars.welcome.description', { country: currentCountry ? (language === 'ar' ? currentCountry.name_ar : currentCountry.name) : '' })}
             </p>
           </div>
         </div>
@@ -759,16 +827,28 @@ export default function CarsPage() {
               </div>
 
               {/* Active Filters */}
-              {activeFilters.length > 0 && (
+              {(activeFilters.length > 0 || searchInput) && (
                 <div className="flex flex-wrap gap-2 items-center">
                   {activeFilters.map((filter, index) => (
-                    <span
+                    <button
                       key={index}
-                      className="px-3 py-1 bg-qatar-maroon/10 text-qatar-maroon dark:text-qatar-maroon rounded-lg text-sm font-medium flex items-center gap-1"
+                      onClick={() => removeFilter(filter)}
+                      className="px-3 py-1 bg-qatar-maroon/10 text-qatar-maroon dark:text-qatar-maroon rounded-lg text-sm font-medium flex items-center gap-1 group hover:bg-qatar-maroon hover:text-white transition-colors"
                     >
                       {filter}
-                    </span>
+                      <XMarkIcon className="h-4 w-4 group-hover:text-white" />
+                    </button>
                   ))}
+                  {searchInput && !activeFilters.includes(searchInput) && (
+                    <button
+                      onClick={() => removeFilter(searchInput)}
+                      className="px-3 py-1 bg-qatar-maroon/10 text-qatar-maroon dark:text-qatar-maroon rounded-lg text-sm font-medium flex items-center gap-1 group hover:bg-qatar-maroon hover:text-white transition-colors"
+                    >
+                      <MagnifyingGlassIcon className="h-4 w-4" />
+                      {searchInput}
+                      <XMarkIcon className="h-4 w-4 group-hover:text-white" />
+                    </button>
+                  )}
                   <button
                     onClick={clearAllFilters}
                     className="px-3 py-1 text-xs font-medium text-qatar-maroon hover:text-white border border-qatar-maroon hover:bg-qatar-maroon rounded-lg transition-colors"
@@ -837,6 +917,38 @@ export default function CarsPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Model */}
+                    {filters.brand_id && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                          {t('cars.filters.model')}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={t('cars.filters.modelPlaceholder')}
+                          value={filters.model || ''}
+                          onChange={(e) => handleModelChange(e.target.value || undefined)}
+                          className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
+                        />
+                      </div>
+                    )}
+
+                    {/* Exact Model */}
+                    {filters.model && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-900 dark:text-white">
+                          {t('cars.filters.exactModel')}
+                        </label>
+                        <input
+                          type="text"
+                          placeholder={t('cars.filters.exactModelPlaceholder')}
+                          value={filters.exact_model || ''}
+                          onChange={(e) => handleExactModelChange(e.target.value || undefined)}
+                          className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
+                        />
+                      </div>
+                    )}
 
                     {/* Price Range */}
                     <div className="space-y-2">
@@ -931,13 +1043,36 @@ export default function CarsPage() {
                       </div>
                     </div>
 
+                    {/* Seller Type */}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-900 dark:text-white">
+                        {t('cars.filters.sellerType') || 'Seller Type'}
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(['dealer', 'private'] as SellerType[]).map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => handleSellerTypeChange(type)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
+                              ${
+                              selectedSellerTypes.includes(type)
+                                ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
+                                : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
+                            }`}
+                          >
+                            {t(`cars.sellerType.${type}`) || type.charAt(0).toUpperCase() + type.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Condition */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
                         {t('cars.filters.condition')}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
-                        {(['New', 'Good', 'Excellent', 'NotWorking'] as CarCondition[]).map((condition) => (
+                        {(['New', 'Good', 'Excellent', 'Not Working'] as CarCondition[]).map((condition) => (
                           
                           <button
                             key={condition}
@@ -949,7 +1084,7 @@ export default function CarsPage() {
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {t(`cars.condition.${condition === 'NotWorking' ? 'notWorking' : condition.toLowerCase()}`)}
+                            {t(`cars.condition.${condition.toLowerCase().replace(' ', '_')}`)}
                           </button>
                         ))}
                       </div>
@@ -1002,29 +1137,6 @@ export default function CarsPage() {
                             }`}
                           >
                             {t(`cars.fuelType.${type.toLowerCase()}`)}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Seller Type */}
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.sellerType') || 'Seller Type'}
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {(['dealer', 'private'] as SellerType[]).map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => handleSellerTypeChange(type)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
-                              ${
-                              selectedSellerTypes.includes(type)
-                                ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
-                                : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
-                            }`}
-                          >
-                            {t(`cars.sellerType.${type}`) || type.charAt(0).toUpperCase() + type.slice(1)}
                           </button>
                         ))}
                       </div>
@@ -1166,7 +1278,7 @@ export default function CarsPage() {
                   <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
                     {currentCountry ? (
                       <p>
-                        {t('cars.noResultsForCountry', { country: currentCountry.name })}
+                        {t('cars.noResultsForCountry', { country: currentCountry ? (language === 'ar' ? currentCountry.name_ar : currentCountry.name) : '' })}
                       </p>
                     ) : (
                       <p>

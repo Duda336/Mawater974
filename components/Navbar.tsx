@@ -15,6 +15,7 @@ import {
   Bars3Icon,
   HomeIcon,
   BellIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -165,7 +166,7 @@ export default function Navbar() {
 
   const userMenuItems = [
     { name: t('user.myProfile'), href: `/${currentCountry?.code.toLowerCase()}/profile`, icon: UserCircleIcon },
-    ...(isAdmin ? [{ name: t('user.adminDashboard'), href: `/${currentCountry?.code.toLowerCase()}/admin`, icon: ClipboardDocumentListIcon }] : []),
+    ...(isAdmin ? [{ name: t('user.adminDashboard'), href: `/admin`, icon: ClipboardDocumentListIcon }] : []),
     ...(isDealer ? [{ name: t('user.dealerDashboard'), href: `/${currentCountry?.code.toLowerCase()}/dealer-dashboard`, icon: ClipboardDocumentListIcon }] : []),
     { name: t('user.myAds'), href: `/${currentCountry?.code.toLowerCase()}/my-ads`, icon: ClipboardDocumentListIcon },
     { name: t('user.favorites'), href: `/${currentCountry?.code.toLowerCase()}/favorites`, icon: HeartIcon },
@@ -234,11 +235,12 @@ export default function Navbar() {
               {/* User Menu */}
               {user ? (
                 <Menu as="div" className="relative ml-3">
-                  <Menu.Button className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-qatar-maroon dark:hover:text-qatar-maroon">
+                  <Menu.Button className="flex items-center text-gray-700 dark:text-gray-300 hover:text-qatar-maroon dark:hover:text-qatar-maroon group">
                     <UserCircleIcon className="h-8 w-8" />
-                    <span className="hidden md:block font-medium">
+                    <span className="hidden md:block font-medium mx-2">
                       {user.user_metadata?.full_name || user.email}
                     </span>
+                    <ChevronDownIcon className="h-4 w-4 text-gray-400 dark:text-gray-500 group-hover:text-qatar-maroon dark:group-hover:text-qatar-maroon transition-colors" />
                   </Menu.Button>
                   <Transition
                     as={Fragment}
@@ -249,17 +251,17 @@ export default function Navbar() {
                     leaveFrom="transform opacity-100 scale-100"
                     leaveTo="transform opacity-0 scale-95"
                   >
-                    <Menu.Items className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <Menu.Items className={`absolute ${language === 'ar' ? 'left-0' : 'right-0'} mt-1 w-56 origin-top-right rounded-md bg-white dark:bg-gray-800 py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50`}>
                       {/* Profile */}
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href="/profile"
+                            href={`/${currentCountry?.code.toLowerCase()}/profile`}
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                           >
-                            <UserCircleIcon className="mr-3 h-5 w-5" />
+                            <UserCircleIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                             {t('user.myProfile')}
                           </Link>
                         )}
@@ -269,15 +271,15 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href="/messages"
+                            href={`/${currentCountry?.code.toLowerCase()}/messages`}
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 relative`}
                           >
-                            <BellIcon className="mr-3 h-5 w-5" />
+                            <BellIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                             {t('user.messages')}
                             {unreadCount > 0 && (
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 bg-qatar-maroon text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                              <span className={`absolute ${language === 'ar' ? 'left-3' : 'right-3'} top-1/2 -translate-y-1/2 bg-qatar-maroon text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center`}>
                                 {unreadCount}
                               </span>
                             )}
@@ -289,12 +291,12 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href="/favorites"
+                            href={`/${currentCountry?.code.toLowerCase()}/favorites`}
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                           >
-                            <HeartIcon className="mr-3 h-5 w-5" />
+                            <HeartIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                             {t('user.favorites')}
                           </Link>
                         )}
@@ -304,12 +306,12 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href="/my-ads"
+                            href={`/${currentCountry?.code.toLowerCase()}/my-ads`}
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                           >
-                            <ClipboardDocumentListIcon className="mr-3 h-5 w-5" />
+                            <ClipboardDocumentListIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                             {t('user.myAds')}
                           </Link>
                         )}
@@ -325,7 +327,7 @@ export default function Navbar() {
                                 active ? 'bg-gray-100 dark:bg-gray-700' : ''
                               } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                             >
-                              <Cog6ToothIcon className="mr-3 h-5 w-5" />
+                              <Cog6ToothIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                               {t('dashboard.title')}
                             </Link>
                           )}
@@ -342,7 +344,7 @@ export default function Navbar() {
                                 active ? 'bg-gray-100 dark:bg-gray-700' : ''
                               } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                             >
-                              <Cog6ToothIcon className="mr-3 h-5 w-5" />
+                              <Cog6ToothIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                               {t('user.adminDashboard')}
                             </Link>
                           )}
@@ -357,7 +359,7 @@ export default function Navbar() {
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
                           >
-                            <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5" />
+                            <ArrowRightOnRectangleIcon className={`h-5 w-5 ${language === 'ar' ? 'ml-3' : 'mr-3'}`} />
                             {t('user.signOut')}
                           </button>
                         )}
