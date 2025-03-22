@@ -16,11 +16,11 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.1.1",
     "@hotjar/browser": "^1.0.9",
-    "@netlify/plugin-nextjs": "^4.41.3",
     "@next/third-parties": "^15.1.7",
     "@radix-ui/react-slider": "^1.2.2",
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/supabase-js": "^2.48.1",
+    "buffer": "^6.0.3",
     "chart.js": "^4.4.8",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -41,6 +41,7 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.10.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
