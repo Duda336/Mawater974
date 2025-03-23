@@ -19,6 +19,8 @@ config.autoAddCss = false
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
+  preload: true,
+  variable: '--font-inter',
 })
 
 // Google Analytics Debug Script
