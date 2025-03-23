@@ -89,10 +89,6 @@ export default function CarsPage() {
   const [countryLoading, setCountryLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>({ sort: 'newest' });
-  const [selectedConditions, setSelectedConditions] = useState<CarCondition[]>([]);
-  const [selectedBodyTypes, setSelectedBodyTypes] = useState<BodyType[]>([]);
-  const [selectedFuelTypes, setSelectedFuelTypes] = useState<FuelType[]>([]);
-  const [selectedSellerTypes, setSelectedSellerTypes] = useState<SellerType[]>([]);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -123,7 +119,7 @@ export default function CarsPage() {
 
   useEffect(() => {
     fetchBrands();
-   /*fetchCars();*/
+    fetchCars();
  
     if (user) {
       fetchUserFavorites();
@@ -238,13 +234,13 @@ export default function CarsPage() {
 
     // Apply filters to both featured and non-featured cars
     const filterFunction = (car: CarWithLocation) => {
-      const matchesCondition = selectedConditions.length === 0 || selectedConditions.includes(car.condition);
-      const matchesBodyType = selectedBodyTypes.length === 0 || selectedBodyTypes.includes(car.body_type);
-      const matchesFuelType = selectedFuelTypes.length === 0 || selectedFuelTypes.includes(car.fuel_type);
+      const matchesCondition = !filters.condition?.length || filters.condition.includes(car.condition);
+      const matchesBodyType = !filters.body_type?.length || filters.body_type.includes(car.body_type);
+      const matchesFuelType = !filters.fuel_type?.length || filters.fuel_type.includes(car.fuel_type);
       const matchesGearbox = !filters.gearbox_type?.length || filters.gearbox_type.includes(car.gearbox_type);
-      const matchesSellerType = selectedSellerTypes.length === 0 || (
-        selectedSellerTypes.includes('dealer') && car.user?.role === 'dealer' ||
-        selectedSellerTypes.includes('private') && car.user?.role !== 'dealer'
+      const matchesSellerType = !filters.seller_type?.length || (
+        filters.seller_type.includes('dealer') && car.user?.role === 'dealer' ||
+        filters.seller_type.includes('private') && car.user?.role !== 'dealer'
       );
       
       const matchesBrand = !filters.brand_id || car.brand_id === filters.brand_id;
@@ -425,61 +421,51 @@ export default function CarsPage() {
 
   const resetFilters = () => {
     setFilters({ sort: 'newest' });
-    setSelectedConditions([]);
-    setSelectedBodyTypes([]);
-    setSelectedFuelTypes([]);
-    setSelectedSellerTypes([]);
     toast.success(t('cars.filters.clear'));
   };
 
   const toggleCondition = (condition: CarCondition) => {
-    setSelectedConditions(prev => {
-      const isSelected = prev.includes(condition);
+    setFilters(prev => {
+      const currentConditions = prev.condition || [];
+      const isSelected = currentConditions.includes(condition);
       const newConditions = isSelected 
-        ? prev.filter(c => c !== condition)
-        : [...prev, condition];
+        ? currentConditions.filter(c => c !== condition)
+        : [...currentConditions, condition];
       
-      // Update filters with the new conditions array
-      setFilters(prevFilters => ({
-        ...prevFilters,
+      return {
+        ...prev,
         condition: newConditions.length > 0 ? newConditions : undefined
-      }));
-      
-      return newConditions;
+      };
     });
   };
 
   const toggleBodyType = (bodyType: BodyType) => {
-    setSelectedBodyTypes(prev => {
-      const isSelected = prev.includes(bodyType);
-      const newBodyTypes = isSelected 
-        ? prev.filter(type => type !== bodyType)
-        : [...prev, bodyType];
+    setFilters(prev => {
+      const currentTypes = prev.body_type || [];
+      const isSelected = currentTypes.includes(bodyType);
+      const newTypes = isSelected 
+        ? currentTypes.filter(type => type !== bodyType)
+        : [...currentTypes, bodyType];
       
-      // Update filters with the new body type array
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        body_type: newBodyTypes.length > 0 ? newBodyTypes : undefined
-      }));
-      
-      return newBodyTypes;
+      return {
+        ...prev,
+        body_type: newTypes.length > 0 ? newTypes : undefined
+      };
     });
   };
 
   const toggleFuelType = (fuelType: FuelType) => {
-    setSelectedFuelTypes(prev => {
-      const isSelected = prev.includes(fuelType);
-      const newFuelTypes = isSelected 
-        ? prev.filter(type => type !== fuelType)
-        : [...prev, fuelType];
+    setFilters(prev => {
+      const currentTypes = prev.fuel_type || [];
+      const isSelected = currentTypes.includes(fuelType);
+      const newTypes = isSelected 
+        ? currentTypes.filter(type => type !== fuelType)
+        : [...currentTypes, fuelType];
       
-      // Update filters with the new fuel type array
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        fuel_type: newFuelTypes.length > 0 ? newFuelTypes : undefined
-      }));
-      
-      return newFuelTypes;
+      return {
+        ...prev,
+        fuel_type: newTypes.length > 0 ? newTypes : undefined
+      };
     });
   };
 
@@ -488,20 +474,18 @@ export default function CarsPage() {
   };
 
   const handleSellerTypeChange = (type: SellerType) => {
-    setSelectedSellerTypes(prev => {
-      const isSelected = prev.includes(type);
+    setFilters(prev => {
+      const currentTypes = prev.seller_type || [];
+      const isSelected = currentTypes.includes(type);
       
-      const newSellerTypes = isSelected 
-        ? prev.filter(t => t !== type)
-        : [...prev, type];
+      const newTypes = isSelected 
+        ? currentTypes.filter(t => t !== type)
+        : [...currentTypes, type];
       
-      // Update filters with the new seller type array
-      setFilters(prevFilters => ({
-        ...prevFilters,
-        seller_type: newSellerTypes.length > 0 ? newSellerTypes : undefined
-      }));
-      
-      return newSellerTypes;
+      return {
+        ...prev,
+        seller_type: newTypes.length > 0 ? newTypes : undefined
+      };
     });
   };
 
@@ -537,7 +521,6 @@ export default function CarsPage() {
     { name: 'model', label: t('cars.filters.model'), options: filterOptions.model },
     { name: 'year', label: t('cars.filters.year'), options: filterOptions.year },
     { name: 'condition', label: t('cars.filters.condition'), options: filterOptions.condition },
-    { name: 'body_type', label: t('cars.filters.bodyType'), options: filterOptions.body_type },
     { name: 'fuel_type', label: t('cars.filters.fuelType'), options: filterOptions.fuel_type },
     { name: 'gearbox_type', label: t('cars.filters.transmission'), options: filterOptions.gearbox_type },
     { name: 'color', label: t('cars.filters.color'), options: filterOptions.color },
@@ -565,10 +548,10 @@ export default function CarsPage() {
     if (filters.brand_id) count++;
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) count++;
     if (filters.minMileage !== undefined || filters.maxMileage !== undefined) count++;
-    if (selectedBodyTypes.length) count++;
-    if (selectedFuelTypes.length) count++;
-    if (selectedConditions.length) count++;
-    if (selectedSellerTypes.length) count++;
+    if (filters.body_type?.length) count++;
+    if (filters.fuel_type?.length) count++;
+    if (filters.condition?.length) count++;
+    if (filters.seller_type?.length) count++;
     if (filters.minYear !== undefined || filters.maxYear !== undefined) count++;
     if (filters.gearbox_type && filters.gearbox_type.length > 0) count++;
     return count;
@@ -576,10 +559,6 @@ export default function CarsPage() {
 
   const clearAllFilters = () => {
     setFilters({ sort: filters.sort });
-    setSelectedBodyTypes([]);
-    setSelectedFuelTypes([]);
-    setSelectedConditions([]);
-    setSelectedSellerTypes([]);
     setActiveFilters([]);
     setSearchInput('');
   };
@@ -596,10 +575,10 @@ export default function CarsPage() {
     if (filters.minMileage !== undefined || filters.maxMileage !== undefined) {
       newActiveFilters.push(t('cars.filters.mileageRange'));
     }
-    selectedBodyTypes.forEach(type => newActiveFilters.push(`${t('cars.filters.bodyType')}: ${type}`));
-    selectedFuelTypes.forEach(type => newActiveFilters.push(`${t('cars.filters.fuelType')}: ${type}`));
-    selectedConditions.forEach(condition => newActiveFilters.push(`${t('cars.filters.condition')}: ${condition}`));
-    selectedSellerTypes.forEach(type => newActiveFilters.push(`${t('cars.filters.sellerType')}: ${type}`));
+    filters.body_type?.forEach(type => newActiveFilters.push(`${t('cars.filters.bodyType')}: ${type}`));
+    filters.fuel_type?.forEach(type => newActiveFilters.push(`${t('cars.filters.fuelType')}: ${type}`));
+    filters.condition?.forEach(condition => newActiveFilters.push(`${t('cars.filters.condition')}: ${condition}`));
+    filters.seller_type?.forEach(type => newActiveFilters.push(`${t('cars.filters.sellerType')}: ${type}`));
     if (filters.minYear !== undefined || filters.maxYear !== undefined) {
       newActiveFilters.push(t('cars.filters.yearRange'));
     }
@@ -607,7 +586,7 @@ export default function CarsPage() {
       newActiveFilters.push(t('cars.filters.transmission'));
     }
     setActiveFilters(newActiveFilters);
-  }, [filters, selectedBodyTypes, selectedFuelTypes, selectedConditions, selectedSellerTypes, brands]);
+  }, [filters, brands]);
 
   const handleSortChange = (value: string) => {
     setFilters(prev => ({
@@ -870,9 +849,9 @@ export default function CarsPage() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -300, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="w-full md:w-80 md:relative fixed inset-0 z-50 md:z-0 bg-white/95 dark:bg-gray-900/95 md:bg-transparent md:dark:bg-transparent overflow-auto"
+                  className="w-full md:w-80 md:relative fixed inset-0 z-50 md:z-0 rounded-xl bg-white/95 dark:bg-gray-900/95 md:bg-transparent md:dark:bg-transparent overflow-auto shadow-lg "
                 >
-                  <div className="w-full md:w-80 bg-white dark:bg-gray-800 p-6 rounded-xl space-y-6">
+                  <div className="w-full md:w-80 bg-white dark:bg-gray-800 p-6 rounded-xl space-y-4">
                     {/* Mobile Close Button */}
                     <button
                       onClick={() => setShowFilters(false)}
@@ -1055,7 +1034,7 @@ export default function CarsPage() {
                             onClick={() => handleSellerTypeChange(type)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
                               ${
-                              selectedSellerTypes.includes(type)
+                              filters.seller_type?.includes(type)
                                 ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
@@ -1079,7 +1058,7 @@ export default function CarsPage() {
                             onClick={() => toggleCondition(condition)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
                               ${
-                              selectedConditions.includes(condition)
+                              filters.condition?.includes(condition)
                                 ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
@@ -1131,7 +1110,7 @@ export default function CarsPage() {
                             onClick={() => toggleFuelType(type)}
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
                               ${
-                              selectedFuelTypes.includes(type)
+                              filters.fuel_type?.includes(type)
                                 ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
@@ -1184,7 +1163,7 @@ export default function CarsPage() {
                                 onClick={() => toggleBodyType(type)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border 
                                   ${
-                                  selectedBodyTypes.includes(type)
+                                  filters.body_type?.includes(type)
                                     ? 'bg-qatar-maroon text-white border-qatar-maroon font-bold hover:bg-qatar-maroon/90'
                                     : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                                 }`}
@@ -1199,7 +1178,7 @@ export default function CarsPage() {
 
                     {/* Clear Filters Button */}
                     <button
-                      onClick={clearAllFilters}
+                      onClick={resetFilters}
                       className="w-full px-4 py-2 text-sm font-medium text-qatar-maroon hover:text-white border border-qatar-maroon hover:bg-qatar-maroon rounded-lg transition-colors"
                     >
                       {t('cars.filters.clear')}

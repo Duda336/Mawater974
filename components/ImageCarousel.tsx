@@ -53,7 +53,7 @@ export default function ImageCarousel({
             <Image
               src={image.url}
               alt={`${alt} ${index + 1}`}
-              fill
+              fill  
               className="object-cover"
               priority={index === 0}
             />

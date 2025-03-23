@@ -7,6 +7,7 @@ import AdminNavbar from '../../../components/admin/AdminNavbar';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import DatabaseManager from '../../../components/admin/DatabaseManager';
+import { ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 interface DatabaseStats {
   tables: {
@@ -17,6 +18,49 @@ interface DatabaseStats {
   totalRows: number;
   lastBackup: string;
 }
+
+const exportToCSV = (data: any[], filename: string) => {
+  if (!data.length) return;
+  
+  const headers = Object.keys(data[0]);
+  const rows = data.map(item => 
+    headers.map(header => {
+      const cell = item[header];
+      const value = typeof cell === 'object' && cell !== null ? JSON.stringify(cell) : cell;
+      return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+        ? `"${value.replace(/"/g, '""')}"` 
+        : value;
+    })
+  );
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const exportToJSON = (data: any[], filename: string) => {
+  const jsonContent = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 export default function AdminDatabasePage() {
   const router = useRouter();
@@ -121,6 +165,30 @@ export default function AdminDatabasePage() {
               <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
                 View and manage database statistics, tables, and backups.
               </p>
+            </div>
+            <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none flex space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const currentDate = new Date().toISOString().split('T')[0];
+                  exportToCSV(stats.tables, `database-export-${currentDate}.csv`);
+                }}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+              >
+                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                Export CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentDate = new Date().toISOString().split('T')[0];
+                  exportToJSON(stats.tables, `database-export-${currentDate}.json`);
+                }}
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+              >
+                <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                Export JSON
+              </button>
             </div>
           </div>
 

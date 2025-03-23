@@ -771,7 +771,8 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                   {currentLanguage === 'ar' && car.brand?.name_ar ? car.brand.name_ar : car.brand.name} {currentLanguage === 'ar' && car.model?.name_ar ? car.model.name_ar : car.model.name}{car.exact_model ? ` - ${car.exact_model}` : ''} {car.year}
                 </h1>
                 <div className="mt-2 flex items-center space-x-4 rtl:space-x-reverse mb-4">
-                  <p className="text-2xl font-bold text-qatar-maroon" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+                  <p className="text-2xl font-bold text-qatar-maroon" 
+                  dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
                     {car.price.toLocaleString('en-US')}
                     {' '}
                     {t(`common.currency.${carCountry?.currency_code || 'QAR'}`)}

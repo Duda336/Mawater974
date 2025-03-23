@@ -121,8 +121,8 @@ export default function CarCard({
 
           <div className="flex flex-col gap-2">
             <div>
-              <span className="text-2xl font-semibold text-qatar-maroon" dir="ltr">
-                {formatPrice(car.price || 0, currentLanguage)}
+              <span className="text-2xl font-semibold text-qatar-maroon">
+                {car.price.toLocaleString('en-US')} {t(`common.currency.${car.country?.currency_code || 'QAR'}`)}
               </span>
             </div>
 

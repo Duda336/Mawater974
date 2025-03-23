@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { 
@@ -19,6 +19,78 @@ const TABLES = [
   'dealerships',
   // Add any other tables here
 ];
+
+const exportToCSV = (data: any[] | Record<string, any[]>, filename: string) => {
+  if (!data) return;
+
+  let csvContent: string;
+  
+  if (Array.isArray(data)) {
+    // Single table export
+    if (data.length === 0) return;
+    
+    const headers = Object.keys(data[0]);
+    const rows = [
+      headers,
+      ...data.map(item => 
+        headers.map(header => {
+          const cell = item[header];
+          const value = typeof cell === 'object' && cell !== null ? JSON.stringify(cell) : cell;
+          return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+            ? `"${value.replace(/"/g, '""')}"` 
+            : value;
+        })
+      )
+    ];
+    csvContent = rows.map(row => row.join(',')).join('\n');
+  } else {
+    // Multi-table export
+    const rows: string[] = [];
+    for (const [table, tableData] of Object.entries(data)) {
+      if (tableData && tableData.length > 0) {
+        rows.push(`Table: ${table}`);
+        const headers = Object.keys(tableData[0]);
+        rows.push(headers.join(','));
+        rows.push(
+          ...tableData.map(item =>
+            headers.map(header => {
+              const cell = item[header];
+              const value = typeof cell === 'object' && cell !== null ? JSON.stringify(cell) : cell;
+              return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+                ? `"${value.replace(/"/g, '""')}"` 
+                : value;
+            }).join(',')
+          )
+        );
+        rows.push(''); // Empty row between tables
+      }
+    }
+    csvContent = rows.join('\n');
+  }
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+const exportToJSON = (data: any[] | Record<string, any[]>, filename: string) => {
+  const jsonContent = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonContent], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 export default function DatabaseManager() {
   const [loading, setLoading] = useState(false);
@@ -99,6 +171,86 @@ export default function DatabaseManager() {
     }
   };
 
+  const handleExportCSV = async () => {
+    setLoading(true);
+    try {
+      if (selectedTable === 'all') {
+        // Export all tables
+        const allData: Record<string, any[]> = {};
+        for (const table of TABLES) {
+          const { data, error } = await supabase
+            .from(table)
+            .select('*');
+          
+          if (error) throw error;
+          allData[table] = data || [];
+        }
+        
+        exportToCSV(allData, `all-tables-${new Date().toISOString().split('T')[0]}.csv`);
+      } else {
+        // Export single table
+        const { data, error } = await supabase
+          .from(selectedTable)
+          .select('*');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          toast.error('No data found in the selected table');
+          return;
+        }
+
+        exportToCSV(data, `${selectedTable}-${new Date().toISOString().split('T')[0]}.csv`);
+      }
+      toast.success('CSV exported successfully!');
+    } catch (error: any) {
+      console.error('Export CSV error:', error);
+      toast.error(error.message || 'Failed to export CSV');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    setLoading(true);
+    try {
+      if (selectedTable === 'all') {
+        // Export all tables
+        const allData: Record<string, any[]> = {};
+        for (const table of TABLES) {
+          const { data, error } = await supabase
+            .from(table)
+            .select('*');
+          
+          if (error) throw error;
+          allData[table] = data || [];
+        }
+
+        exportToJSON(allData, `all-tables-${new Date().toISOString().split('T')[0]}.json`);
+      } else {
+        // Export single table
+        const { data, error } = await supabase
+          .from(selectedTable)
+          .select('*');
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          toast.error('No data found in the selected table');
+          return;
+        }
+
+        exportToJSON(data, `${selectedTable}-${new Date().toISOString().split('T')[0]}.json`);
+      }
+      toast.success('JSON exported successfully!');
+    } catch (error: any) {
+      console.error('Export JSON error:', error);
+      toast.error(error.message || 'Failed to export JSON');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
@@ -138,9 +290,23 @@ export default function DatabaseManager() {
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
             ) : (
-              <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
+              <DocumentArrowDownIcon className="w-5 h-5 mr-2" />
             )}
-            Export {selectedTable === 'all' ? 'All Data' : selectedTable}
+            Export JSON
+          </button>
+
+          {/* Export CSV Button */}
+          <button
+            onClick={handleExportCSV}
+            disabled={loading}
+            className="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon disabled:opacity-50 transition-colors duration-200"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+            ) : (
+              <DocumentArrowDownIcon className="w-5 h-5 mr-2" />
+            )}
+            Export CSV
           </button>
 
           {/* Import Button */}
@@ -173,10 +339,10 @@ export default function DatabaseManager() {
         <div className="mt-6 bg-gray-50 dark:bg-gray-700 rounded-md p-4">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Instructions</h3>
           <ul className="list-disc pl-5 text-sm text-gray-600 dark:text-gray-300 space-y-1">
-            <li>Export will download a JSON file containing the selected table data</li>
+            <li>Export will download a JSON or CSV file containing the selected table data</li>
             <li>Import will replace all existing data in the selected table</li>
             <li>Make sure to backup your data before importing</li>
-            <li>Only JSON files are supported for import</li>
+            <li>Only JSON or CSV files are supported for import</li>
           </ul>
         </div>
       </div>
