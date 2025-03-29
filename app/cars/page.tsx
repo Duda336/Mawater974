@@ -109,12 +109,12 @@ export default function CarsPage() {
   const router = useRouter();
 
   const sortOptions = [
-    { value: 'newest', label: t('cars.sort.newest') },
-    { value: 'oldest', label: t('cars.sort.oldest') },
-    { value: 'price_asc', label: t('cars.sort.priceLow') },
-    { value: 'price_desc', label: t('cars.sort.priceHigh') },
-    { value: 'year_asc', label: t('cars.sort.yearOld') },
-    { value: 'year_desc', label: t('cars.sort.yearNew') },
+    { value: 'newest', label: t('car.sort.newest') },
+    { value: 'oldest', label: t('car.sort.oldest') },
+    { value: 'price_asc', label: t('car.sort.priceLow') },
+    { value: 'price_desc', label: t('car.sort.priceHigh') },
+    { value: 'year_asc', label: t('car.sort.yearOld') },
+    { value: 'year_desc', label: t('car.sort.yearNew') },
   ];
 
   useEffect(() => {
@@ -328,7 +328,7 @@ export default function CarsPage() {
 
   const handleFavoriteToggle = async (carId: number) => {
     if (!user) {
-      toast.error(t('cars.favorite.login'));
+      toast.error(t('car.favorite.login'));
       router.push('/login');
       return;
     }
@@ -347,7 +347,7 @@ export default function CarsPage() {
         if (error) throw error;
 
         setFavorites(prev => prev.filter(id => id !== carId));
-        toast.success(t('cars.favorite.remove'), {
+        toast.success(t('car.favorite.remove'), {
           icon: '💔',
           position: 'bottom-right',
         });
@@ -362,14 +362,14 @@ export default function CarsPage() {
         if (error) throw error;
 
         setFavorites(prev => [...prev, carId]);
-        toast.success(t('cars.favorite.add'), {
+        toast.success(t('car.favorite.add'), {
           icon: '❤️',
           position: 'bottom-right',
         });
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      toast.error(t('cars.error.load'));
+      toast.error(t('car.error.load'));
     }
   };
 
@@ -384,7 +384,7 @@ export default function CarsPage() {
         return newSelection;
       }
       if (prev.length >= 2) {
-        toast.error(t('cars.compare.limit'));
+        toast.error(t('car.compare.limit'));
         return prev;
       }
       return [...prev, car];
@@ -396,7 +396,7 @@ export default function CarsPage() {
       if (selectedCars.length >= 2) {
         setShowCompareModal(true);
       } else {
-        toast.error(t('cars.compare.minimum'));
+        toast.error(t('car.compare.minimum'));
       }
     } else {
       setCompareMode(true);
@@ -421,7 +421,7 @@ export default function CarsPage() {
 
   const resetFilters = () => {
     setFilters({ sort: 'newest' });
-    toast.success(t('cars.filters.clear'));
+    toast.success(t('car.filters.clear'));
   };
 
   const toggleCondition = (condition: CarCondition) => {
@@ -517,14 +517,14 @@ export default function CarsPage() {
   };
 
   const filterConfigs = [
-    { name: 'brand', label: t('cars.filters.brand'), options: filterOptions.brand },
-    { name: 'model', label: t('cars.filters.model'), options: filterOptions.model },
-    { name: 'year', label: t('cars.filters.year'), options: filterOptions.year },
-    { name: 'condition', label: t('cars.filters.condition'), options: filterOptions.condition },
-    { name: 'fuel_type', label: t('cars.filters.fuelType'), options: filterOptions.fuel_type },
-    { name: 'gearbox_type', label: t('cars.filters.transmission'), options: filterOptions.gearbox_type },
-    { name: 'color', label: t('cars.filters.color'), options: filterOptions.color },
-    { name: 'location', label: t('cars.filters.location'), options: filterOptions.location },
+    { name: 'brand', label: t('car.filters.brand'), options: filterOptions.brand },
+    { name: 'model', label: t('car.filters.model'), options: filterOptions.model },
+    { name: 'year', label: t('car.filters.year'), options: filterOptions.year },
+    { name: 'condition', label: t('car.filters.condition'), options: filterOptions.condition },
+    { name: 'fuel_type', label: t('car.filters.fuelType'), options: filterOptions.fuel_type },
+    { name: 'gearbox_type', label: t('car.filters.gearboxType'), options: filterOptions.gearbox_type },
+    { name: 'color', label: t('car.filters.color'), options: filterOptions.color },
+    { name: 'location', label: t('car.filters.location'), options: filterOptions.location },
   ].filter(filter => filter.options.length > 0);
 
   const priceRanges = [
@@ -567,23 +567,23 @@ export default function CarsPage() {
     const newActiveFilters = [];
     if (filters.brand_id) {
       const brand = brands.find(b => b.id === filters.brand_id);
-      if (brand) newActiveFilters.push(`${t('cars.filters.brand')}: ${brand.name}`);
+      if (brand) newActiveFilters.push(`${t('car.filters.brand')}: ${brand.name}`);
     }
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
-      newActiveFilters.push(t('cars.filters.priceRange'));
+      newActiveFilters.push(t('car.filters.priceRange'));
     }
     if (filters.minMileage !== undefined || filters.maxMileage !== undefined) {
-      newActiveFilters.push(t('cars.filters.mileageRange'));
+      newActiveFilters.push(t('car.filters.mileageRange'));
     }
-    filters.body_type?.forEach(type => newActiveFilters.push(`${t('cars.filters.bodyType')}: ${type}`));
-    filters.fuel_type?.forEach(type => newActiveFilters.push(`${t('cars.filters.fuelType')}: ${type}`));
-    filters.condition?.forEach(condition => newActiveFilters.push(`${t('cars.filters.condition')}: ${condition}`));
-    filters.seller_type?.forEach(type => newActiveFilters.push(`${t('cars.filters.sellerType')}: ${type}`));
+    filters.body_type?.forEach(type => newActiveFilters.push(`${t('car.filters.bodyType')}: ${type}`));
+    filters.fuel_type?.forEach(type => newActiveFilters.push(`${t('car.filters.fuelType')}: ${type}`));
+    filters.condition?.forEach(condition => newActiveFilters.push(`${t('car.filters.condition')}: ${condition}`));
+    filters.seller_type?.forEach(type => newActiveFilters.push(`${t('car.filters.sellerType')}: ${type}`));
     if (filters.minYear !== undefined || filters.maxYear !== undefined) {
-      newActiveFilters.push(t('cars.filters.yearRange'));
+      newActiveFilters.push(t('car.filters.yearRange'));
     }
     if (filters.gearbox_type && filters.gearbox_type.length > 0) {
-      newActiveFilters.push(t('cars.filters.transmission'));
+      newActiveFilters.push(t('car.filters.gearboxType'));
     }
     setActiveFilters(newActiveFilters);
   }, [filters, brands]);
@@ -699,10 +699,10 @@ export default function CarsPage() {
           </div>
           <div className="relative max-w-4xl mx-auto text-center py-20 px-4">
             <h1 className="text-4xl font-bold text-gray-100 mb-4 tracking-tight drop-shadow-lg">
-              {t('cars.welcome.title')}
+              {t('car.welcome.title')}
             </h1>
             <p className="text-lg font-normal text-gray-100 max-w-2xl mx-auto leading-relaxed tracking-wide drop-shadow">
-              {t('cars.welcome.description', { country: currentCountry ? (language === 'ar' ? currentCountry.name_ar : currentCountry.name) : '' })}
+              {t('car.welcome.description', { country: currentCountry ? (language === 'ar' ? currentCountry.name_ar : currentCountry.name) : '' })}
             </p>
           </div>
         </div>
@@ -718,7 +718,7 @@ export default function CarsPage() {
                   <div className="relative flex-1">
                     <input
                       type="text"
-                      placeholder={t('cars.search.placeholder')}
+                      placeholder={t('car.search.placeholder')}
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       onKeyPress={handleSearchKeyPress}
@@ -730,7 +730,7 @@ export default function CarsPage() {
                     className="px-4 py-2 bg-qatar-maroon text-white rounded-xl hover:bg-qatar-maroon/90 transition-all duration-200 flex items-center gap-2"
                   >
                     <MagnifyingGlassIcon className="h-5 w-5" />
-                    {t('cars.search.button')}
+                    {t('car.search.button')}
                   </button>
                 </div>
                 
@@ -745,7 +745,7 @@ export default function CarsPage() {
                     }`}
                   >
                     <FunnelIcon className="h-5 w-5" />
-                    <span className="hidden sm:inline">{t('cars.filters.title')}</span>
+                    <span className="hidden sm:inline">{t('car.filters.title')}</span>
                     {getActiveFilterCount() > 0 && (
                       <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
                         !showFilters 
@@ -796,10 +796,10 @@ export default function CarsPage() {
                     <AdjustmentsHorizontalIcon className="h-5 w-5" />
                     {compareMode ? (
                       selectedCars.length > 0 
-                        ? `${t('cars.compare.selected', {count: selectedCars.length })}/2` 
-                        : t('cars.compare.select')
+                        ? `${t('car.compare.selected', {count: selectedCars.length })}/2` 
+                        : t('car.compare.select')
                     ) : (
-                      t('cars.compare.button')
+                      t('car.compare.button')
                     )}
                   </button>
                 </div>
@@ -832,7 +832,7 @@ export default function CarsPage() {
                     onClick={clearAllFilters}
                     className="px-3 py-1 text-xs font-medium text-qatar-maroon hover:text-white border border-qatar-maroon hover:bg-qatar-maroon rounded-lg transition-colors"
                   >
-                    {t('cars.filters.clear')}
+                    {t('car.filters.clear')}
                   </button>
                 </div>
               )}
@@ -862,15 +862,15 @@ export default function CarsPage() {
                     
                     <div className="flex items-center justify-between">
                       <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {t('cars.filters.title')}
+                        {t('car.filters.title')}
                       </h2>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{cars.length} {t('cars.filters.cars')}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">{cars.length} {t('car.filters.cars')}</span>
                     </div>        
                   
                     {/* Brand */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.brand')}
+                        {t('car.filters.brand')}
                       </label>
                       <div className="relative">
                         <select
@@ -878,7 +878,7 @@ export default function CarsPage() {
                           onChange={(e) => handleBrandChange(e.target.value ? Number(e.target.value) : undefined)}
                           className="appearance-none w-full px-4 py-2 pr-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-qatar-maroon hover:shadow-md"
                         >
-                          <option value="">{t('cars.filters.all')}</option>
+                          <option value="">{t('car.filters.all')}</option>
                           {brands.map((brand) => (
                             <option 
                               key={brand.id} 
@@ -901,11 +901,11 @@ export default function CarsPage() {
                     {filters.brand_id && (
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t('cars.filters.model')}
+                          {t('car.filters.model')}
                         </label>
                         <input
                           type="text"
-                          placeholder={t('cars.filters.modelPlaceholder')}
+                          placeholder={t('car.filters.modelPlaceholder')}
                           value={filters.model || ''}
                           onChange={(e) => handleModelChange(e.target.value || undefined)}
                           className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
@@ -917,11 +917,11 @@ export default function CarsPage() {
                     {filters.model && (
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-gray-900 dark:text-white">
-                          {t('cars.filters.exactModel')}
+                          {t('car.filters.exactModel')}
                         </label>
                         <input
                           type="text"
-                          placeholder={t('cars.filters.exactModelPlaceholder')}
+                          placeholder={t('car.filters.exactModelPlaceholder')}
                           value={filters.exact_model || ''}
                           onChange={(e) => handleExactModelChange(e.target.value || undefined)}
                           className="w-full px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
@@ -932,19 +932,19 @@ export default function CarsPage() {
                     {/* Price Range */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.price')}
+                        {t('car.filters.price')}
                       </label>
                       <div className="grid grid-cols-2 gap-3">
                         <input
                           type="number"
-                          placeholder={t('cars.filters.priceMin')}
+                          placeholder={t('car.filters.priceMin')}
                           value={filters.minPrice || ''}
                           onChange={(e) => handlePriceRangeChange(Number(e.target.value), filters.maxPrice)}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
                         />
                         <input
                           type="number"
-                          placeholder={t('cars.filters.priceMax')}
+                          placeholder={t('car.filters.priceMax')}
                           value={filters.maxPrice || ''}
                           onChange={(e) => handlePriceRangeChange(filters.minPrice, Number(e.target.value))}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
@@ -955,19 +955,19 @@ export default function CarsPage() {
                     {/* Mileage Range */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.mileage')}
+                        {t('car.filters.mileage')}
                       </label>
                       <div className="grid grid-cols-2 gap-3">
                         <input
                           type="number"
-                          placeholder={t('cars.filters.mileageMin')}
+                          placeholder={t('car.filters.mileageMin')}
                           value={filters.minMileage || ''}
                           onChange={(e) => handleMileageRangeChange(Number(e.target.value), filters.maxMileage)}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
                         />
                         <input
                           type="number"
-                          placeholder={t('cars.filters.mileageMax')}
+                          placeholder={t('car.filters.mileageMax')}
                           value={filters.maxMileage || ''}
                           onChange={(e) => handleMileageRangeChange(filters.minMileage, Number(e.target.value))}
                           className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon"
@@ -978,7 +978,7 @@ export default function CarsPage() {
                     {/* Year */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.year')}
+                        {t('car.filters.year')}
                       </label>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="relative group">
@@ -987,7 +987,7 @@ export default function CarsPage() {
                             onChange={(e) => handleYearRangeChange(Number(e.target.value), filters.maxYear)}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon appearance-none pr-8 hover:border-qatar-maroon hover:shadow-sm transition-all duration-300 ease-in-out"
                           >
-                            <option value="">{t('cars.filters.yearMin')}</option>
+                            <option value="">{t('car.filters.yearMin')}</option>
                             {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                               <option key={year} value={year}>
                                 {year}
@@ -1006,7 +1006,7 @@ export default function CarsPage() {
                             onChange={(e) => handleYearRangeChange(filters.minYear, Number(e.target.value))}
                             className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:ring-qatar-maroon focus:border-qatar-maroon appearance-none pr-8 hover:border-qatar-maroon hover:shadow-sm transition-all duration-300 ease-in-out"
                           >
-                            <option value="">{t('cars.filters.yearMax')}</option>
+                            <option value="">{t('car.filters.yearMax')}</option>
                             {Array.from({ length: new Date().getFullYear() - 1990 + 1 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                               <option key={year} value={year}>
                                 {year}
@@ -1025,7 +1025,7 @@ export default function CarsPage() {
                     {/* Seller Type */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.sellerType') || 'Seller Type'}
+                        {t('car.filters.sellerType') || 'Seller Type'}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {(['dealer', 'private'] as SellerType[]).map((type) => (
@@ -1039,7 +1039,7 @@ export default function CarsPage() {
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {t(`cars.sellerType.${type}`) || type.charAt(0).toUpperCase() + type.slice(1)}
+                            {t(`car.sellerType.${type}`) || type.charAt(0).toUpperCase() + type.slice(1)}
                           </button>
                         ))}
                       </div>
@@ -1048,7 +1048,7 @@ export default function CarsPage() {
                     {/* Condition */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.condition')}
+                        {t('car.filters.condition')}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {(['New', 'Good', 'Excellent', 'Not Working'] as CarCondition[]).map((condition) => (
@@ -1063,16 +1063,16 @@ export default function CarsPage() {
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {t(`cars.condition.${condition.toLowerCase().replace(' ', '_')}`)}
+                            {t(`car.condition.${condition.toLowerCase().replace(' ', '_')}`)}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    {/* Transmission */}
+                    {/* Gearbox Type */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.transmission')}
+                        {t('car.filters.gearboxType')}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {['automatic', 'manual'].map((type) => (
@@ -1092,7 +1092,7 @@ export default function CarsPage() {
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {t(`cars.transmission.${type}`)}
+                            {t(`car.gearboxType.${type}`)}
                           </button>
                         ))}
                       </div>
@@ -1101,7 +1101,7 @@ export default function CarsPage() {
                     {/* Fuel Type */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-900 dark:text-white">
-                        {t('cars.filters.fuelType')}
+                        {t('car.filters.fuelType')}
                       </label>
                       <div className="grid grid-cols-2 gap-2">
                         {(['Petrol', 'Diesel', 'Electric', 'Hybrid'] as FuelType[]).map((type) => (
@@ -1115,7 +1115,7 @@ export default function CarsPage() {
                                 : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                             }`}
                           >
-                            {t(`cars.fuelType.${type.toLowerCase()}`)}
+                            {t(`car.fuelType.${type.toLowerCase()}`)}
                           </button>
                         ))}
                       </div>
@@ -1130,12 +1130,12 @@ export default function CarsPage() {
                       >
                         {filtersExpanded ? (
                           <>
-                            {t('cars.filters.showLess') || 'Show Less'}
+                            {t('car.filters.showLess') || 'Show Less'}
                             <ChevronUpIcon className="h-5 w-5" />
                           </>
                         ) : (
                           <>
-                            {t('cars.filters.showMore') || 'Show More'}
+                            {t('car.filters.showMore') || 'Show More'}
                             <ChevronDownIcon className="h-5 w-5" />
                           </>
                         )}
@@ -1154,7 +1154,7 @@ export default function CarsPage() {
                         {/* Body Type */}
                         <div className="space-y-2">
                           <label className="text-sm font-medium text-gray-900 dark:text-white">
-                            {t('cars.filters.bodyType')}
+                            {t('car.filters.bodyType')}
                           </label>
                           <div className="grid grid-cols-2 gap-2">
                             {(['Sedan', 'SUV', 'Coupe', 'Hatchback', 'Wagon', 'Van', 'Truck', 'Convertible', 'Other'] as BodyType[]).map((type) => (
@@ -1168,7 +1168,7 @@ export default function CarsPage() {
                                     : 'bg-white dark:bg-transparent border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-qatar-maroon/50'
                                 }`}
                               >
-                                {t(`cars.bodyType.${type.toLowerCase()}`)}
+                                {t(`car.bodyType.${type.toLowerCase()}`)}
                               </button>
                             ))}
                           </div>
@@ -1181,7 +1181,7 @@ export default function CarsPage() {
                       onClick={resetFilters}
                       className="w-full px-4 py-2 text-sm font-medium text-qatar-maroon hover:text-white border border-qatar-maroon hover:bg-qatar-maroon rounded-lg transition-colors"
                     >
-                      {t('cars.filters.clear')}
+                      {t('car.filters.clear')}
                     </button>
                   </div>
                 </motion.aside>
@@ -1205,10 +1205,10 @@ export default function CarsPage() {
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
-                          {t('cars.compare.title')}
+                          {t('car.compare.title')}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {selectedCars.length} of 2 {t('cars.compare.cars')}
+                          {selectedCars.length} of 2 {t('car.compare.cars')}
                         </p>
                       </div>
                     </div>
@@ -1257,11 +1257,11 @@ export default function CarsPage() {
                   <div className="col-span-full text-center text-gray-500 dark:text-gray-400">
                     {currentCountry ? (
                       <p>
-                        {t('cars.noResultsForCountry', { country: currentCountry ? (language === 'ar' ? currentCountry.name_ar : currentCountry.name) : '' })}
+                        {t('car.noResultsForCountry', { country: currentCountry ? (language === 'ar' ? currentCountry.name_ar : currentCountry.name) : '' })}
                       </p>
                     ) : (
                       <p>
-                        {t('cars.noResults')}
+                        {t('car.noResults')}
                       </p>
                     )}
                   </div>

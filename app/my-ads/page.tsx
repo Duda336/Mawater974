@@ -30,12 +30,14 @@ type City = Database['public']['Tables']['cities']['Row'];
 type Country = Database['public']['Tables']['countries']['Row'];
 
 interface ExtendedCar extends Car {
+  id: number;
   brand?: Brand;
   model?: Model;
   city?: City;
   country?: Country;
   location?: string;
   images: { url: string; is_main: boolean }[];
+  views_count?: number;
 }
 
 export default function MyAdsPage() {
@@ -64,6 +66,31 @@ export default function MyAdsPage() {
     if (user) {
       fetchCars();
       fetchNotifications();
+      const viewCountSubscription = supabase
+        .channel('view-counts')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'cars',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload: any) => {
+            if (payload.new && payload.new.id) {
+              setCars(prevCars => prevCars.map(car => 
+                car.id === payload.new.id 
+                  ? { ...car, views_count: payload.new.views_count || 0 }
+                  : car
+              ));
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        viewCountSubscription.unsubscribe();
+      };
     }
   }, [user, filter]);
 
@@ -76,16 +103,31 @@ export default function MyAdsPage() {
           *,
           brand:brands(id, name, name_ar),
           model:models(id, name, name_ar),
-          city:cities(id, name, name_ar),
-          country:countries(id, name, name_ar, currency_code),
-          images:car_images(id, url, is_main)
+          city:cities(id, name, name_ar, country_id),
+          country:countries(id, name, name_ar, currency_code)
         `)
         .eq('user_id', user?.id)
         .eq(filter !== 'all' ? 'status' : '', filter !== 'all' ? filter.charAt(0).toUpperCase() + filter.slice(1) : '')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCars(cars || []);
+
+      const carsWithImages = await Promise.all(
+        (cars || []).map(async (car) => {
+          const { data: imagesData } = await supabase
+            .from('car_images')
+            .select('*')
+            .eq('car_id', car.id)
+            .order('is_main', { ascending: false });
+
+          return {
+            ...car,
+            images: imagesData || []
+          };
+        })
+      );
+
+      setCars(carsWithImages || []);
     } catch (error) {
       console.error('Error fetching cars:', error);
       toast.error(t('myAds.error.fetch'));
@@ -96,13 +138,11 @@ export default function MyAdsPage() {
 
   const fetchNotifications = async () => {
     try {
-      // Get total count
       const { count } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user?.id);
 
-      // Get recent notifications
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -138,7 +178,6 @@ export default function MyAdsPage() {
     
     setActionLoading(true);
     try {
-      // Delete car images first
       const { error: imagesError } = await supabase
         .from('car_images')
         .delete()
@@ -146,7 +185,6 @@ export default function MyAdsPage() {
 
       if (imagesError) throw imagesError;
 
-      // Then delete the car
       const { error: carError } = await supabase
         .from('cars')
         .delete()
@@ -156,7 +194,6 @@ export default function MyAdsPage() {
 
       toast.success(t('myAds.success.deleted'));
       setShowDeleteModal(false);
-      fetchCars(); // Refresh the list
     } catch (error) {
       console.error('Error deleting car:', error);
       toast.error(t('myAds.error.delete'));
@@ -171,7 +208,6 @@ export default function MyAdsPage() {
     
     setActionLoading(true);
     try {
-      // Update car status
       const { error: carError } = await supabase
         .from('cars')
         .update({ status: 'Sold' })
@@ -179,7 +215,6 @@ export default function MyAdsPage() {
 
       if (carError) throw carError;
 
-      // Create notification
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
@@ -195,8 +230,8 @@ export default function MyAdsPage() {
       toast.success(t('myAds.success.markedSold'));
       setShowSoldModal(false);
       await Promise.all([
-        fetchCars(), // Refresh the cars list
-        fetchNotifications(), // Refresh notifications
+        fetchCars(), 
+        fetchNotifications(), 
       ]);
     } catch (error) {
       console.error('Error marking car as sold:', error);
@@ -207,19 +242,18 @@ export default function MyAdsPage() {
     }
   };
 
-  const handleEditClick = (car: any) => {
+  const handleEditCar = (car: ExtendedCar) => {
     setSelectedCar(car);
     setIsEditModalOpen(true);
   };
 
   const handleEditComplete = () => {
-    fetchCars(); // Refresh the car listings
+    fetchCars();
   };
 
   const handleSetMainPhoto = async (carId: number, imageUrl: string) => {
     setActionLoading(true);
     try {
-      // First, reset all images to not main
       const { error: resetError } = await supabase
         .from('car_images')
         .update({ is_main: false })
@@ -227,7 +261,6 @@ export default function MyAdsPage() {
 
       if (resetError) throw resetError;
 
-      // Then set the selected image as main
       const { error: updateError } = await supabase
         .from('car_images')
         .update({ is_main: true })
@@ -237,7 +270,7 @@ export default function MyAdsPage() {
       if (updateError) throw updateError;
 
       toast.success(t('myAds.success.mainPhoto'));
-      fetchCars(); // Refresh the list
+      fetchCars(); 
     } catch (error) {
       console.error('Error setting main photo:', error);
       toast.error(t('myAds.error.mainPhoto'));
@@ -281,10 +314,11 @@ export default function MyAdsPage() {
     );
   }
 
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {t('myAds.title')}
           </h1>
@@ -298,7 +332,7 @@ export default function MyAdsPage() {
         </div>
 
         {/* Status Filters */}
-        <div className="flex flex-wrap gap-2 sm:gap-4 bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+        <div className="flex flex-wrap gap-2 sm:gap-4 bg-white dark:bg-gray-800 p-4 mb-4 rounded-xl shadow-sm">
           <button
             onClick={() => setFilter('all')}
             className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
@@ -364,12 +398,16 @@ export default function MyAdsPage() {
                 key={car.id}
                 className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden"
               >
-                {/* Car Image and Status */}
-                <div className="aspect-w-16 aspect-h-9 relative h-48">
+                  {/* Car Image and Status */}
+                  <div className="aspect-w-16 aspect-h-9 relative h-48">
+                  <Link
+                    href={`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`}
+                    className="block"
+                  > 
                   {car.images && car.images.length > 0 ? (
                     <Image
                       src={car.images.find(img => img.is_main)?.url || car.images[0].url}
-                      alt={`${car.brand.name} ${car.model.name}`}
+                      alt={t`${car.brand.name} ${car.model.name}`}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       priority={false}
@@ -381,9 +419,11 @@ export default function MyAdsPage() {
                       <TruckIcon className="h-12 w-12 text-gray-400" />
                     </div>
                   )}
+                  </Link>
                   <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-sm font-medium shadow-lg" style={{
                     backgroundColor: car.status === 'Approved' ? 'rgba(34, 197, 94, 0.9)' : 
                                    car.status === 'Pending' ? 'rgba(234, 179, 8, 0.9)' :
+                                   car.status === 'Rejected' ? 'rgba(239, 68, 68, 0.9)' :
                                    car.status === 'Sold' ? 'rgba(59, 130, 246, 0.9)' :
                                    'rgba(239, 68, 68, 0.9)',
                     color: 'white'
@@ -395,7 +435,7 @@ export default function MyAdsPage() {
                 {/* Car Details */}
                 <div className="p-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {car.brand.name} {car.model.name}
+                    {car.brand?.name} {car.model?.name} {car.exact_model && `(${car.exact_model})`}
                   </h3>
                   <div className="mt-2 text-sm text-gray-500 dark:text-gray-400 space-y-1">
                     <p>
@@ -404,7 +444,7 @@ export default function MyAdsPage() {
                     </p>
                     <p>
                       <span className="font-medium">{t('myAds.car.mileage')}:</span>{' '}
-                      {car.mileage.toLocaleString()}  {t('cars.mileage.unit')}
+                      {car.mileage.toLocaleString()}  {t('car.mileage.unit')}
                     </p>
                     <p>
                       <span className="font-medium">{t('myAds.car.location')}:</span>{' '}
@@ -418,13 +458,13 @@ export default function MyAdsPage() {
                     </p>
                     <p>
                       <span className="font-medium">{t('myAds.car.views')}:</span>{' '}
-                      {car.views || 0}
+                      {car.views_count || 0}
                     </p>
                   </div>
                   <div className="mt-4 flex justify-end gap-.5">
                     <button
-                      onClick={() => handleEditClick(car)}
-                      className="flex items-center px-3 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
+                      onClick={() => handleEditCar(car)}
+                      className="flex items-center px-2 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
                     >
                       <PencilIcon className="h-4 w-4 mr-1.5" />
                       {t('myAds.actions.edit')}
@@ -434,7 +474,7 @@ export default function MyAdsPage() {
                         setSelectedCar(car);
                         setShowSoldModal(true);
                       }}
-                      className="flex items-center px-4 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
+                      className="flex items-center px-2 py-1.5 text-sm rounded-lg text-gray-600 hover:text-qatar-maroon dark:text-gray-400 dark:hover:text-qatar-maroon hover:bg-qatar-maroon/10 transition-colors"
                     >
                       <ShoppingBagIcon className="h-4 w-4 mr-1.5" />
                       {t('myAds.actions.markSold')}
@@ -582,7 +622,10 @@ export default function MyAdsPage() {
               setSelectedCar(null);
             }}
             car={selectedCar}
-            onUpdate={handleEditComplete}
+            onUpdate={() => {
+              fetchCars();
+            }}
+            onEditComplete={handleEditComplete}
           />
         )}
       </div>

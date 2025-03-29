@@ -9,12 +9,15 @@ import { useCountry } from '@/contexts/CountryContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide, faTag } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from '@/components/SearchBar';
+import { Dancing_Script } from 'next/font/google';
+
+const dancingScript = Dancing_Script({ subsets: ['latin'] });
 
 export default function HomePage() {
   const { signOutMessage, setSignOutMessage } = useAuth();
   const { t, language, currentLanguage } = useLanguage();
   const { currentCountry } = useCountry();
-  
+
   useEffect(() => {
     // Clear sign-out message after it's been shown
     if (signOutMessage) {
@@ -90,6 +93,7 @@ export default function HomePage() {
                         <div className={`flex-1 text-center lg:text-${language === 'ar' ? 'right' : 'left'} w-full`}>
               <div className={`${language === 'ar' ? 'rtl' : 'ltr'}`}>
                 <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col">
+                  <span className={`${dancingScript.className} text-3xl lg:text-5xl text-secondary mb-3`}>Ride in Style</span>
                   <span className="text-white inline-block">{t('home.hero.title1')}</span>
                   <span className="text-primary inline-block mt-2">
                     {t('home.hero.title2', { 

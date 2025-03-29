@@ -41,7 +41,7 @@ export default function CarCard({
     e.preventDefault();
     e.stopPropagation();
     if (!user) {
-      toast.error(t('cars.favorite.login'));
+      toast.error(t('car.favorite.login'));
       router.push('/login');
       return;
     }
@@ -62,12 +62,12 @@ export default function CarCard({
       >
         {featured && (
           <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-qatar-maroon text-white text-xs font-medium rounded-full">
-            {t('cars.featured.badge')}
+            {t('car.featured.badge')}
           </div>
         )}
         {car.user?.role === 'dealer' && (
           <div className="absolute top-2 right-2 z-20 px-2 py-1 bg-blue-500/90 text-white text-xs font-medium rounded-full">
-            {t('cars.dealer.badge') || 'Dealer'}
+            {t('car.dealer.badge') || 'Dealer'}
           </div>
         )}
         
@@ -114,7 +114,7 @@ export default function CarCard({
               <span>{car.year}</span>
               <span>•</span>
               <span>
-                {t(`cars.condition.${car.condition?.toLowerCase().replace(' ', '_')}`)}
+                {t(`car.condition.${car.condition?.toLowerCase().replace(' ', '_')}`)}
               </span>
             </div>
           </div>
@@ -128,11 +128,11 @@ export default function CarCard({
 
             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-2 flex-1 truncate">
-                <span dir="ltr">{car.mileage?.toLocaleString() || '0'} {t('cars.mileage.unit')}</span>
+                <span dir="ltr">{car.mileage?.toLocaleString() || '0'} {t('car.mileage.unit')}</span>
                 <span>•</span>
-                <span>{t(`cars.fuelType.${car.fuel_type?.toLowerCase()}`) || car.fuel_type}</span>
+                <span>{t(`car.fuelType.${car.fuel_type?.toLowerCase()}`) || car.fuel_type}</span>
                 <span>•</span>
-                <span>{t(`cars.transmission.${car.gearbox_type?.toLowerCase()}`) || car.gearbox_type}</span>
+                <span>{t(`car.gearboxType.${car.gearbox_type?.toLowerCase()}`) || car.gearbox_type}</span>
               </div>
             </div>
 

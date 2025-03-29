@@ -84,7 +84,7 @@ const specs = [
     key: 'fuel_type' 
   },
   { 
-    label: 'Transmission', 
+    label: 'Gearbox Type', 
     key: 'gearbox_type' 
   },
   { 

@@ -28,7 +28,10 @@ interface CarDetails extends Car {
   user: Profile;
 }
 
-interface ExtendedCar extends CarDetails {}
+interface ExtendedCar extends CarDetails {
+  id: number;
+  views_count: number;
+}
 
 interface Analytics {
   totalUsers: number;
@@ -43,6 +46,7 @@ interface Analytics {
   averagePrice: number;
   adminUsers: number;
   normalUsers: number;
+  totalViews: number;
   recentActivity: {
     timestamp: string;
     action: string;
@@ -92,6 +96,7 @@ export default function AdminDashboard() {
     averagePrice: 0,
     adminUsers: 0,
     normalUsers: 0,
+    totalViews: 0,
     recentActivity: [],
     carsByBrand: [],
     pendingCarsList: []
@@ -560,6 +565,7 @@ export default function AdminDashboard() {
         averagePrice: carsData?.reduce((sum, car) => sum + (car.price || 0), 0) / carsData?.length || 0,
         adminUsers: usersData?.filter(user => user.role === 'admin').length || 0,
         normalUsers: (usersData?.length || 0) - (usersData?.filter(user => user.role === 'admin').length || 0),
+        totalViews: 0,
         recentActivity: [],
         carsByBrand: [],
         pendingCarsList: []
@@ -750,10 +756,33 @@ export default function AdminDashboard() {
       featuredPercentage: (cars.filter(car => car.is_featured).length / cars.length) * 100,
       totalRevenue: cars.reduce((sum, car) => sum + (car.price || 0), 0),
       averagePrice: cars.reduce((sum, car) => sum + (car.price || 0), 0) / cars.length,
+      totalViews: cars.reduce((sum, car) => sum + (car.views_count || 0), 0),
       carsByBrand,
       pendingCarsList
     }));
   }, [cars]);
+
+  useEffect(() => {
+    fetchAnalytics();
+
+    // Subscribe to changes in cars table
+    const subscription = supabase
+      .channel('cars_views_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'cars',
+        filter: `views_count=gt.0`
+      }, () => {
+        // Refetch analytics when views change
+        fetchAnalytics();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const renderAnalytics = () => {
     if (loading) {
@@ -810,7 +839,7 @@ export default function AdminDashboard() {
     return (
       <div className="space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Total Cars */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
             <div className="flex items-center justify-between">
@@ -822,9 +851,6 @@ export default function AdminDashboard() {
                 <p className="text-xs text-gray-500 mt-1">
                   {analytics?.pendingCars || 0} pending / {analytics?.activeCars || 0} active / {analytics?.soldCars || 0} sold
                 </p>
-              </div>
-              <div className="p-3 rounded-full bg-qatar-maroon bg-opacity-10">
-                <div className="h-8 w-8"></div>
               </div>
             </div>
           </div>
@@ -841,9 +867,6 @@ export default function AdminDashboard() {
                   {analytics?.featuredPercentage.toFixed(1)}% of total cars
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-yellow-100">
-                <div className="h-8 w-8"></div>
-              </div>
             </div>
           </div>
 
@@ -853,14 +876,8 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Revenue</p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                  QAR {analytics?.totalRevenue.toLocaleString() || 0}
+                  {analytics?.totalRevenue.toLocaleString() || 0} QAR
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Avg: QAR {analytics?.averagePrice.toFixed(0).toLocaleString() || 0}
-                </p>
-              </div>
-              <div className="p-3 rounded-full bg-green-100">
-                <div className="h-8 w-8"></div>
               </div>
             </div>
           </div>
@@ -877,15 +894,28 @@ export default function AdminDashboard() {
                   {analytics?.adminUsers || 0} admin / {analytics?.normalUsers || 0} normal
                 </p>
               </div>
-              <div className="p-3 rounded-full bg-blue-100">
-                <div className="h-8 w-8"></div>
+            </div>
+          </div>
+
+          {/* Total Views */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total Views</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  {analytics?.totalViews || 0}
+                </p>
+              </div>
+              <div className="p-3 rounded-full bg-indigo-100">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                </svg>
               </div>
             </div>
           </div>
         </div>
-
-
-
+         
         {/* Pending Cars List */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-6">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Cars</h3>
@@ -1039,13 +1069,13 @@ export default function AdminDashboard() {
                       <div className="bg-white dark:bg-gray-800 rounded-md p-3">
                         <div className="text-xs text-gray-500 dark:text-gray-400">Total Revenue</div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          QAR {item.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          {item.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} QAR
                         </div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 rounded-md p-3">
                         <div className="text-xs text-gray-500 dark:text-gray-400">Average Price</div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
-                          QAR {item.averagePrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          {item.averagePrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} QAR
                         </div>
                       </div>
                     </div>
@@ -1677,6 +1707,48 @@ export default function AdminDashboard() {
       pendingCarsList
     }));
   }, [cars]);
+
+  const fetchAnalytics = async () => {
+    try {
+      const [
+        { data: usersData, error: usersError },
+        { data: carsData, error: carsError }
+      ] = await Promise.all([
+        supabase.from('profiles').select('*'),
+        supabase.from('cars').select('*, views_count')
+      ]);
+
+      if (usersError) throw usersError;
+      if (carsError) throw carsError;
+
+      const totalViews = carsData?.reduce((sum, car) => sum + (car.views_count || 0), 0) || 0;
+
+      setAnalytics({
+        totalUsers: usersData?.length || 0,
+        totalCars: carsData?.length || 0,
+        totalDealers: usersData?.filter(user => user.role === 'dealer').length || 0,
+        pendingCars: carsData?.filter(car => car.status === 'Pending').length || 0,
+        activeCars: carsData?.filter(car => car.status === 'Approved').length || 0,
+        soldCars: carsData?.filter(car => car.status === 'Sold').length || 0,
+        featuredCars: carsData?.filter(car => car.is_featured).length || 0,
+        featuredPercentage: (carsData?.filter(car => car.is_featured).length || 0) / (carsData?.length || 1) * 100,
+        totalRevenue: carsData?.reduce((sum, car) => sum + (car.price || 0), 0) || 0,
+        averagePrice: carsData?.reduce((sum, car) => sum + (car.price || 0), 0) / carsData?.length || 0,
+        adminUsers: usersData?.filter(user => user.role === 'admin').length || 0,
+        normalUsers: (usersData?.length || 0) - (usersData?.filter(user => user.role === 'admin').length || 0),
+        totalViews,
+        recentActivity: [],
+        carsByBrand: [],
+        pendingCarsList: []
+      });
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, []);
 
   // Show loading state while checking auth and admin status
   if (authLoading || (loading && !isAdmin)) {

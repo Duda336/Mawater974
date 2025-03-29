@@ -530,7 +530,7 @@ export default function SellPage() {
               <option value="">{t('sell.details.fuelType.select')}</option>
               {fuelTypes.map(type => (
                 <option key={type} value={type}>
-                  {t(`cars.fuelType.${type.toLowerCase()}`)}
+                  {t(`car.fuelType.${type.toLowerCase()}`)}
                 </option>
               ))}
             </select>
@@ -542,7 +542,7 @@ export default function SellPage() {
               htmlFor="gearbox_type" 
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              {t('sell.details.transmission')} *
+              {t('sell.details.gearboxType')} *
             </label>
             <select
               id="gearbox_type"
@@ -554,10 +554,10 @@ export default function SellPage() {
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
                          focus:border-qatar-maroon transition duration-200 ease-in-out"
             >
-              <option value="">{t('sell.details.transmission.select')}</option>
+              <option value="">{t('sell.details.gearboxType.select')}</option>
               {gearboxTypes.map(type => (
                 <option key={type} value={type}>
-                  {t(`cars.transmission.${type.toLowerCase()}`)}
+                  {t(`car.gearboxType.${type.toLowerCase()}`)}
                 </option>
               ))}
             </select>
@@ -584,7 +584,7 @@ export default function SellPage() {
               <option value="">{t('sell.details.bodyType.select')}</option>
               {bodyTypes.map(type => (
                 <option key={type} value={type}>
-                  {t(`cars.bodyType.${type.toLowerCase()}`)}
+                  {t(`car.bodyType.${type.toLowerCase()}`)}
                 </option>
               ))}
             </select>
@@ -611,7 +611,7 @@ export default function SellPage() {
               <option value="">{t('sell.details.condition.select')}</option>
               {conditions.map(condition => (
                 <option key={condition} value={condition}>
-                  {t(`cars.condition.${condition?.toLowerCase().replace(' ', '_')}`)}
+                  {t(`car.condition.${condition?.toLowerCase().replace(' ', '_')}`)}
                 </option>
               ))}
             </select>
@@ -638,7 +638,7 @@ export default function SellPage() {
               <option value="">{t('sell.details.color.select')}</option>
               {colors.map(color => (
                 <option key={color} value={color}>
-                  {t(`cars.colors.${color.toLowerCase()}`)}
+                  {t(`car.colors.${color.toLowerCase()}`)}
                 </option>
               ))}
             </select>
@@ -960,12 +960,12 @@ export default function SellPage() {
       { label: t('sell.basic.exactModel') || 'Exact Model', value: formData.exact_model || null },
       { label: t('sell.basic.year'), value: formData.year },
       { label: t('sell.basic.price'), value: formData.price ? `${formData.price} ${t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}` : null },
-      { label: t('sell.details.mileage'), value: formData.mileage ? `${formData.mileage} ${t('cars.km')}` : null },
-      { label: t('sell.details.fuelType'), value: formData.fuel_type ? t(`cars.fuelType.${formData.fuel_type.toLowerCase()}`) : null },
-      { label: t('sell.details.transmission'), value: formData.gearbox_type ? t(`cars.transmission.${formData.gearbox_type.toLowerCase()}`) : null },
-      { label: t('sell.details.bodyType'), value: formData.body_type ? t(`cars.bodyType.${formData.body_type.toLowerCase()}`) : null },
-      { label: t('sell.details.condition'), value: formData.condition ? t(`cars.condition.${formData.condition?.toLowerCase().replace(' ', '_')}`) : null },
-      { label: t('sell.details.color'), value: formData.color ? t(`cars.colors.${formData.color.toLowerCase()}`) : null },
+      { label: t('sell.details.mileage'), value: formData.mileage ? `${formData.mileage} ${t('car.km')}` : null },
+      { label: t('sell.details.fuelType'), value: formData.fuel_type ? t(`car.fuelType.${formData.fuel_type.toLowerCase()}`) : null },
+      { label: t('sell.details.gearboxType'), value: formData.gearbox_type ? t(`car.gearboxType.${formData.gearbox_type.toLowerCase()}`) : null },
+      { label: t('sell.details.bodyType'), value: formData.body_type ? t(`car.bodyType.${formData.body_type.toLowerCase()}`) : null },
+      { label: t('sell.details.condition'), value: formData.condition ? t(`car.condition.${formData.condition?.toLowerCase().replace(' ', '_')}`) : null },
+      { label: t('sell.details.color'), value: formData.color ? t(`car.colors.${formData.color.toLowerCase()}`) : null },
       { 
         label: t('sell.details.cylinders'), 
         value: formData.cylinders ? (formData.cylinders === 'Electric' ? t('sell.details.cylinders.electric') : t('sell.details.cylinders.count', { count: Number(formData.cylinders) })) : null 

@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountry } from '@/contexts/CountryContext';
+import { MapPinIcon } from '@heroicons/react/24/outline';
 import {
   UserCircleIcon,
   PhoneIcon,
@@ -18,6 +19,7 @@ import {
   ArrowLeftIcon,
   TruckIcon as CarIcon,
 } from '@heroicons/react/24/outline';
+import ChangePassword from '@/components/ChangePassword';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -45,7 +47,7 @@ export default function ProfilePage() {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, countries(*)')
         .eq('id', user?.id)
         .single();
 
@@ -152,7 +154,7 @@ export default function ProfilePage() {
                         id="full_name"
                         value={editForm.full_name}
                         onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
                       />
                     </div>
                   </div>
@@ -168,7 +170,7 @@ export default function ProfilePage() {
                         id="email"
                         value={editForm.email}
                         onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
                       />
                     </div>
                   </div>
@@ -182,9 +184,9 @@ export default function ProfilePage() {
                         type="tel"
                         name="phone_number"
                         id="phone_number"
-                        value={editForm.phone_number}
+                        value={editForm.phone_number.replace(/^(\+\d{1,3})(\d+)/, '$1-$2')}
                         onChange={(e) => setEditForm({ ...editForm, phone_number: e.target.value })}
-                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
                       />
                     </div>
                   </div>
@@ -199,7 +201,7 @@ export default function ProfilePage() {
                         name="country"
                         value={editForm.country_id}
                         onChange={(e) => setEditForm({ ...editForm, country_id: e.target.value })}
-                        className="shadow-sm focus:ring-qatar-maroon focus:border-qatar-maroon block w-full sm:text-sm border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md"
+                        className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white focus:outline-none focus:ring-qatar-maroon focus:border-qatar-maroon sm:text-sm bg-white dark:bg-gray-700 transition-colors duration-200"
                       >
                         <option value="">{t('profile.selectCountry')}</option>
                         {countries.map((country) => (
@@ -243,7 +245,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3 sm:grid-cols-3">
                   <div className="flex items-center space-x-3">
                     <EnvelopeIcon className="h-5 w-5 text-gray-400" />
                     <span className="text-gray-600 dark:text-gray-300">{profile?.email}</span>
@@ -251,10 +253,26 @@ export default function ProfilePage() {
                   <div className="flex items-center space-x-3">
                     <PhoneIcon className="h-5 w-5 text-gray-400" />
                     <span className="text-gray-600 dark:text-gray-300">
-                      {profile?.phone_number || 'Not provided'}
+                      {profile?.phone_number?.replace(/^(\+\d{1,3})(\d+)/, '$1-$2') || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <MapPinIcon className="h-5 w-5 text-gray-400" />
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {countries?.find((c) => c.id === profile?.country_id)?.name}
                     </span>
                   </div>
                 </div>
+
+                {/* Change Password Section */}
+                {!isEditing && profile && (
+                  <div className="mt-8">
+                    <ChangePassword 
+                      userId={profile.id} 
+                      currentPlainPassword={profile.password_plain || ''} 
+                    />
+                  </div>
+                )}
 
                 <div className="mt-6 flex justify-center">
                   <Link

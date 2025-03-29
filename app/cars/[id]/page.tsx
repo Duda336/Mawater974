@@ -61,6 +61,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
   const [editContent, setEditContent] = useState('');
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewCounted, setViewCounted] = useState(false);
 
   interface CommentWithReplies extends Omit<Comment, 'parent_id'> {
     id: number;
@@ -136,6 +137,45 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
     }
   }, [user, car]);
 
+  useEffect(() => {
+    if (car && !viewCounted) {
+      const incrementViewCount = async () => {
+        try {
+          // Get current view count
+          const { data: currentData } = await supabase
+            .from('cars')
+            .select('views_count')
+            .eq('id', car.id)
+            .single();
+
+          const currentViews = currentData?.views_count || 0;
+
+          // Increment view count
+          const { error: updateError } = await supabase
+            .from('cars')
+            .update({ views_count: currentViews + 1 })
+            .eq('id', car.id);
+
+          if (updateError) throw updateError;
+          
+          // Update local state
+          setCar(prev => prev ? { ...prev, views_count: currentViews + 1 } : null);
+          setViewCounted(true);
+        } catch (error) {
+          console.error('Error incrementing view count:', error);
+        }
+      };
+
+      incrementViewCount();
+    }
+  }, [car, viewCounted]);
+
+  useEffect(() => {
+    if (car) {
+      trackCarView(car.id.toString(), car.name || '');
+    }
+  }, [car]);
+
   const toggleFullImage = () => {
     setShowFullImage(!showFullImage);
   };
@@ -197,12 +237,6 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
       fetchCarDetails();
     }
   }, [carId, user]);
-
-  useEffect(() => {
-    if (car) {
-      trackCarView(car.id.toString(), car.name || '');
-    }
-  }, [car]);
 
   useEffect(() => {
     const fetchSimilarCars = async () => {
@@ -679,7 +713,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               />
               {car.is_featured && (
                 <div className="absolute top-2 left-2 z-20 px-2 py-1 bg-qatar-maroon/90 text-white text-xs font-medium rounded-lg shadow-lg">
-                  {t('cars.featured.badge')}
+                  {t('car.featured.badge')}
                 </div>
               )}
               {(car?.images?.length || 0) > 1 && (
@@ -812,7 +846,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
             <div className="flex items-center space-x-3 rtl:space-x-reverse py-3 px-4 bg-gray-200/50 dark:bg-gray-800  rounded-lg">
               <div className="w-12 h-12 bg-qatar-maroon/10 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 8" />
                 </svg>
               </div>
               <div className="flex flex-col">
@@ -844,20 +878,20 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
                   <BeakerIcon className="h-5 w-5 text-qatar-maroon" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('cars.mileage.label')}</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.mileage.label')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
-                  {car.mileage.toLocaleString()} {t('cars.mileage.unit')}</p>
+                  {car.mileage.toLocaleString()} {t('car.mileage.unit')}</p>
               </div>
 
-              {/* Transmission */}
+              {/* Gearbox Type */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
                   <KeyIcon className="h-5 w-5 text-qatar-maroon" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('cars.gearboxType.label')}</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.gearboxType.label')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
-                  {t(`cars.transmission.${car.gearbox_type.toLowerCase()}`)}
+                  {t(`car.gearboxType.${car.gearbox_type.toLowerCase()}`)}
                 </p>
               </div>
 
@@ -865,10 +899,10 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
                   <BeakerIcon className="h-5 w-5 text-qatar-maroon" />
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('cars.fuelType.label')}</span>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.fuelType.label')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
-                  {t(`cars.fuelType.${car.fuel_type.toLowerCase()}`)}
+                  {t(`car.fuelType.${car.fuel_type.toLowerCase()}`)}
                 </p>
               </div>
 
@@ -881,7 +915,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.condition')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
-                  {t(`cars.condition.${car.condition?.toLowerCase().replace(' ', '_')}`)}
+                  {t(`car.condition.${car.condition?.toLowerCase().replace(' ', '_')}`)}
                 </p>
               </div>
 
@@ -889,11 +923,11 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 11-8 0 4 4 0 018 8" />
                   </svg>
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.color')}</span>
                 </div>
-                <p className="text-gray-900 dark:text-white font-semibold">{t(`cars.colors.${car.color.toLowerCase()}`)}</p>
+                <p className="text-gray-900 dark:text-white font-semibold">{t(`car.color.${car.color.toLowerCase()}`)}</p>
               </div>
 
               {/* Body Type */}
@@ -904,7 +938,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                   </svg>
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.bodyType')}</span>
                 </div>
-                <p className="text-gray-900 dark:text-white font-semibold">{t(`cars.bodyType.${car.body_type.toLowerCase()}`)}</p>
+                <p className="text-gray-900 dark:text-white font-semibold">{t(`car.bodyType.${car.body_type.toLowerCase()}`)}</p>
               </div>
 
               {/* Cylinders */}
@@ -932,6 +966,18 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                     ? (currentLanguage === 'ar' && carCity.name_ar ? carCity.name_ar : carCity.name)
                     : (car?.location ? car.location : t('common.notSpecified'))}
                 </p>
+              </div>
+
+              {/* Views */}
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.views')}</span>
+                </div>
+                <p className="text-gray-900 dark:text-white font-semibold">{car.views_count || 0}</p>
               </div>
             </div>
 
@@ -1210,7 +1256,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
             {/* Featured Similar Cars */}
             {featuredSimilarCars.length > 0 && (
               <div className="mb-10">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('cars.featured.title')}</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{t('car.featured.title')}</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {featuredSimilarCars.map((similarCar) => (
                     <div
@@ -1220,7 +1266,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                       {/* Featured Badge */}
                       <div className="absolute top-2 right-2 z-10">
                         <span className="bg-qatar-maroon text-white text-xs font-medium px-2.5 py-1 rounded">
-                          {t('cars.featured.badge')}
+                          {t('car.featured.badge')}
                         </span>
                       </div>
                       <div className="relative aspect-[4/3]">
