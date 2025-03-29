@@ -92,7 +92,7 @@ export default function CarsPage() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedCars, setSelectedCars] = useState<CarWithLocation[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareMode, setCompareMode] = useState(false);

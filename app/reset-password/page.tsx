@@ -20,13 +20,17 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState('');
   const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
-
-  // Get token from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const resetToken = urlParams.get('token');
-  const resetEmail = urlParams.get('email');
+  const [urlToken, setUrlToken] = useState<string | null>(null);
+  const [urlEmail, setUrlEmail] = useState<string | null>(null);
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    const resetEmail = urlParams.get('email');
+
+    setUrlToken(resetToken);
+    setUrlEmail(resetEmail);
+
     if (resetToken && resetEmail) {
       setToken(resetToken);
       setEmail(resetEmail);
