@@ -5,9 +5,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ForgotPassword() {
   const { t, dir } = useLanguage();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +18,11 @@ export default function ForgotPassword() {
     setLoading(true);
 
     try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      
+      // Add type=recovery to the URL instead of options
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${origin}/reset-password?type=recovery`
       });
 
       if (error) {
@@ -26,7 +31,12 @@ export default function ForgotPassword() {
 
       toast.success(t('auth.forgotPassword.success'));
       setEmail('');
+      
+      setTimeout(() => {
+        router.push('/login?message=reset_email_sent');
+      }, 2000);
     } catch (error) {
+      console.error('Password reset error:', error);
       toast.error(t('auth.forgotPassword.error'));
     } finally {
       setLoading(false);

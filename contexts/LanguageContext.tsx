@@ -380,6 +380,7 @@ const translations = {
     'auth.resetPassword.mismatch': 'Passwords do not match',
     'auth.resetPassword.wrongPassword': 'Current password is incorrect',
     'auth.resetPassword.email': 'Email Address',
+    'auth.resetPassword.invalidLink': 'Invalid reset link',
     // Sell Car - Plan Selection
     'sell.plan.title': 'Choose Your Listing Plan',
     'sell.plan.subtitle': 'Maximize your car\'s visibility with our flexible listing options.',
@@ -1430,7 +1431,7 @@ const translations = {
     'auth.resetPassword.mismatch': 'كلمتا المرور الجديدة لا تتطابق',
     'auth.resetPassword.wrongPassword': 'كلمة المرور الحالية غير صحيحة',
     'auth.resetPassword.email': 'البريد الإلكتروني',
-
+    'auth.resetPassword.invalidLink': 'رابط التحقق غير صحيح',
     // Sell Car - Plan Selection
     'sell.plan.title': 'اختر خطة الإعلان',
     'sell.plan.subtitle': 'زد من ظهور سيارتك مع خياراتنا المرنة للإعلان',

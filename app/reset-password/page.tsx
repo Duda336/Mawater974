@@ -18,27 +18,27 @@ export default function ResetPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [token, setToken] = useState('');
-  const [email, setEmail] = useState('');
-  const [urlToken, setUrlToken] = useState<string | null>(null);
-  const [urlEmail, setUrlEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const resetToken = urlParams.get('token');
-    const resetEmail = urlParams.get('email');
+    const checkRecoverySession = async () => {
+      if (typeof window !== 'undefined') {
+        // Get the current session
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-    setUrlToken(resetToken);
-    setUrlEmail(resetEmail);
+        // Check if this is a recovery flow
+        const urlParams = new URLSearchParams(window.location.search);
+        const isRecovery = urlParams.get('type') === 'recovery';
 
-    if (resetToken && resetEmail) {
-      setToken(resetToken);
-      setEmail(resetEmail);
-    } else {
-      toast.error(t('auth.resetPassword.error'));
-      window.location.href = '/login';
-    }
-  }, [t]);
+        if (!isRecovery || !session) {
+          toast.error(t('auth.resetPassword.invalidLink'));
+          router.push('/login');
+          return;
+        }
+      }
+    };
+
+    checkRecoverySession();
+  }, [router, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,13 +53,12 @@ export default function ResetPassword() {
     }
 
     try {
-      // Update auth password
+      // Update the password
       const { data: authData, error: authError } = await supabase.auth.updateUser({
         password: password
       });
 
       if (authError) {
-        setError(t('auth.resetPassword.error'));
         throw authError;
       }
 
@@ -71,7 +70,6 @@ export default function ResetPassword() {
           .eq('id', authData.user.id);
 
         if (profileError) {
-          setError(t('auth.resetPassword.error'));
           throw profileError;
         }
       }
@@ -82,9 +80,12 @@ export default function ResetPassword() {
       setShowPassword(false);
       setShowConfirmPassword(false);
 
+      // Sign out after password reset
+      await supabase.auth.signOut();
+
       // Redirect to login after a short delay
       setTimeout(() => {
-        window.location.href = '/login?message=password_updated';
+        router.push('/login?message=password_updated');
       }, 2000);
 
     } catch (error) {
