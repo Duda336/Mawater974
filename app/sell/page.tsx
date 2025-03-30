@@ -638,7 +638,7 @@ export default function SellPage() {
               <option value="">{t('sell.details.color.select')}</option>
               {colors.map(color => (
                 <option key={color} value={color}>
-                  {t(`car.colors.${color.toLowerCase()}`)}
+                  {t(`car.color.${color.toLowerCase()}`)}
                 </option>
               ))}
             </select>
@@ -965,7 +965,7 @@ export default function SellPage() {
       { label: t('sell.details.gearboxType'), value: formData.gearbox_type ? t(`car.gearboxType.${formData.gearbox_type.toLowerCase()}`) : null },
       { label: t('sell.details.bodyType'), value: formData.body_type ? t(`car.bodyType.${formData.body_type.toLowerCase()}`) : null },
       { label: t('sell.details.condition'), value: formData.condition ? t(`car.condition.${formData.condition?.toLowerCase().replace(' ', '_')}`) : null },
-      { label: t('sell.details.color'), value: formData.color ? t(`car.colors.${formData.color.toLowerCase()}`) : null },
+      { label: t('sell.details.color'), value: formData.color ? t(`car.color.${formData.color.toLowerCase()}`) : null },
       { 
         label: t('sell.details.cylinders'), 
         value: formData.cylinders ? (formData.cylinders === 'Electric' ? t('sell.details.cylinders.electric') : t('sell.details.cylinders.count', { count: Number(formData.cylinders) })) : null 
