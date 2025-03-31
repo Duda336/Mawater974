@@ -9,11 +9,6 @@ import {
   HeartIcon as HeartIconSolid,
   ShareIcon,
   PhoneIcon,
-  EnvelopeIcon,
-  ClockIcon,
-  TagIcon,
-  KeyIcon,
-  BeakerIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   FlagIcon,
@@ -25,6 +20,13 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { useAnalytics } from '../../../hooks/useAnalytics';
 import { useCountry } from '../../../contexts/CountryContext';
 import toast from 'react-hot-toast';
+import { GearboxIcon } from '@/components/icons/GearboxIcon';
+import { FuelTypeIcon } from '@/components/icons/FuelTypeIcon';
+import { ColorIcon } from '@/components/icons/ColorIcon';
+import { BodyTypeIcon } from '@/components/icons/BodyTypeIcon';
+import { CylinderIcon } from '@/components/icons/CylinderIcon';
+import { ConditionIcon } from '@/components/icons/ConditionIcon';
+import { MileageIcon } from '@/components/icons/MileageIcon';
 
 export default function CarDetailsPage({ params: propParams }: { params?: { id: string } } = {}) {
   const params = useParams();
@@ -843,10 +845,10 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
             </div>
 
             {/* Owner Info */}
-            <div className="flex items-center space-x-3 rtl:space-x-reverse py-3 px-4 bg-gray-200/50 dark:bg-gray-800  rounded-lg">
+            <div className="flex items-center space-x-3 rtl:space-x-reverse py-3 px-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <div className="w-12 h-12 bg-qatar-maroon/10 rounded-full flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 8" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div className="flex flex-col">
@@ -877,7 +879,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Mileage */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <BeakerIcon className="h-5 w-5 text-qatar-maroon" />
+                  <MileageIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.mileage.label')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
@@ -887,7 +889,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Gearbox Type */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <KeyIcon className="h-5 w-5 text-qatar-maroon" />
+                  <GearboxIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.gearboxType.label')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
@@ -898,7 +900,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Fuel Type */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <BeakerIcon className="h-5 w-5 text-qatar-maroon" />
+                  <FuelTypeIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.fuelType.label')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
@@ -909,9 +911,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Condition */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.828 10H7v2H5v2H0v-2a2 2 0 012-2h14a2 2 0 012 2v2h-3v2h1.828a2 2 0 01.073 1.054l-2 6a2 2 0 01-.889.938l-3 1a2 2 0 01-2.828 0l-3-1a2 2 0 01-.889-.938l-2-6a2 2 0 010-2.828l2-6a2 2 0 012.828 0l2 6a2 2 0 01.073 1.054z" />
-                  </svg>
+                  <ConditionIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.condition')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">
@@ -922,9 +922,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Color */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 11-8 0 4 4 0 018 8" />
-                  </svg>
+                  <ColorIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.color')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">{t(`car.color.${car.color.toLowerCase()}`)}</p>
@@ -933,9 +931,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Body Type */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 17h14M5 12h14m-7-4V3m0 18v-5" />
-                  </svg>
+                  <BodyTypeIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.bodyType')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">{t(`car.bodyType.${car.body_type.toLowerCase()}`)}</p>
@@ -944,9 +940,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Cylinders */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                  </svg>
+                  <CylinderIcon className="h-6 w-6 text-qatar-maroon" />
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('car.details.cylinders')}</span>
                 </div>
                 <p className="text-gray-900 dark:text-white font-semibold">{car.cylinders}</p>
@@ -955,7 +949,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Location */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -971,7 +965,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
               {/* Views */}
               <div className="bg-gradient-to-br from-gray-100 to-gray-200/50 dark:from-gray-800 dark:to-gray-700 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>

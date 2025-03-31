@@ -24,6 +24,7 @@ import {
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import EditCarModal from '@/components/EditCarModal';
+import { dir } from 'node:console';
 
 interface DealershipData {
   id: number;
@@ -78,7 +79,7 @@ export default function DealerDashboard() {
   const { supabase } = useSupabase();
   const { user, profile, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { language, t } = useLanguage();
+  const { language, t, dir } = useLanguage();
   const { currentCountry, isLoading: countryLoading } = useCountry();
   const [city, setCity] = useState<City | null>(null);
   const [country, setCountry] = useState<Country | null>(null);
@@ -330,260 +331,262 @@ export default function DealerDashboard() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        {[
-          { 
-            label: 'dashboard.totalListings', 
-            value: stats.totalListings, 
-            icon: <ShoppingBagIcon className="h-8 w-8 text-qatar-maroon dark:text-qatar-maroon/80" />,
-            bgGradient: 'from-qatar-maroon/10 to-qatar-maroon/5'
-          },
-          { 
-            label: 'dashboard.approvedListings', 
-            value: stats.approvedListings, 
-            icon: <CheckCircleIcon className="h-8 w-8 text-green-500 dark:text-green-400" />,
-            bgGradient: 'from-green-100 to-green-50 dark:from-green-900/20 dark:to-green-900/10'
-          },
-          { 
-            label: 'dashboard.pendingListings', 
-            value: stats.pendingListings, 
-            icon: <ClockIcon className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />,
-            bgGradient: 'from-yellow-100 to-yellow-50 dark:from-yellow-900/20 dark:to-yellow-900/10'
-          },
-          { 
-            label: 'dashboard.rejectedListings', 
-            value: stats.rejectedListings, 
-            icon: <XCircleIcon className="h-8 w-8 text-red-500 dark:text-red-400" />,
-            bgGradient: 'from-red-100 to-red-50 dark:from-red-900/20 dark:to-red-900/10'
-          },
-          { 
-            label: 'dashboard.soldListings', 
-            value: stats.soldListings, 
-            icon: <CheckCircleIcon className="h-8 w-8 text-green-500 dark:text-green-400" />,
-            bgGradient: 'from-green-100 to-green-50 dark:from-green-900/20 dark:to-green-900/10'
-          },
-          { 
-            label: 'dashboard.totalViews', 
-            value: stats.totalViews, 
-            icon: <ChartBarIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />,
-            bgGradient: 'from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/10'
-          }
-        ].map((stat, index) => (
-          <div 
-            key={index} 
-            className={`bg-gradient-to-br ${stat.bgGradient} dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl hover:scale-105`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{t(stat.label)}</p>
-                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8" dir={dir}>
+      <div className="container  mx-auto px-4 py-8">
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {[
+            { 
+              label: 'dashboard.totalListings', 
+              value: stats.totalListings, 
+              icon: <ShoppingBagIcon className="h-8 w-8 text-qatar-maroon dark:text-qatar-maroon/80" />,
+              bgGradient: 'from-qatar-maroon/10 to-qatar-maroon/5'
+            },
+            { 
+              label: 'dashboard.approvedListings', 
+              value: stats.approvedListings, 
+              icon: <CheckCircleIcon className="h-8 w-8 text-green-500 dark:text-green-400" />,
+              bgGradient: 'from-green-100 to-green-50 dark:from-green-900/20 dark:to-green-900/10'
+            },
+            { 
+              label: 'dashboard.pendingListings', 
+              value: stats.pendingListings, 
+              icon: <ClockIcon className="h-8 w-8 text-yellow-500 dark:text-yellow-400" />,
+              bgGradient: 'from-yellow-100 to-yellow-50 dark:from-yellow-900/20 dark:to-yellow-900/10'
+            },
+            { 
+              label: 'dashboard.rejectedListings', 
+              value: stats.rejectedListings, 
+              icon: <XCircleIcon className="h-8 w-8 text-red-500 dark:text-red-400" />,
+              bgGradient: 'from-red-100 to-red-50 dark:from-red-900/20 dark:to-red-900/10'
+            },
+            { 
+              label: 'dashboard.soldListings', 
+              value: stats.soldListings, 
+              icon: <CheckCircleIcon className="h-8 w-8 text-green-500 dark:text-green-400" />,
+              bgGradient: 'from-green-100 to-green-50 dark:from-green-900/20 dark:to-green-900/10'
+            },
+            { 
+              label: 'dashboard.totalViews', 
+              value: stats.totalViews, 
+              icon: <ChartBarIcon className="h-8 w-8 text-blue-500 dark:text-blue-400" />,
+              bgGradient: 'from-blue-100 to-blue-50 dark:from-blue-900/20 dark:to-blue-900/10'
+            }
+          ].map((stat, index) => (
+            <div 
+              key={index} 
+              className={`bg-gradient-to-br ${stat.bgGradient} dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl hover:scale-105`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{t(stat.label)}</p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</h3>
+                </div>
+                {stat.icon}
               </div>
-              {stat.icon}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Main Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div className="w-full">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {language === 'ar' && dealership?.business_name_ar
-                  ? dealership.business_name_ar
-                  : dealership?.business_name}
-              </h1>
-              <button
-                onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/sell`)}
-                className={getButtonClass('primary')}
-              >
-                <PlusIcon className="h-5 w-5" />
-                {t('myAds.createListing')}
-              </button>
-            </div>
+        {/* Main Content */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div className="w-full">
-              <Tab.Group>
-                <Tab.List className="flex space-x-2 rounded-xl bg-qatar-maroon/20 p-1">
-                  {['all', 'approved', 'pending', 'rejected', 'sold'].map((status) => (
-                    <Tab
-                      key={status}
-                      onClick={() => setSelectedStatus(status)}
-                      className={getTabClass(selectedStatus === status)}
-                    >
-                      {t(`dashboard.${status}`)}
-                    </Tab>
-                  ))}
-                </Tab.List>
-              </Tab.Group>
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs uppercase bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.brand')}</th>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.model')}</th>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.year')}</th>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.price')}</th>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.status')}</th>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.featured')}</th>
-                <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-              {filteredListings.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    {t('dashboard.noListings')}
-                  </td>
-                </tr>
-              ) : (
-                filteredListings.map((car) => (
-                  <tr key={car.id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
-                      {language === 'ar' && car.brand.name_ar ? car.brand.name_ar : car.brand.name}
-                    </td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white">
-                      {language === 'ar' && car.model.name_ar ? car.model.name_ar : car.model.name}
-                    </td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white">{car.year}</td>
-                    <td className="px-6 py-4 text-gray-900 dark:text-white font-medium" dir="ltr">
-                    {car.price.toLocaleString('en-US')} {t(`common.currency.${car.country?.currency_code || 'QAR'}`)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(car.status)}`}>
-                        {t(`dashboard.${car.status.toLowerCase()}`)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        car.featured ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {car.featured ? t('common.yes') : t('common.no')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setSelectedCar(car)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                          title={t('dashboard.view')}
-                        >
-                          <EyeIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleEditClick(car)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-                          title={t('dashboard.edit')}
-                        >
-                          <PencilIcon className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteCar(car.id)}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-                          title={t('dashboard.delete')}
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Car Details Modal */}
-      {selectedCar && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {language === 'ar' && selectedCar.brand.name_ar ? selectedCar.brand.name_ar : selectedCar.brand.name}{' '}
-                  {language === 'ar' && selectedCar.model.name_ar ? selectedCar.model.name_ar : selectedCar.model.name}{' '}
-                  {selectedCar.year}
-                </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {language === 'ar' && dealership?.business_name_ar
+                    ? dealership.business_name_ar
+                    : dealership?.business_name}
+                </h1>
                 <button
-                  onClick={() => setSelectedCar(null)}
-                  className={getButtonClass('close')}
+                  onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/sell`)}
+                  className={getButtonClass('primary')}
                 >
-                  <XMarkIcon className="h-6 w-6" />
+                  <PlusIcon className="h-5 w-5" />
+                  {t('myAds.createListing')}
                 </button>
               </div>
-
-              {/* Car Images */}
-              {selectedCar.images && selectedCar.images.length > 0 && (
-                <div className="relative h-80 mb-8 rounded-xl overflow-hidden shadow-lg">
-                  <Image
-                    src={selectedCar.images[0].url}
-                    alt={`${selectedCar.brand.name} ${selectedCar.model.name}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
-                  />
-                </div>
-              )}
-
-              {/* Car Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-                    <ChartBarIcon className="h-5 w-5 text-qatar-maroon" />
-                    {t('car.specifications')}
-                  </h3>
-                  <dl className="space-y-3">
-                    {[
-                      { label: 'car.price', value: `${selectedCar.price.toLocaleString('en-US')} ${t(`common.currency.${selectedCar.country?.currency_code || 'QAR'}`)}` },
-                      { label: 'car.mileage', value: `${selectedCar.mileage} km` },
-                      { label: 'car.fuelType', value: selectedCar.fuel_type },
-                      { label: 'car.gearboxType', value: selectedCar.gearbox_type },
-                      { label: 'car.bodyType', value: selectedCar.body_type },
-                      { label: 'car.condition', value: selectedCar.condition }
-                    ].map((detail, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600 last:border-0">
-                        <dt className="text-gray-600 dark:text-gray-400">{t(detail.label)}</dt>
-                        <dd className="font-medium text-gray-900 dark:text-white">{detail.value}</dd>
-                      </div>
+              <div className="w-full">
+                <Tab.Group>
+                  <Tab.List className="flex space-x-2 rounded-xl bg-qatar-maroon/20 p-1">
+                    {['all', 'approved', 'pending', 'rejected', 'sold'].map((status) => (
+                      <Tab
+                        key={status}
+                        onClick={() => setSelectedStatus(status)}
+                        className={getTabClass(selectedStatus === status)}
+                      >
+                        {t(`dashboard.${status}`)}
+                      </Tab>
                     ))}
-                  </dl>
+                  </Tab.List>
+                </Tab.Group>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs uppercase bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.brand')}</th>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.model')}</th>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.year')}</th>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.price')}</th>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.status')}</th>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.featured')}</th>
+                  <th scope="col" className="px-6 py-3 text-gray-700 dark:text-gray-300 font-semibold">{t('dashboard.actions')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                {filteredListings.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                      {t('dashboard.noListings')}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredListings.map((car) => (
+                    <tr key={car.id} className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td className="px-6 py-4 text-gray-900 dark:text-white font-medium">
+                        {language === 'ar' && car.brand.name_ar ? car.brand.name_ar : car.brand.name}
+                      </td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white">
+                        {language === 'ar' && car.model.name_ar ? car.model.name_ar : car.model.name}
+                      </td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white">{car.year}</td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white font-medium" dir="ltr">
+                      {car.price.toLocaleString('en-US')} {t(`common.currency.${car.country?.currency_code || 'QAR'}`)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(car.status)}`}>
+                          {t(`dashboard.${car.status.toLowerCase()}`)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          car.featured ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {car.featured ? t('common.yes') : t('common.no')}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setSelectedCar(car)}
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                            title={t('dashboard.view')}
+                          >
+                            <EyeIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleEditClick(car)}
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                            title={t('dashboard.edit')}
+                          >
+                            <PencilIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCar(car.id)}
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                            title={t('dashboard.delete')}
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Car Details Modal */}
+        {selectedCar && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {language === 'ar' && selectedCar.brand.name_ar ? selectedCar.brand.name_ar : selectedCar.brand.name}{' '}
+                    {language === 'ar' && selectedCar.model.name_ar ? selectedCar.model.name_ar : selectedCar.model.name}{' '}
+                    {selectedCar.year}
+                  </h2>
+                  <button
+                    onClick={() => setSelectedCar(null)}
+                    className={getButtonClass('close')}
+                  >
+                    <XMarkIcon className="h-6 w-6" />
+                  </button>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
-                  <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-                    <ShoppingBagIcon className="h-5 w-5 text-qatar-maroon" />
-                    {t('car.description')}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                    {language === 'ar' && selectedCar.description_ar
-                      ? selectedCar.description_ar
-                      : selectedCar.description}
-                  </p>
+
+                {/* Car Images */}
+                {selectedCar.images && selectedCar.images.length > 0 && (
+                  <div className="relative h-80 mb-8 rounded-xl overflow-hidden shadow-lg">
+                    <Image
+                      src={selectedCar.images[0].url}
+                      alt={`${selectedCar.brand.name} ${selectedCar.model.name}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
+                    />
+                  </div>
+                )}
+
+                {/* Car Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                      <ChartBarIcon className="h-5 w-5 text-qatar-maroon" />
+                      {t('car.specifications')}
+                    </h3>
+                    <dl className="space-y-3">
+                      {[
+                        { label: 'car.price', value: `${selectedCar.price.toLocaleString('en-US')} ${t(`common.currency.${selectedCar.country?.currency_code || 'QAR'}`)}` },
+                        { label: 'car.mileage', value: `${selectedCar.mileage} km` },
+                        { label: 'car.fuelType', value: selectedCar.fuel_type },
+                        { label: 'car.gearboxType', value: selectedCar.gearbox_type },
+                        { label: 'car.bodyType', value: selectedCar.body_type },
+                        { label: 'car.condition', value: selectedCar.condition }
+                      ].map((detail, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-600 last:border-0">
+                          <dt className="text-gray-600 dark:text-gray-400">{t(detail.label)}</dt>
+                          <dd className="font-medium text-gray-900 dark:text-white">{detail.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                      <ShoppingBagIcon className="h-5 w-5 text-qatar-maroon" />
+                      {t('car.description')}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {language === 'ar' && selectedCar.description_ar
+                        ? selectedCar.description_ar
+                        : selectedCar.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-      {/* Edit Modal */}
-      {selectedCar && (
-        <EditCarModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          car={selectedCar}
-          onUpdate={() => {
-            setSelectedCar(null);
-            fetchCars();
-          }}
-          onEditComplete={handleEditComplete}
-        />
-      )}
+        )}
+        {/* Edit Modal */}
+        {selectedCar && (
+          <EditCarModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            car={selectedCar}
+            onUpdate={() => {
+              setSelectedCar(null);
+              fetchCars();
+            }}
+            onEditComplete={handleEditComplete}
+          />
+        )}
+      </div>
     </div>
   );
 }
