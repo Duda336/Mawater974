@@ -1,7 +1,0 @@
-English translations to add:
-'dealership.selectDealershipType': 'Select Dealership Type',
-'dealership.selectBusinessType': 'Select Business Type',
-
-Arabic translations to add:
-'dealership.selectDealershipType': '???? ??? ??????',
-'dealership.selectBusinessType': '???? ??? ?????',
