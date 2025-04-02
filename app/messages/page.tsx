@@ -1,52 +1,91 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
+import { useRouter, useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import format from 'date-fns/format';
+import { format } from 'date-fns';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Notification {
   id: string;
+  user_id: string;
   title: string;
   message: string;
   type: string;
   is_read: boolean;
   created_at: string;
+  replies: any[];
+  isNotification?: boolean;
+  isContactMessage?: boolean;
 }
 
 export default function MessagesPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
+  const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
   const { user } = useAuth();
   const { t } = useLanguage();
+  const router = useRouter();
+  const params = useParams();
+  const countryCode = params.countryCode as string;
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
+    if (!user) {
+      router.push('/login');
+      return;
     }
-  }, [user]);
+    fetchNotifications();
+  }, [user, countryCode]);
 
   const fetchNotifications = async () => {
     try {
-      let query = supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        query = query.eq('is_read', filter === 'read');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/auth/login');
+        return;
       }
 
-      const { data, error } = await query;
+      // Fetch both notifications and contact messages
+      const [notificationsResponse, contactMessagesResponse] = await Promise.all([
+        supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('contact_messages')
+          .select(`
+            *,
+            replies:contact_messages!parent_message_id(*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+      ]);
 
-      if (error) throw error;
-      setNotifications(data || []);
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
+      if (notificationsResponse.error) throw notificationsResponse.error;
+      if (contactMessagesResponse.error) throw contactMessagesResponse.error;
+
+      // Filter out replies from contact messages
+      const mainMessages = contactMessagesResponse.data?.filter(msg => !msg.parent_message_id) || [];
+
+      // Combine and sort notifications and contact messages
+      const allNotifications = [
+        ...(notificationsResponse.data || []).map(n => ({
+          ...n,
+          isNotification: true
+        })),
+        ...(mainMessages || []).map(m => ({
+          ...m,
+          isContactMessage: true
+        }))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setNotifications(allNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
       toast.error(t('messages.error.load'));
     } finally {
       setLoading(false);
@@ -126,6 +165,54 @@ export default function MessagesPage() {
       default:
         return '📫';
     }
+  };
+
+  // Helper function to format message content
+  const formatMessageContent = (message: string) => {
+    return (
+      <>
+        {message
+          .split('\n')
+          .map((line, index) => (
+            <p key={index} className="mb-1 whitespace-pre-wrap">
+              {line}
+            </p>
+          ))}
+      </>
+    );
+  };
+
+  // Helper function to render replies
+  const renderReplies = (replies: any[]) => {
+    if (!replies || replies.length === 0) return null;
+
+    return (
+      <div className="ml-6 mt-4 space-y-4">
+        {replies.map((reply) => (
+          <div key={reply.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-qatar-maroon">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{reply.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{reply.email}</p>
+              </div>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {format(new Date(reply.created_at), 'PPp')}
+              </span>
+            </div>
+            <div className="prose max-w-none text-sm text-gray-700 dark:text-gray-300">
+              {formatMessageContent(reply.message)}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Helper function to get a preview of the message
+  const getMessagePreview = (message: string) => {
+    const words = message.split(' ');
+    if (words.length <= 15) return message;
+    return words.slice(0, 15).join(' ') + '...';
   };
 
   if (!user) {
@@ -209,14 +296,48 @@ export default function MessagesPage() {
                           {getNotificationIcon(notification.type)}
                         </span>
                         <div>
-                          <h3 className="font-semibold text-gray-900 dark:text-white">
-                            {notification.title}
-                          </h3>
-                          <p className="text-gray-600 dark:text-gray-300 mt-1">
-                            {notification.message}
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                            {format(new Date(notification.created_at), 'PPpp')}
+                          {notification.isNotification ? (
+                            <>
+                              <h3 className="font-semibold text-gray-900 dark:text-white">
+                                {notification.title}
+                              </h3>
+                              <p className="text-gray-600 dark:text-gray-300 mt-1">
+                                {notification.message}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-start">
+                                <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                                  {expandedMessage === notification.id 
+                                    ? notification.message 
+                                    : getMessagePreview(notification.message)
+                                  }
+                                </p>
+                                <button
+                                  onClick={() => setExpandedMessage(
+                                    expandedMessage === notification.id ? null : notification.id
+                                  )}
+                                  className="ml-4 text-sm text-qatar-maroon hover:text-qatar-maroon-dark"
+                                >
+                                  {expandedMessage === notification.id
+                                    ? t('contact.messages.actions.colapse')
+                                    : t('contact.messages.actions.expand')
+                                  }
+                                </button>
+                              </div>
+                              {expandedMessage === notification.id && notification.replies && notification.replies.length > 0 && (
+                                <div className="mt-4">
+                                  <h4 className="text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                                    {t('contact.messages.replies')}
+                                  </h4>
+                                  {renderReplies(notification.replies)}
+                                </div>
+                              )}
+                            </>
+                          )}
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            {format(new Date(notification.created_at), 'PPp')}
                           </p>
                         </div>
                       </div>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Showroom } from '@/types/showroom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPinIcon } from '@heroicons/react/24/solid';
+import { useCountry } from '@/contexts/CountryContext';
 
 interface ShowroomCardProps {
   showroom: Showroom;
@@ -11,6 +12,7 @@ interface ShowroomCardProps {
 
 export default function ShowroomCard({ showroom }: ShowroomCardProps) {
   const { t, language } = useLanguage();
+  const { currentCountry } = useCountry();
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 ${showroom.featured ? 'ring-2 ring-qatar-maroon' : ''}`}>
@@ -61,7 +63,7 @@ export default function ShowroomCard({ showroom }: ShowroomCardProps) {
           {language === 'ar' ? showroom.description_ar || showroom.description : showroom.description}
         </p>
         
-        <Link href={`/showrooms/${showroom.id}`} className="block w-full">
+        <Link href={`/${currentCountry.code.toLowerCase()}/showrooms/${showroom.id}`} className="block w-full">
           <button className="w-full bg-qatar-maroon text-white py-2 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
             {t('showroom.viewShowroom')}
           </button>

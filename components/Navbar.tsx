@@ -35,9 +35,11 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isDealer, setIsDealer] = useState(false);
+  const [country, setCountry] = useState(currentCountry?.code.toLowerCase() || 'qa');
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    setCountry(currentCountry?.code.toLowerCase() || 'qa');
     setMounted(true);
     // Check if user is admin
     const checkUserRole = async () => {
@@ -165,11 +167,11 @@ export default function Navbar() {
   ];
 
   const userMenuItems = [
-    { name: t('user.myProfile'), href: `/${currentCountry?.code.toLowerCase()}/profile`, icon: UserCircleIcon },
+    { name: t('user.myProfile'), href: `/profile`, icon: UserCircleIcon },
     ...(isAdmin ? [{ name: t('user.adminDashboard'), href: `/admin`, icon: ClipboardDocumentListIcon }] : []),
-    ...(isDealer ? [{ name: t('user.dealerDashboard'), href: `/${currentCountry?.code.toLowerCase()}/dealer-dashboard`, icon: ClipboardDocumentListIcon }] : []),
-    { name: t('user.myAds'), href: `/${currentCountry?.code.toLowerCase()}/my-ads`, icon: ClipboardDocumentListIcon },
-    { name: t('user.favorites'), href: `/${currentCountry?.code.toLowerCase()}/favorites`, icon: HeartIcon },
+    ...(isDealer ? [{ name: t('user.dealerDashboard'), href: `/dealer-dashboard`, icon: ClipboardDocumentListIcon }] : []),
+    { name: t('user.myAds'), href: `/my-ads`, icon: ClipboardDocumentListIcon },
+    { name: t('user.favorites'), href: `/favorites`, icon: HeartIcon },
   ];
 
   if (!mounted) {
@@ -182,14 +184,14 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           {/* Logo and main nav */}
           <div className="flex-1 flex items-center justify-between">
-            <Link href="/" className="flex items-center">
+            <Link href={`/${currentCountry?.code.toLowerCase()}`} className="flex items-center">
               <Image src="/logo.png" alt="Mawater974 Logo" width={150} height={40} className="h-150 w-40" priority />
             </Link>
 
             {/* Navigation Links */}
             <div className={`hidden md:flex items-center ${language === 'ar' ? 'space-x-reverse space-x-8' : 'space-x-8'}`}>
               <Link
-                href="/"
+                href={`/${currentCountry?.code.toLowerCase()}`}
                 className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium whitespace-nowrap"
               >
                 {t('nav.home')}
@@ -256,7 +258,7 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href={`/${currentCountry?.code.toLowerCase()}/profile`}
+                            href="/profile"
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
@@ -271,7 +273,7 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href={`/${currentCountry?.code.toLowerCase()}/messages`}
+                            href="/messages"
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 relative`}
@@ -291,7 +293,7 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href={`/${currentCountry?.code.toLowerCase()}/favorites`}
+                            href="/favorites"
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
@@ -306,7 +308,7 @@ export default function Navbar() {
                       <Menu.Item>
                         {({ active }) => (
                           <Link
-                            href={`/${currentCountry?.code.toLowerCase()}/my-ads`}
+                            href="/my-ads"
                             className={`${
                               active ? 'bg-gray-100 dark:bg-gray-700' : ''
                             } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}
@@ -322,7 +324,7 @@ export default function Navbar() {
                         <Menu.Item>
                           {({ active }) => (
                             <Link
-                              href={`/${currentCountry?.code.toLowerCase()}/dealer-dashboard`}
+                              href="/dealer-dashboard"
                               className={`${
                                 active ? 'bg-gray-100 dark:bg-gray-700' : ''
                               } flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300`}

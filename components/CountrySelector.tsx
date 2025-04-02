@@ -9,36 +9,15 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function CountrySelector() {
-  const { countries, currentCountry, setCurrentCountry, isLoading } = useCountry();
+  const { countries, currentCountry, isLoading, changeCountry } = useCountry();
   const { language } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   const handleCountryChange = (country) => {
-    setCurrentCountry(country);
-    
-    // Update URL to reflect the new country
-    const countryCode = country.code.toLowerCase();
-    
-    // Check if we're already on a country-specific route
-    if (pathname) {
-      // Extract the path after the country code
-      const pathParts = pathname.split('/');
-      if (pathParts.length > 1) {
-        // If we're already on a country route (e.g., /qa/cars)
-        if (countries.some(c => c.code.toLowerCase() === pathParts[1])) {
-          // Replace the country code in the URL
-          pathParts[1] = countryCode;
-          // Force a full page refresh to ensure data is updated
-          window.location.href = pathParts.join('/');
-          return;
-        }
-      }
-    }
-    
-    // If we're not on a country-specific route, go to the country homepage
-    window.location.href = `/${countryCode}`;
+    // Use the new changeCountry function that handles loading state and redirection
+    changeCountry(country);
   };
 
   if (isLoading) {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
@@ -14,6 +15,7 @@ import { Dancing_Script } from 'next/font/google';
 const dancingScript = Dancing_Script({ subsets: ['latin'] });
 
 export default function HomePage() {
+  const [loading, setLoading] = useState(true);
   const { signOutMessage, setSignOutMessage } = useAuth();
   const { t, language, currentLanguage } = useLanguage();
   const { currentCountry } = useCountry();
@@ -24,7 +26,16 @@ export default function HomePage() {
       toast.success(signOutMessage);
       setSignOutMessage(null);
     }
+    setLoading(false);
   }, [signOutMessage, setSignOutMessage]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   const countryPrefix = currentCountry ? `/${currentCountry.code.toLowerCase()}` : '';
   
@@ -107,11 +118,11 @@ export default function HomePage() {
                   })}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href={`${countryPrefix}/cars`} className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
+                <Link href={`/${currentCountry?.code.toLowerCase()}/cars`} className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
                   <FontAwesomeIcon icon={faCarSide} className="mr-2" />
                   {t('home.hero.browseCars')}
                 </Link>
-                <Link href={`${countryPrefix}/sell`} className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
+                <Link href={`/${currentCountry?.code.toLowerCase()}/sell`} className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
                   <FontAwesomeIcon icon={faTag} className="mr-2" />
                   {t('home.hero.sellYourCar')}
                 </Link>

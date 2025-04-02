@@ -2,15 +2,34 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useLanguage } from '../../../contexts/LanguageContext';
-import { useCountry } from '../../../contexts/CountryContext';
-import { supabase } from '../../../lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
-import LoadingSpinner from '../../../components/LoadingSpinner';
-import AdminNavbar from '../../../components/admin/AdminNavbar';
-import Link from 'next/link';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import AdminNavbar from '@/components/admin/AdminNavbar';
 import { format as formatDate } from 'date-fns';
+import Link from 'next/link';
+import { useCountry } from '@/contexts/CountryContext';
+import { Brand } from '@/types/supabase';
+import { Car } from '@/types/supabase';
+
+interface ExtendedCar extends Car {
+  brand: {
+    name: string;
+  };
+  model: {
+    name: string;
+  };
+  user: {
+    full_name: string;
+    email: string;
+  };
+  images: {
+    url: string;
+    is_main: boolean;
+  }[];
+}
 
 type CarReport = {
   id: string;
@@ -26,6 +45,11 @@ type CarReport = {
     id: number;
     description: string;
     price: number;
+    brand: Brand;
+    model: {
+      id: number;
+      name: string;
+    };
   };
   profiles: {
     id: string;
@@ -38,12 +62,14 @@ export default function ReportsManagement() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
-  const { selectedCountry } = useCountry();
+  const { currentCountry } = useCountry();
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [countryFilter, setCountryFilter] = useState<string>('all');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [cars, setCars] = useState<ExtendedCar[]>([]);
 
   useEffect(() => {
     const checkAdminAndFetchData = async () => {
@@ -72,6 +98,8 @@ export default function ReportsManagement() {
 
         // Fetch reports
         await fetchReports();
+        // Fetch brands
+        await fetchBrands();
       } catch (error) {
         console.error('Error:', error);
         setError(error.message);
@@ -99,7 +127,7 @@ export default function ReportsManagement() {
           created_at,
           updated_at,
           country_code,
-          cars!car_id(id, description, price),
+          cars!car_id(id, description, price, brand_id, model_id),
           profiles!user_id(id, full_name, email)
         `)
         .order('created_at', { ascending: false });
@@ -128,6 +156,22 @@ export default function ReportsManagement() {
       toast.error('Failed to fetch reports');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('brands')
+        .select('id, name');
+
+      if (error) throw error;
+
+      setBrands(data || []);
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+      setError(error.message);
+      toast.error('Failed to fetch brands');
     }
   };
 
@@ -185,7 +229,7 @@ export default function ReportsManagement() {
     return reasonMap[reason] || reason;
   };
 
-  if (loading && reports.length === 0) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner />
@@ -208,8 +252,9 @@ export default function ReportsManagement() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminNavbar />
+      <div className="container mx-auto py-10">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Manage Car Reports</h1>
 
@@ -297,10 +342,8 @@ export default function ReportsManagement() {
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {reports.map((report) => (
                   <tr key={report.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Link href={`/cars/${report.car_id}`} className="text-qatar-maroon hover:underline">
-                        {report.cars?.description ? report.cars.description.substring(0, 30) + '...' : `Car #${report.car_id}`}
-                      </Link>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      {report.cars?.brand?.name} {report.cars?.model?.name}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                       {report.profiles?.full_name || 'Unknown User'}
@@ -338,7 +381,7 @@ export default function ReportsManagement() {
                         </select>
                         {report.cars && (
                           <Link 
-                            href={`/cars/${report.car_id}`} 
+                            href={`/cars/${report.cars.id}`} 
                             className="text-qatar-maroon hover:text-qatar-maroon-dark"
                           >
                             View Car
@@ -352,6 +395,7 @@ export default function ReportsManagement() {
             </table>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

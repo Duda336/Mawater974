@@ -13,6 +13,7 @@ import DatabaseManager from '../../components/admin/DatabaseManager';
 import AdminNavbar from '../../components/admin/AdminNavbar';
 import { UsersIcon, ShoppingBagIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { useCountry } from '../../contexts/CountryContext';
 
 type Brand = Database['public']['Tables']['brands']['Row'];
 type Model = Database['public']['Tables']['models']['Row'];
@@ -82,6 +83,7 @@ type CarStatus = 'Pending' | 'Approved' | 'Rejected' | 'Sold';
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const { currentCountry } = useCountry();
   const [activeTab, setActiveTab] = useState<'analytics' | 'users' | 'database' | 'cars'>('analytics');
   const [analytics, setAnalytics] = useState<Analytics>({
     totalUsers: 0,
@@ -955,7 +957,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-3">
                       <button
-                        onClick={() => router.push(`/admin/cars/${car.id}`)}
+                        onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`)}
                         className="text-qatar-maroon hover:text-qatar-maroon-dark dark:text-qatar-maroon-light dark:hover:text-qatar-maroon"
                       >
                         View Details
@@ -1276,7 +1278,7 @@ export default function AdminDashboard() {
                   {/* Action Buttons */}
                   <div className="mt-4 flex items-center justify-end space-x-2">
                     <Link
-                      href={`/cars/${car.id}`}
+                      href={`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`}
                       className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-qatar-maroon hover:bg-qatar-maroon hover:text-white rounded-md transition-colors duration-200"
                     >
                       View Details

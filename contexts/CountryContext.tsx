@@ -24,6 +24,7 @@ interface CountryContextType {
   getCitiesByCountry: (countryId: number) => City[];
   formatPrice: (price: number, language?: string) => string;
   convertPrice: (price: number, fromCurrency: string, toCurrency: string) => number;
+  changeCountry: (country: Country) => void;
 }
 
 const CountryContext = createContext<CountryContextType>({
@@ -37,6 +38,7 @@ const CountryContext = createContext<CountryContextType>({
   getCitiesByCountry: () => [],
   formatPrice: () => '',
   convertPrice: () => 0,
+  changeCountry: () => {}
 });
 
 // Default countries and cities in case the database tables don't exist yet
@@ -179,6 +181,7 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
   const [currentCountry, setCurrentCountry] = useState<Country | null>(null);
   const [currentCity, setCurrentCity] = useState<City | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isChangingCountry, setIsChangingCountry] = useState(false);
   const [currencyRates, setCurrencyRates] = useState<CurrencyRate[]>([]);
 
   // Fetch all countries and cities on initial load
@@ -449,6 +452,27 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
     return price;
   };
 
+  // Function to handle country change with redirection
+  const changeCountry = (country: Country) => {
+    setIsChangingCountry(true);
+    setCurrentCountry(country);
+    
+    // Set first city in this country as default
+    const firstCity = cities.find(c => c.country_id === country.id);
+    if (firstCity) {
+      setCurrentCity(firstCity);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('selectedCountryId', country.id.toString());
+    localStorage.setItem('selectedCountry', JSON.stringify(country));
+    
+    // Redirect to home page after a short delay to ensure country is set
+    setTimeout(() => {
+      window.location.href = `/${country.code.toLowerCase()}`;
+    }, 500);
+  };
+
   return (
     <CountryContext.Provider
       value={{
@@ -456,12 +480,13 @@ export function CountryProvider({ children }: { children: React.ReactNode }) {
         cities,
         currentCountry,
         currentCity,
-        isLoading,
+        isLoading: isLoading || isChangingCountry,
         setCurrentCountry: handleCountryChange,
         setCurrentCity,
         getCitiesByCountry,
         formatPrice,
         convertPrice,
+        changeCountry
       }}
     >
       {children}

@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { supabase } from '@/lib/supabase';
 import CarCard from '@/components/CarCard';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -10,19 +11,32 @@ import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+
 export default function FavoritesPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const { currentCountry } = useCountry();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const { t } = useLanguage();
+  const countryCode = params.countryCode as string;
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    fetchFavorites();
+  }, [user, countryCode]);
 
   const fetchFavorites = async () => {
     try {
       setLoading(true);
       
       if (!user) {
-        router.push('/login');
+        router.push(`/${countryCode}/login`);
         return;
       }
 
@@ -52,7 +66,8 @@ export default function FavoritesPage() {
           city:cities(id, name, name_ar),
           images:car_images(url, is_main)
         `)
-        .in('id', carIds);
+        .in('id', carIds)
+        .eq('country_id', currentCountry?.id);
 
       if (carsError) throw carsError;
 
@@ -64,10 +79,6 @@ export default function FavoritesPage() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchFavorites();
-  }, []);
 
   const handleFavoriteToggle = async (carId: number) => {
     if (!user) return;
@@ -140,7 +151,7 @@ export default function FavoritesPage() {
               {t('favorites.empty.description')}
             </p>
             <button
-              onClick={() => router.push('/cars')}
+              onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/cars`)}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
             >
               {t('favorites.empty.browse')}

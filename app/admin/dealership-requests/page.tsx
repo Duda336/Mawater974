@@ -234,8 +234,9 @@ export default function DealershipRequestsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="flex flex-col min-h-screen dark:bg-gray-900 dark:text-white">
       <AdminNavbar />
+      <main className="container mx-auto py-4">
       <h1 className="text-2xl font-bold mb-6">{t('admin.dealership.requests')}</h1>
 
       <div className="grid grid-cols-1 gap-6">
@@ -388,6 +389,7 @@ export default function DealershipRequestsPage() {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 }

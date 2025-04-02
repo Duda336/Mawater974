@@ -10,6 +10,9 @@ import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import toast from 'react-hot-toast';
 import AdminNavbar from '../../../components/admin/AdminNavbar';
+import EditCarModal from '../../../components/EditCarModal';
+import { useCountry } from '../../../contexts/CountryContext';
+
 
 interface ExtendedCar extends Car {
   brand: {
@@ -33,14 +36,15 @@ type SortOrder = 'newest' | 'oldest' | 'price_high' | 'price_low';
 
 export default function AdminCarsPage() {
   const [cars, setCars] = useState<ExtendedCar[]>([]);
+  const [editingCar, setEditingCar] = useState<ExtendedCar | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeStatus, setActiveStatus] = useState<CarStatus>('Pending');
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
+  const { currentCountry } = useCountry();
   const [viewMode, setViewMode] = useState<'grid' | 'detail'>('grid');
-  const [editingCar, setEditingCar] = useState<ExtendedCar | null>(null);
 
   useEffect(() => {
     checkAdminStatus();
@@ -202,51 +206,6 @@ export default function AdminCarsPage() {
 
   const handleEdit = async (car: ExtendedCar) => {
     setEditingCar(car);
-  };
-
-  const handleSaveEdit = async (updatedData: Partial<Car>) => {
-    if (!editingCar) return;
-
-    try {
-      // Validate price and mileage
-      if (updatedData.price && updatedData.price <= 0) {
-        toast.error('Price must be greater than 0');
-        return;
-      }
-      if (updatedData.mileage && updatedData.mileage < 0) {
-        toast.error('Mileage cannot be negative');
-        return;
-      }
-
-      // Remove any undefined values from updatedData
-      const cleanedData = Object.fromEntries(
-        Object.entries(updatedData).filter(([_, value]) => value !== undefined)
-      );
-
-      const { error } = await supabase
-        .from('cars')
-        .update(cleanedData)
-        .eq('id', editingCar.id);
-
-      if (error) {
-        console.error('Update error:', error);
-        throw error;
-      }
-
-      // Create notification for the user
-      await createNotification(
-        editingCar.user_id,
-        'Car Listing Updated',
-        `Your car listing for ${editingCar.brand.name} ${editingCar.model.name} has been updated by an admin.`
-      );
-
-      toast.success('Car listing updated successfully');
-      setEditingCar(null);
-      fetchCars();
-    } catch (err) {
-      console.error('Error updating car:', err);
-      toast.error(`Failed to update car: ${err.message || 'Unknown error'}`);
-    }
   };
 
   const handleAcceptAll = async () => {
@@ -474,7 +433,7 @@ export default function AdminCarsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
+    <div className="min-h-screen">
       <AdminNavbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
@@ -679,7 +638,7 @@ export default function AdminCarsPage() {
                     {/* Action Buttons */}
                     <div className="mt-4 flex items-center justify-end space-x-2">
                       <Link
-                        href={`/cars/${car.id}`}
+                        href={`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`}
                         className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-qatar-maroon hover:bg-qatar-maroon hover:text-white rounded-md transition-colors duration-200"
                       >
                         View Details
@@ -815,7 +774,7 @@ export default function AdminCarsPage() {
                       <td className="px-6 py-4 text-right space-x-2">
                         <div className="flex items-center justify-end space-x-2">
                           <Link
-                            href={`/cars/${car.id}`}
+                            href={`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`}
                             className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-qatar-maroon hover:bg-qatar-maroon hover:text-white rounded-md transition-colors duration-200"
                           >
                             View
@@ -882,199 +841,15 @@ export default function AdminCarsPage() {
             </div>
           )}
 
-          {/* Edit Modal */}
+          {/* Edit Car Modal */}
           {editingCar && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Edit Car Listing - {editingCar.brand.name} {editingCar.model.name}
-                  </h2>
-                  <button
-                    onClick={() => setEditingCar(null)}
-                    className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
-                  >
-                    <XMarkIcon className="h-6 w-6" />
-                  </button>
-                </div>
-                <div className="p-6">
-                  <form onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    const updatedData = {
-                      price: Number(formData.get('price')),
-                      mileage: Number(formData.get('mileage')),
-                      color: formData.get('color') as string,
-                      transmission: formData.get('transmission') as string,
-                      description: formData.get('description') as string,
-                      year: Number(formData.get('year')),
-                      cylinders: formData.get('cylinders') as string,
-                      fuel_type: formData.get('fuel_type') as string,
-                      is_featured: formData.get('is_featured') === 'true',
-                      status: formData.get('status') as 'Pending' | 'Approved' | 'Rejected' | 'Sold',
-                    };
-                    handleSaveEdit(updatedData);
-                  }}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Price (QAR)
-                        </label>
-                        <input
-                          type="number"
-                          name="price"
-                          defaultValue={editingCar.price}
-                          min="0"
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Year
-                        </label>
-                        <input
-                          type="number"
-                          name="year"
-                          defaultValue={editingCar.year}
-                          min="1900"
-                          max={new Date().getFullYear() + 1}
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Mileage (km)
-                        </label>
-                        <input
-                          type="number"
-                          name="mileage"
-                          defaultValue={editingCar.mileage}
-                          min="0"
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Color
-                        </label>
-                        <input
-                          type="text"
-                          name="color"
-                          defaultValue={editingCar.color}
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Transmission
-                        </label>
-                        <select
-                          name="transmission"
-                          defaultValue={editingCar.transmission}
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        >
-                          <option value="Automatic">Automatic</option>
-                          <option value="Manual">Manual</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Cylinders
-                        </label>
-                        <select
-                          name="cylinders"
-                          defaultValue={editingCar.cylinders}
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        >
-                          <option value="3">3 Cylinder</option>
-                          <option value="4">4 Cylinder</option>
-                          <option value="6">6 Cylinder</option>
-                          <option value="8">8 Cylinder</option>
-                          <option value="12">12 Cylinder</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Fuel Type
-                        </label>
-                        <select
-                          name="fuel_type"
-                          defaultValue={editingCar.fuel_type}
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        >
-                          <option value="Petrol">Petrol</option>
-                          <option value="Diesel">Diesel</option>
-                          <option value="Electric">Electric</option>
-                          <option value="Hybrid">Hybrid</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Status
-                        </label>
-                        <select
-                          name="status"
-                          defaultValue={editingCar.status}
-                          required
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="Approved">Approved</option>
-                          <option value="Rejected">Rejected</option>
-                          <option value="Sold">Sold</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Featured
-                        </label>
-                        <select
-                          name="is_featured"
-                          defaultValue={editingCar.is_featured.toString()}
-                          className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                        >
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="mt-6">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Description
-                      </label>
-                      <textarea
-                        name="description"
-                        defaultValue={editingCar.description || ''}
-                        rows={4}
-                        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
-                      />
-                    </div>
-                    <div className="mt-6 flex justify-end space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => setEditingCar(null)}
-                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
+            <EditCarModal
+              isOpen={!!editingCar}
+              onClose={() => setEditingCar(null)}
+              car={editingCar}
+              onUpdate={fetchCars}
+              onEditComplete={() => setEditingCar(null)}
+            />
           )}
         </div>
       </div>

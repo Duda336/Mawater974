@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Car, ExtendedCar, City } from '../types/supabase';
+import { ExtendedCar } from '@/types/supabase';
 import { HeartIcon as HeartOutline } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolid } from '@heroicons/react/24/solid';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import ImageCarousel from './ImageCarousel';
 import { useLanguage } from '../contexts/LanguageContext';
+
 
 interface CarCardProps {
   car: ExtendedCar;
@@ -51,7 +52,7 @@ export default function CarCard({
   };
 
   return (
-    <Link href={`/cars/${car.id}`}>
+    <Link href={`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`}>
       <div 
         className={`relative group bg-white dark:bg-gray-900/95 rounded-xl overflow-hidden border 
           ${featured 

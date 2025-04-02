@@ -4,15 +4,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 
 export default function Footer() {
   const { t, language, dir } = useLanguage();
+  const { currentCountry } = useCountry();
 
   const quickLinks = [
-    { name: t('footer.quickLinks.buyCar'), href: '/cars' },
-    { name: t('footer.quickLinks.sellCar'), href: '/sell' },
-    { name: t('footer.quickLinks.showrooms'), href: '/showrooms' },
-    { name: t('footer.quickLinks.spareParts'), href: '/spare-parts' },
+    { name: t('footer.quickLinks.buyCar'), href: `/${currentCountry?.code.toLowerCase()}/cars` },
+    { name: t('footer.quickLinks.sellCar'), href: `/${currentCountry?.code.toLowerCase()}/sell` },
+    { name: t('footer.quickLinks.showrooms'), href: `/${currentCountry?.code.toLowerCase()}/showrooms` },
+    { name: t('footer.quickLinks.spareParts'), href: `/${currentCountry?.code.toLowerCase()}/spare-parts` },
+    { name: t('footer.quickLinks.carRental'), href: `/${currentCountry?.code.toLowerCase()}/car-rental` },
+    { name: t('footer.quickLinks.carPhotography'), href: `/${currentCountry?.code.toLowerCase()}/car-photography` },
   ];
 
   const socialLinks = [

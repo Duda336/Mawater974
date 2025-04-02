@@ -192,13 +192,14 @@ export default function ModelsManagement() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminNavbar />
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Manage Models</h1>
+      <main className="container mx-auto py-10">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Manage Models</h1>
 
-        {/* Brand Selection */}
-        <div className="mb-8">
+          {/* Brand Selection */}
+          <div className="mb-8">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Select Brand
           </label>
@@ -343,6 +344,7 @@ export default function ModelsManagement() {
           </>
         )}
       </div>
+      </main>
     </div>
   );
 }

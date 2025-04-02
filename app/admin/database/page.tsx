@@ -157,7 +157,7 @@ export default function AdminDatabasePage() {
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminNavbar />
-      <main className="py-10">
+      <div className="py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="sm:flex sm:items-center">
             <div className="sm:flex-auto">
@@ -265,7 +265,7 @@ export default function AdminDatabasePage() {
             </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

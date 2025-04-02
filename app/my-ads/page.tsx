@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { Database } from '../../types/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { Database } from '@/types/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -303,7 +303,7 @@ export default function MyAdsPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="animate-pulse">
               <div className="bg-gray-200 dark:bg-gray-700 rounded-xl h-48"></div>
@@ -392,7 +392,7 @@ export default function MyAdsPage() {
 
         {/* Car Listings */}
         {cars.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
             {cars.map((car) => (
               <div
                 key={car.id}

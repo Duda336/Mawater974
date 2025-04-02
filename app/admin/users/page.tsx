@@ -121,7 +121,7 @@ export default function AdminUsersPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
         <AdminNavbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center py-16">
@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <AdminNavbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
@@ -174,7 +174,7 @@ export default function AdminUsersPage() {
                               {user.full_name || 'No Name'}
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.phone_number || 'No Phone'}
+                              {user.phone_number?.replace(/^(\+\d{1,3})(\d+)/, '$1-$2') || 'No Phone'}
                             </div>
                           </div>
                         </div>

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 import { supabase } from '../lib/supabase';
-import type { CarBrand, CarModel } from '../types/supabase';
+import type { CarBrand, CarModel } from '@/types/supabase';
+import { useCountry } from '@/contexts/CountryContext';
 
 const priceRanges = [
   { label: 'Any Price', value: '' },
@@ -27,6 +28,7 @@ export default function SearchBar() {
   const [showFilters, setShowFilters] = useState(false);
   const [brands, setBrands] = useState<CarBrand[]>([]);
   const [models, setModels] = useState<CarModel[]>([]);
+  const { currentCountry } = useCountry();
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useState({
     query: '',
@@ -86,7 +88,7 @@ export default function SearchBar() {
     Object.entries(searchParams).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
-    router.push(`/cars?${params.toString()}`);
+    router.push(`/${currentCountry?.code.toLowerCase()}/cars?${params.toString()}`);
   };
 
   return (
