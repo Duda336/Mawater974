@@ -9,7 +9,7 @@ export default function LoadingSpinner() {
           alt="Loading spinner"
           width={64}
           height={64}
-          className="animate-spin dark:invert"
+          className="animate-spin"
         />
       </div>
       <span className="ml-2 text-qatar-maroon dark:text-qatar-maroon-light">Loading...</span>

@@ -4,12 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
-  HomeIcon,
-  UserIcon,
-  UsersIcon,
-  ServerIcon,
-  ChartBarIcon,
-  Cog6ToothIcon,
   Bars3Icon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
@@ -19,17 +13,19 @@ export default function AdminNavbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { name: 'Analytics', href: '/admin' },
+    { name: 'Dashboard', href: '/admin' },
     { name: 'Country Analytics', href: '/admin/country-analytics' },
     { name: 'Cars', href: '/admin/cars' },
-    { name: 'Reports', href: '/admin/reports' },
+    { name: 'Dealership', href: '/admin/dealership-requests' },
     { name: 'Users', href: '/admin/users' },
     { name: 'Database', href: '/admin/database' },
     { name: 'Brands', href: '/admin/brands' },
     { name: 'Models', href: '/admin/models' },
     { name: 'Locations', href: '/admin/locations' },
-    { name: 'Dealership Requests', href: '/admin/dealership-requests' },
-    { name: 'Contact Messages', href: '/admin/contact-messages' },
+    { name: 'Currency Rates', href: '/admin/currency-rates' },
+    { name: 'Settings', href: '/admin/settings' },
+    { name: 'Contacts', href: '/admin/contact-messages' },
+    { name: 'Reports', href: '/admin/reports' },
   ];
 
   const isActive = (path: string) => {
@@ -40,8 +36,8 @@ export default function AdminNavbar() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-md mb-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="bg-white dark:bg-gray-800 shadow-md mb-4">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
@@ -49,7 +45,7 @@ export default function AdminNavbar() {
                 Admin
               </Link>
             </div>
-            <nav className="ml-6 flex space-x-4 overflow-x-auto hide-scrollbar">
+            <nav className="ml-6 flex overflow-x-auto hide-scrollbar">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
