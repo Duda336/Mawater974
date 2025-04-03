@@ -853,6 +853,8 @@ const translations = {
     'dashboard.noDealership': 'No Dealership',
     'dashboard.noDealershipDesc': 'You need to register a showroom to access the dealer dashboard and start adding cars.',
     'dashboard.registerShowroom': 'Register a showroom',
+    'dashboard.error.loading': 'Failed to load data',
+    'dashboard.error.deleting': 'Failed to delete car. Please try again.',
 
     // Dealership Approval Notifications
     'dealership.requestSubmitted': 'Your dealership request has been submitted successfully.',
@@ -1833,6 +1835,8 @@ const translations = {
     'showroom.dealershipType.officail': 'وكيل رسمي',
     'showroom.noCars': 'لا يوجد سيارات حالياً',
     'showroom.viewAllCars': 'عرض جميع السيارات',
+    'showroom.notFound': 'لا يوجد معرض',
+    'showroom.notFoundDesc': 'المعرض الذي تبحث عنه غير موجود أو تم إزالتها.',
     'dealership.registration': 'سجل معرضك',
     'dealership.businessName': 'اسم المعرض',
     'dealership.description': 'وصف المعرض',
@@ -1928,6 +1932,8 @@ const translations = {
     'dashboard.noDealership': 'لا يوجد معرض',
     'dashboard.noDealershipDesc': 'قم بتسجيل معرضك للوصول إلى لوحة التحكم وبدء إدراج السيارات.',
     'dashboard.registerShowroom': 'تسجيل معرضك',
+    'dashboard.error.loading': 'فشل في جلب البيانات',
+    'dashboard.error.deleting': 'فشل في حذف السيارة. يرجى المحاولة مرة أخرى.',
 
     // Dealership Approval Notifications
     'dealership.requestSubmitted': 'تم تقديم طلب الوكالة بنجاح.',
