@@ -206,25 +206,27 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
         if (carError) {
           setError(t('car.details.errorLoadingCar'));
           console.error('Error fetching car:', carError);
+          setLoading(false);
           return;
         }
 
         if (!data) {
           setError(t('car.details.carNotFound'));
+          setLoading(false);
           return;
         }
 
         setCar(data);
       } catch (error) {
-        console.error('Error:', error);
         setError(t('car.details.errorLoadingCar'));
+        console.error('Error:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchCar();
-  }, [carId]);
+  }, [carId, t]);
 
   useEffect(() => {
     const fetchSimilarCars = async () => {
@@ -359,6 +361,34 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
       fetchComments();
     }
   }, [carId]);
+  
+
+  // Check if car is in favorites when component mounts or user changes
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (!user || !car) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('car_id', car.id)
+          .single();
+
+        if (error) {
+          console.error('Error checking favorite status:', error);
+          return;
+        }
+
+        setIsFavorite(!!data);
+      } catch (error) {
+        console.error('Error checking favorite status:', error);
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [user, car]);
 
   const handleFavoriteClick = async () => {
     if (!user || !car || isUpdatingFavorite) return;
@@ -374,16 +404,21 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
           .eq('car_id', car.id);
 
         if (error) throw error;
+        setIsFavorite(false);
       } else {
         // Add to favorites
         const { error } = await supabase
           .from('favorites')
-          .insert([{ user_id: user.id, car_id: car.id }]);
+          .insert([
+            {
+              user_id: user.id,
+              car_id: car.id
+            }
+          ]);
 
         if (error) throw error;
+        setIsFavorite(true);
       }
-
-      setIsFavorite(!isFavorite);
     } catch (error) {
       console.error('Error updating favorite:', error);
     } finally {
@@ -572,7 +607,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
             if (parentComment.id === editingComment.parent_id) {
               return {
                 ...parentComment,
-                replies: parentComment.replies?.map(reply =>
+                replies: parentComments.get(parentComment.id)?.map(reply =>
                   reply.id === editingComment.id ? updatedComment : reply
                 ) || []
               };
@@ -639,12 +674,20 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex col-span-full items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex col-span-full items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <p className="text-xl text-gray-700 dark:text-gray-300 mb-4">
-            {t('car.details.errorLoadingCar')}
+            {error}
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -658,25 +701,11 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
   }
 
   if (!car) {
-    return (
-      <div className="flex col-span-full items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <p className="text-xl text-gray-700 dark:text-gray-300 mb-4">
-            {t('car.details.carNotFound')}
-          </p>
-          <Link
-            href={`/${currentCountry?.code.toLowerCase()}/cars`}
-            className="inline-block px-4 py-2 bg-qatar-maroon text-white rounded-md hover:bg-qatar-maroon-dark transition-colors"
-          >
-            {t('car.details.back')}
-          </Link>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8 px-6 pb-16">
         {/* Breadcrumb */}
         <nav className="mb-4">

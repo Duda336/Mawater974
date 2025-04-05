@@ -21,9 +21,9 @@ export default function CountrySpecificCarPhotographyPage() {
   }, [countryCode, countries, setCurrentCountry]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-2">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">{t('photography.title')}</h1>
+        <h1 className="text-4xl font-bold mb-8">{t('photography.title')}</h1>
         
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-qatar-maroon to-qatar-maroon/80 text-white rounded-xl p-8 mb-12 shadow-lg">
@@ -170,10 +170,10 @@ export default function CountrySpecificCarPhotographyPage() {
 
         {/* Coming Soon Section */}
         <section className="mt-16">
-          <h2 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">{t('photography.comingSoon.title')}</h2>
+          <h2 className="text-3xl font-bold mb-8">{t('photography.comingSoon.title')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">{t('photography.comingSoon.title')}</h2>
+              <h2 className="text-3xl font-bold mb-4">{t('photography.comingSoon.title')}</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">{t('photography.comingSoon.description')}</p>
               <div className="flex justify-center items-center space-x-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-qatar-maroon" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -106,14 +106,14 @@ import Footer from '@/components/Footer'
                 <CountryProvider>
                   <Providers>
                     <AnalyticsProvider>
-                      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 py-16">
+                      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
                         <Navbar />
-                        <main className="flex-grow">
+                        <main className="flex-grow pt-16">
                           {children}
                         </main>
-                        <Footer/>
                         <AIChatButton />
                       </div>
+                      <Footer/>
                     </AnalyticsProvider>
                   </Providers>
                 </CountryProvider>

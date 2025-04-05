@@ -65,10 +65,10 @@ export default function ContactPage() {
   };
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8" dir={dir}>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8" dir={dir}>
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-4xl font-bold mb-4">
             {t('contact.title')}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
@@ -80,14 +80,14 @@ export default function ContactPage() {
           {/* Contact Information */}
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold mb-6">
                 {t('contact.info.title')}
               </h2>
               <div className="space-y-6">
                 <div className="flex items-start">
                   <EnvelopeIcon className="h-6 w-6 text-qatar-maroon mt-1" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Email</p>
+                    <p className="text-sm font-medium">Email</p>
                     <a href="mailto:info@mawater974.com" className="text-sm text-gray-600 dark:text-gray-400 hover:text-qatar-maroon">
                       {t('contact.info.email')}
                     </a>
@@ -96,7 +96,7 @@ export default function ContactPage() {
                 <div className="flex items-start">
                   <PhoneIcon className="h-6 w-6 text-qatar-maroon mt-1" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Phone</p>
+                    <p className="text-sm font-medium">Phone</p>
                     <a href="tel:+97412345678" className="text-sm text-gray-600 dark:text-gray-400 hover:text-qatar-maroon">
                       {t('contact.info.phone')}
                     </a>
@@ -105,7 +105,7 @@ export default function ContactPage() {
                 <div className="flex items-start">
                   <MapPinIcon className="h-6 w-6 text-qatar-maroon mt-1" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">Address</p>
+                    <p className="text-sm font-medium">Address</p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {t('contact.info.address')}
                     </p>
@@ -114,7 +114,7 @@ export default function ContactPage() {
                 <div className="flex items-start">
                   <ClockIcon className="h-6 w-6 text-qatar-maroon mt-1" />
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm font-medium">
                       {t('contact.info.workingHours')}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -129,7 +129,7 @@ export default function ContactPage() {
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-2xl font-bold mb-6">
                 {t('contact.form.title')}
               </h2>
               {error && (

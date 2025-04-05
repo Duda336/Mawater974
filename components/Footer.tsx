@@ -43,7 +43,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-gray-900 to-gray-900 text-gray-300 pt-16 pb-8 border-t border-gray-700">
+    <footer className="bg-gray-900 text-gray-300 pt-10 pb-8 border-t border-gray-700">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12 mb-12" dir={dir}>
           {/* Logo and Description */}

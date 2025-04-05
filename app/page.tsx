@@ -60,7 +60,7 @@ export default function RootPage() {
   }, [router, user, profile]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <LoadingSpinner />
         <p className="mt-4 text-gray-600 dark:text-gray-400">Redirecting to your country...</p>

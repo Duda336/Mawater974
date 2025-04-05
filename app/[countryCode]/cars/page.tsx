@@ -129,18 +129,14 @@ export default function CarsPage() {
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      setShowFilters(!mobile);
+      const screenWidth = window.innerWidth;
+      const isLaptopOrLarger = screenWidth > 768;
+      setShowFilters(isLaptopOrLarger);
+      setIsMobile(screenWidth <= 768);
     };
 
-    // Initial check
-    handleResize();
-
-    // Add event listener
+    handleResize(); // Initial check
     window.addEventListener('resize', handleResize);
-
-    // Cleanup
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -727,7 +723,7 @@ export default function CarsPage() {
                     className="px-4 py-2 bg-qatar-maroon text-white rounded-xl hover:bg-qatar-maroon/90 transition-all duration-200 flex items-center gap-2"
                   >
                     <MagnifyingGlassIcon className="h-5 w-5" />
-                    {t('car.search.button')}
+                    <span className="md:hidden lg:inline">{t('car.search.button')}</span>
                   </button>
                 </div>
                 
@@ -742,7 +738,7 @@ export default function CarsPage() {
                     }`}
                   >
                     <FunnelIcon className="h-5 w-5" />
-                    <span className="hidden sm:inline">{t('car.filters.title')}</span>
+                    <span className="hidden sm:hidden md:inline ">{t('car.filters.title')}</span>
                     {getActiveFilterCount() > 0 && (
                       <span className={`ml-1 px-2 py-0.5 text-xs rounded-full ${
                         !showFilters 
@@ -762,7 +758,7 @@ export default function CarsPage() {
                         ...prev, 
                         sort: e.target.value as Filters['sort'] 
                       }))}
-                      className="appearance-none w-full px-4 py-2 pr-8 rounded-xl border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50  hover:border-qatar-maroon hover:shadow-md"
+                      className="appearance-none w-full md:w-28 px-4 py-2 pr-8 rounded-xl border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50  hover:border-qatar-maroon hover:shadow-md"
                     >
                       {sortOptions.map((option) => (
                         <option 
@@ -787,7 +783,7 @@ export default function CarsPage() {
                     className={`px-3 sm:px-6 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
                       compareMode
                         ? 'bg-qatar-maroon text-white hover:bg-qatar-maroon/90 transform hover:scale-105'
-                        : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50 border border-gray-200 dark:border-gray-700/50 hover:border-qatar-maroon hover:shadow-md'
+                        : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
                     }`}
                   >
                     <AdjustmentsHorizontalIcon className="h-5 w-5" />
@@ -1198,7 +1194,7 @@ export default function CarsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="p-2 rounded-full bg-qatar-maroon/10">
-                        <AdjustmentsHorizontalIcon className="h-5 w-5 text-qatar-maroon" />
+                        <AdjustmentsHorizontalIcon className="h-5 w-5" />
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
@@ -1228,7 +1224,7 @@ export default function CarsPage() {
               )}
 
               {/* Car Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-6 mb-24">
                 {loading ? (
                   <div className="flex col-span-full items-center justify-center min-h-[400px]">
                     <LoadingSpinner />
@@ -1273,9 +1269,9 @@ export default function CarsPage() {
                       {compareMode && (
                         <button
                           onClick={() => handleCompareToggle(car)}
-                          className={`absolute top-2 left-2 p-2 rounded-lg z-10 transition-all ${
+                          className={`absolute top-2 left-2 p-2 rounded-lg z-10 transition-all border-2 border-gray-400 dark:border-gray-400 ${
                             selectedCars.some(c => c.id === car.id)
-                              ? 'bg-qatar-maroon text-white'
+                              ? 'bg-qatar-maroon text-white border-qatar-maroon '
                               : 'bg-white/80 hover:bg-qatar-maroon hover:text-white'
                           }`}
                         >
@@ -1284,7 +1280,7 @@ export default function CarsPage() {
                               <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="w-3 h-3 bg-white rounded-sm"
+                                className="w-4 h-4 bg-white rounded-sm"
                               />
                             )}
                           </div>

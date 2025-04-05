@@ -88,7 +88,7 @@ export default function PrivacyPolicyPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800" dir={dir}>
+    <div className="min-h-screen" dir={dir}>
       <div className="container mx-auto px-4 py-16 max-w-5xl">
         {/* Header */}
         <div className="mb-12 relative">
@@ -100,7 +100,7 @@ export default function PrivacyPolicyPage() {
             {t('common.backToHome')}
           </Link>
           
-          <div className="absolute top-0 right-0 opacity-10 dark:opacity-20">
+          <div className="absolute top-0 right-0">
             <ShieldCheckIcon className="h-24 w-24 text-qatar-maroon" />
           </div>
 

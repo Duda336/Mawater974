@@ -115,8 +115,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
           {/* Profile Header */}
           <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
@@ -269,16 +269,6 @@ export default function ProfilePage() {
                     />
                   </div>
                 )}
-
-                <div className="mt-6 flex justify-center">
-                  <Link
-                    href="/my-ads"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-qatar-maroon hover:bg-qatar-maroon-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
-                  >
-                    <CarIcon className="h-5 w-5 mr-2" />
-                    View My Car Listings
-                  </Link>
-                </div>
               </div>
             )}
           </div>

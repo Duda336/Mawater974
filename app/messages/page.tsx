@@ -192,7 +192,7 @@ export default function MessagesPage() {
           <div key={reply.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-qatar-maroon">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">{reply.name}</p>
+                <p className="text-sm font-medium">{reply.name}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{reply.email}</p>
               </div>
               <span className="text-xs text-gray-500 dark:text-gray-400">

@@ -15,6 +15,7 @@ import { faSearch, faCamera, faChartLine, faHeadset } from '@fortawesome/free-so
 import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountry } from '@/contexts/CountryContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type Car = Database['public']['Tables']['cars']['Row'];
 type Brand = Database['public']['Tables']['brands']['Row'];
@@ -313,13 +314,13 @@ export default function SellPage() {
     setStep('details');
   };
 
-    if (loading) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-screen">
-          <LoadingSpinner />
-        </div>
-      );
-    }
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   const renderBasicInfo = () => (
     <div className="space-y-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-xl rounded-xl p-6 md:p-10">

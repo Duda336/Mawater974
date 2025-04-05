@@ -7,9 +7,9 @@ export default function SpareParts() {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-2">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">{t('spareParts.title')}</h1>
+        <h1 className="text-4xl font-bold mb-8">{t('spareParts.title')}</h1>
         
         {/* Search Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-12">
@@ -18,11 +18,11 @@ export default function SpareParts() {
               type="text"
               placeholder={t('spareParts.search.placeholder')}
               className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 
-                         text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 
-                         focus:ring-qatar-maroon focus:border-transparent"
+                          placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 
+                          focus:ring-qatar-maroon focus:border-transparent"
             />
             <select className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 
-                             text-gray-900 dark:text-white focus:ring-2 focus:ring-qatar-maroon focus:border-transparent">
+                          focus:ring-2 focus:ring-qatar-maroon focus:border-transparent">
               <option value="">{t('spareParts.search.carMake')}</option>
             </select>
             <button className="bg-qatar-maroon text-white px-8 py-3 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
@@ -75,7 +75,7 @@ export default function SpareParts() {
               <div className="text-qatar-maroon mb-4">
                 {category.icon}
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">{t(category.title)}</h3>
+              <h3 className="text-xl font-semibold mb-2">{t(category.title)}</h3>
               <p className="text-gray-600 dark:text-gray-300">{t(category.desc)}</p>
             </div>
           ))}
@@ -84,7 +84,7 @@ export default function SpareParts() {
         {/* Coming Soon Section */}
         <section className="mt-12">
           <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-            <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">{t('spareParts.comingSoon.title')}</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('spareParts.comingSoon.title')}</h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6">{t('spareParts.comingSoon.desc')}</p>
           </div>
         </section>

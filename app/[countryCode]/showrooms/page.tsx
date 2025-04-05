@@ -133,7 +133,7 @@ export default function ShowroomsPage() {
   }
   
   return (
-  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div className="min-h-screen">
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-8">

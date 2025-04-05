@@ -241,7 +241,7 @@ export default function ShowroomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900"> 
+    <div className="min-h-screen"> 
       <div className="container mx-auto px-4 py-8 ">
         {/* Hero Section */}
         <div className="relative w-full h-64 md:h-80 lg:h-96 mb-8 rounded-lg overflow-hidden">
