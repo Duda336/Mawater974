@@ -95,7 +95,7 @@ export default function CarCard({
               {/* Favorite Button */}
               <button
                 onClick={handleFavoriteClick}
-                className={`absolute bottom-3 right-3 p-1.5 rounded-lg transition-all duration-200 border 
+                className={`absolute bottom-3 ltr:right-3 rtl:left-3  p-1.5 rounded-lg transition-all duration-200 border
                   ${isFavorite
                     ? 'bg-qatar-maroon/10 text-qatar-maroon border-qatar-maroon hover:bg-qatar-maroon hover:text-white'
                     : 'bg-transparent border-gray-200 dark:border-gray-600 text-gray-400 hover:border-qatar-maroon hover:text-qatar-maroon'
