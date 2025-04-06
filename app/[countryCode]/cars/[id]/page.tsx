@@ -29,6 +29,7 @@ import { CylinderIcon } from '@/components/icons/CylinderIcon';
 import { ConditionIcon } from '@/components/icons/ConditionIcon';
 import { MileageIcon } from '@/components/icons/MileageIcon';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import LoginPopup from '@/components/LoginPopup';
 
 export default function CarDetailsPage({ params: propParams }: { params?: { id: string } } = {}) {
   const params = useParams();
@@ -1466,6 +1467,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
           </div>
         </div>
       )}
+      <LoginPopup delay={5000} />
     </div>
   );
 }

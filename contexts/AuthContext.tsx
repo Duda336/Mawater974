@@ -35,6 +35,8 @@ interface AuthContextType {
   dealershipProfile: DealershipProfile | null;
   isDealer: boolean;
   isLoading: boolean;
+  signOutMessage: string | null;
+  setSignOutMessage: (message: string | null) => void;
   signIn: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -45,6 +47,8 @@ const AuthContext = createContext<AuthContextType>({
   dealershipProfile: null,
   isDealer: false,
   isLoading: true,
+  signOutMessage: null,
+  setSignOutMessage: () => {},
   signIn: async () => {},
   signOut: async () => {},
 });
@@ -55,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [dealershipProfile, setDealershipProfile] = useState<DealershipProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [signOutMessage, setSignOutMessage] = useState<string | null>(null);
 
   useEffect(() => {
     // Get initial session
@@ -183,6 +188,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dealershipProfile,
         isDealer: !!profile?.role && profile.role === 'dealer',
         isLoading,
+        signOutMessage,
+        setSignOutMessage,
         signIn,
         signOut,
       }}

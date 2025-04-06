@@ -98,14 +98,13 @@ export default function SellPage() {
     featured: [
       t('sell.features.featured.visibility'),
       t('sell.features.featured.photos'),
-      t('sell.features.featured.homepage'),
-      t('sell.features.featured.details'),
       t('sell.features.featured.search'),
-      t('sell.features.featured.social'),
+      t('sell.features.featured.details'),
       t('sell.features.featured.duration'),
       t('sell.features.featured.support'),
-      t('sell.features.featured.analytics'),
-      t('sell.features.featured.badge')
+      t('sell.features.featured.badge'),
+      t('sell.features.featured.social'),
+      t('sell.features.featured.analytics')
     ]
   }), [t]);
 
@@ -176,12 +175,16 @@ export default function SellPage() {
   const currentStepIndex = useMemo(() => {
     switch (currentStep) {
       case 'step1':
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return 0;
       case 'step2':
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return 1;
       case 'step3':
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return 2;
       case 'step4':
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return 3;
       default:
         return 0;
@@ -1139,12 +1142,16 @@ export default function SellPage() {
     if (validateStep()) {
       if (currentStep === 'plan-selection') {
         setCurrentStep('step1');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (currentStep === 'step3' && currentStepIndex < totalSteps - 1) {
         setCurrentStep('step4');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (currentStep === 'step2') {
         setCurrentStep('step3');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (currentStep === 'step1') {
         setCurrentStep('step2');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   };
@@ -1152,12 +1159,16 @@ export default function SellPage() {
   const handleBack = () => {
     if (currentStep === 'step4') {
       setCurrentStep('step3');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (currentStep === 'step3') {
       setCurrentStep('step2');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (currentStep === 'step2') {
       setCurrentStep('step1');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (currentStep === 'step1') {
       setCurrentStep('plan-selection');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -1196,6 +1207,7 @@ export default function SellPage() {
         country_id: currentCountry.id,
         city_id: formData.city_id,
         status: 'Pending',
+        is_featured: selectedPlan === 'featured'
       };
 
       // Only add currency_code if it exists in the database schema
@@ -1496,7 +1508,7 @@ export default function SellPage() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
         {/* Hero Section */}
-        <div className="relative bg-gradient-to-br from-qatar-maroon to-qatar-maroon/90 py-16 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-qatar-maroon to-qatar-maroon/90 py-14 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <svg 
@@ -1586,7 +1598,7 @@ export default function SellPage() {
         {/* Pricing Section */} 
         <div className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mt-12 space-y-4 sm:mt-16 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0">
+            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-6 lg:max-w-4xl lg:mx-auto xl:max-w-none xl:mx-0">
               {/* Free Plan */}
               <div className={`rounded-lg shadow-sm divide-y divide-gray-200 dark:divide-gray-700 ${
                 selectedPlan === 'free' 
@@ -1647,7 +1659,7 @@ export default function SellPage() {
                   </p>
                   <p className="mt-8">
                     <span className="text-4xl font-extrabold text-gray-900 dark:text-white">
-                      {t('sell.plan.featured.price')}
+                      {t(`sell.plan.featured.price.${currentCountry?.code?.toLowerCase() || '00'}`)} {t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}
                     </span>
                     <span className="text-base font-medium text-gray-500 dark:text-gray-400">
                       {t('sell.plan.featured.period')}
@@ -1713,17 +1725,17 @@ export default function SellPage() {
 
         {/* Progress Steps */}
         <div className="relative mb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
             <div className="relative">
               {/* Progress Bar Background */}
-              <div className="absolute top-4 left-0 w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-full" />
-              
+              <div className="absolute top-4 w-full h-1 bg-gray-200 dark:bg-gray-800 rounded-full" />
               {/* Active Progress Bar */}
               <div 
-                className="absolute top-4 left-0 h-1 bg-qatar-maroon rounded-full transition-all duration-500 ease-in-out"
+                className={`absolute top-4 ${currentLanguage === 'ar' ? 'right-0' : 'left-0'} h-1 bg-qatar-maroon rounded-full transition-all duration-500 ease-in-out`} 
                 style={{ 
                   width: `${((['plan-selection', 'step1', 'step2', 'step3', 'step4'].indexOf(currentStep)) / 4) * 100}%`,
-                  boxShadow: '0 0 10px rgba(158, 27, 52, 0.3)' 
+                  boxShadow: '0 0 10px rgba(158, 27, 52, 0.3)',
+                  transform: currentLanguage === 'ar' ? 'scaleX(-1)' : 'none'
                 }}
               />
 

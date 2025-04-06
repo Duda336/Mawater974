@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCarSide, faTag } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from '@/components/SearchBar';
 import { Dancing_Script } from 'next/font/google';
+import LoginPopup from '@/components/LoginPopup';
 
 const dancingScript = Dancing_Script({ subsets: ['latin'] });
 
@@ -189,6 +190,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      <LoginPopup />
     </div>
   );
 }

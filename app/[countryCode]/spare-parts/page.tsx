@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import LoginPopup from '@/components/LoginPopup';
 
 export default function SpareParts() {
   const { t } = useLanguage();
@@ -89,6 +90,7 @@ export default function SpareParts() {
           </div>
         </section>
       </div>
+      <LoginPopup delay={5000} />
     </div>
   );
 }

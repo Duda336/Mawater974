@@ -25,6 +25,7 @@ import { Slider } from '@/components/ui/slider';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import LoginPopup from '@/components/LoginPopup';
 
 type CarCondition = 'Good' | 'Excellent' | 'New' | 'Not Working';
 type BodyType = 'Sedan' | 'SUV' | 'Coupe' | 'Hatchback' | 'Wagon' | 'Van' | 'Truck' | 'Convertible' | 'Other';
@@ -1303,6 +1304,7 @@ export default function CarsPage() {
           )}
         </main>
       </div>
+      <LoginPopup delay={5000} />
     </div>
   );
 }

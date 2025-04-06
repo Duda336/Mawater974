@@ -12,7 +12,9 @@ import CarCard from '@/components/CarCard';
 import toast from 'react-hot-toast';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { useCountry } from '@/contexts/CountryContext'
+import { useCountry } from '@/contexts/CountryContext';
+import LoginPopup from '@/components/LoginPopup';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 type BusinessType = 'dealership' | 'service center' | 'spare parts dealership' | 'showroom';
 type DealershipType = 'Official' | 'Private';
@@ -239,7 +241,13 @@ export default function ShowroomPage() {
       </div>
     );
   }
-
+  if (loading) {
+    return (
+      <div className="flex col-span-full items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen"> 
       <div className="container mx-auto px-4 py-8 ">
@@ -417,6 +425,7 @@ export default function ShowroomPage() {
         </div>
       )}
     </div>
+    <LoginPopup delay={5000} />
   </div>
   );
 }

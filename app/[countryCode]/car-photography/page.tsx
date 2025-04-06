@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useCountry } from '@/contexts/CountryContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import LoginPopup from '@/components/LoginPopup';
 
 export default function CountrySpecificCarPhotographyPage() {
   const params = useParams();
@@ -184,6 +185,7 @@ export default function CountrySpecificCarPhotographyPage() {
           </div>
         </section>
       </div>
+      <LoginPopup delay={5000} />
     </div>
   );
 }

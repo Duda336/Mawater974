@@ -11,6 +11,7 @@ import { MagnifyingGlassIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { useCountry } from '@/contexts/CountryContext';
 import { City } from '@/types/supabase';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import LoginPopup from '@/components/LoginPopup';
 
 export default function ShowroomsPage() {
   const { t, language, currentLanguage } = useLanguage();
@@ -231,6 +232,7 @@ export default function ShowroomsPage() {
         onClose={() => setIsRegistrationModalOpen(false)}
       />
     </div>
+    <LoginPopup delay={5000} />
   </div>
   );
 }
