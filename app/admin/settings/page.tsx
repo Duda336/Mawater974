@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/lib/supabase';
-import AdminNavbar from '@/components/admin/AdminNavbar';
 import { toast } from 'react-hot-toast';
 import { Tab } from '@headlessui/react';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -188,7 +187,6 @@ export default function WebsiteSettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AdminNavbar />
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">

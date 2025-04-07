@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '../../../contexts/AuthContext';
-import AdminNavbar from '../../../components/admin/AdminNavbar';
 import { useRouter } from 'next/navigation';
 import { ChartBarIcon, GlobeAsiaAustraliaIcon, UsersIcon, ShoppingCartIcon, ArrowPathIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
@@ -306,7 +305,6 @@ export default function CountryAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <AdminNavbar />
       <main className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="sm:flex sm:items-center mb-8">

@@ -192,34 +192,31 @@ export default function DealershipRegistrationModal({
       if (existingData && existingData.length > 0 && existingData[0].status === 'rejected') {
         dealershipId = existingData[0].id;
         
-        // Find the selected city name for the location field
-        const selectedCity = cities.find(city => city.id.toString() === formData.city_id);
-        const cityName = selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name) : '';
-        
-        // Combine city name with additional location details
-        const combinedLocation = `${cityName}${formData.location ? `, ${formData.location}` : ''}`;
-        const combinedLocationAr = `${selectedCity?.name_ar || ''}${formData.location_ar ? `, ${formData.location_ar}` : ''}`;
+        // Just use the location field directly
+        const locationValue = formData.location;
+        const locationValueAr = formData.location_ar;
         
         const { error: updateError } = await supabase
-          .from('dealerships')
-          .update({
-            business_name: formData.business_name,
-            business_name_ar: formData.business_name_ar,
-            description: formData.description,
-            description_ar: formData.description_ar,
-            location: combinedLocation,
-            location_ar: combinedLocationAr,
-            dealership_type: formData.dealership_type,
-            business_type: formData.business_type,
-            country_id: formData.country_id,
-            logo_url: logoUrl,
-            status: 'pending',
-            reviewer_id: null,
-            review_notes: null,
-            reviewed_at: null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', dealershipId);
+        .from('dealerships')
+        .update({
+          business_name: formData.business_name,
+          business_name_ar: formData.business_name_ar,
+          description: formData.description,
+          description_ar: formData.description_ar,
+          location: locationValue,
+          location_ar: locationValueAr,
+          dealership_type: formData.dealership_type,
+          business_type: formData.business_type,
+          country_id: formData.country_id,
+          city_id: formData.city_id ? parseInt(formData.city_id) : null,
+          logo_url: logoUrl,
+          status: 'pending',
+          reviewer_id: null,
+          review_notes: null,
+          reviewed_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', dealershipId);
         
         if (updateError) {
           console.error('Error updating dealership request:', updateError);
@@ -227,13 +224,9 @@ export default function DealershipRegistrationModal({
         }
       } else {
         // Create a new dealership request
-        // Find the selected city name for the location field
-        const selectedCity = cities.find(city => city.id.toString() === formData.city_id);
-        const cityName = selectedCity ? (language === 'ar' ? selectedCity.name_ar : selectedCity.name) : '';
-        
-        // Combine city name with additional location details
-        const combinedLocation = `${cityName}${formData.location ? `, ${formData.location}` : ''}`;
-        const combinedLocationAr = `${selectedCity?.name_ar || ''}${formData.location_ar ? `, ${formData.location_ar}` : ''}`;
+        // Just use the location field directly
+        const locationValue = formData.location;
+        const locationValueAr = formData.location_ar;
         
         const { error: requestError } = await supabase
           .from('dealerships')
@@ -243,11 +236,12 @@ export default function DealershipRegistrationModal({
             business_name_ar: formData.business_name_ar,
             description: formData.description,
             description_ar: formData.description_ar,
-            location: combinedLocation,
-            location_ar: combinedLocationAr,
+            location: locationValue,
+            location_ar: locationValueAr,
             dealership_type: formData.dealership_type,
             business_type: formData.business_type,
             country_id: formData.country_id,
+            city_id: formData.city_id ? parseInt(formData.city_id) : null,
             logo_url: logoUrl,
             status: 'pending',
           });
@@ -459,14 +453,12 @@ export default function DealershipRegistrationModal({
                 </label>
                 <select
                   value={formData.city_id}
-                  name="city_id"
                   onChange={(e) => setFormData(prev => ({ ...prev, city_id: e.target.value }))}
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  required
                 >
                   <option value="">{t('dealership.selectCity')}</option>
-                  {cities.map(city => (
-                    <option key={city.id} value={city.id}>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id.toString()}>
                       {language === 'ar' ? city.name_ar : city.name}
                     </option>
                   ))}

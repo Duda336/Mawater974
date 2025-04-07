@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 import { Brand } from '../../../types/supabase';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 import PlaceholderCar from '../../../components/PlaceholderCar';
-import AdminNavbar from '../../../components/admin/AdminNavbar';
 
 export default function BrandsManagement() {
   const router = useRouter();
@@ -159,7 +158,6 @@ export default function BrandsManagement() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-gray-800">
-      <AdminNavbar />
       <div className="container mx-auto px-4 py-4">
         <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Manage Brands</h1>
 

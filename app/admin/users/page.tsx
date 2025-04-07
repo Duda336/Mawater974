@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { Profile } from '../../../types/supabase';
-import AdminNavbar from '../../../components/admin/AdminNavbar';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner from '../../../components/LoadingSpinner';
 
@@ -123,7 +122,6 @@ export default function AdminUsersPage() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-        <AdminNavbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center py-16">
             <p className="text-lg text-gray-600 dark:text-gray-400">Checking admin privileges...</p>
@@ -143,7 +141,6 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AdminNavbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">

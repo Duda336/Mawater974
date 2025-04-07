@@ -192,14 +192,14 @@ export default function ShowroomsPage() {
       </div>
 
       {/* Featured Showrooms */}
-      {filteredShowrooms.some(showroom => showroom.featured) && (
+      {filteredShowrooms.some(showroom => showroom.featured === true) && (
         <div className="mb-12">
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
             {t('showroom.featuredShowrooms')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredShowrooms
-              .filter(showroom => showroom.featured)
+              .filter(showroom => showroom.featured === true)
               .map((showroom) => (
                 <ShowroomCard key={showroom.id} showroom={showroom} />
               ))}
@@ -215,7 +215,7 @@ export default function ShowroomsPage() {
         {filteredShowrooms.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredShowrooms
-              .filter(showroom => !showroom.featured)
+              .filter(showroom => showroom.featured !== true)
               .map((showroom) => (
                 <ShowroomCard key={showroom.id} showroom={showroom} />
               ))}

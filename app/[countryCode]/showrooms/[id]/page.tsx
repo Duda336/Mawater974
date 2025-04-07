@@ -30,8 +30,10 @@ interface ShowroomRegistration {
   description_ar?: string;
   location: string;
   location_ar?: string;
+  city_id: number;
   status: string;
   user_id: string;
+  featured: boolean;
   created_at: string;
   updated_at: string;
   brands?: Array<{ id: number; name: string; name_ar?: string }>;
@@ -124,30 +126,30 @@ export default function ShowroomPage() {
     const fetchShowroomData = async () => {
       try {
         // Fetch showroom details from dealerships table
-        const { data: showroomData, error: showroomError } = await supabase
+        const { data: showroom } = await supabase
           .from('dealerships')
           .select(`
             *,
-            country:country_id(*)
+            country:country_id(*),
+            city:city_id(*)
           `)
           .eq('id', id)
-          .eq('status', 'approved')
           .single();
 
-        if (showroomError) throw showroomError;
-        setShowroom(showroomData);
+        if (!showroom) throw new Error('Showroom not found');
+        setShowroom(showroom);
 
         // Check if user is owner
-        if (user && showroomData) {
-          setIsOwner(user.id === showroomData.user_id);
+        if (user && showroom) {
+          setIsOwner(user.id === showroom.user_id);
         }
 
         // Fetch dealer profile information
-        if (showroomData?.user_id) {
+        if (showroom?.user_id) {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
-            .eq('id', showroomData.user_id)
+            .eq('id', showroom.user_id)
             .single();
 
           if (profileError) {
@@ -170,9 +172,9 @@ export default function ShowroomPage() {
             city:cities(id, name, name_ar),
             is_featured
           `)
-          .eq('user_id', showroomData.user_id)
+          .eq('user_id', showroom.user_id)
           .eq('status', 'Approved')
-          .eq('country_id', showroomData.country_id);
+          .eq('country_id', showroom.country_id);
 
         if (carError) {
           console.error('Error fetching car listings:', carError);
@@ -280,22 +282,9 @@ export default function ShowroomPage() {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
         <div className="absolute bottom-0 left-0 w-full p-6 text-white">
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-5xl font-bold mb-2">
             {language === 'ar' && showroom.business_name_ar ? showroom.business_name_ar : showroom.business_name}
           </h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <MapPinIcon className="h-5 w-5" />
-              <span>
-                {language === 'ar' && showroom.location_ar ? showroom.location_ar : showroom.location}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm">
-                {language === 'ar' && showroom.country?.name_ar ? showroom.country.name_ar : showroom.country?.name}
-              </span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -315,9 +304,13 @@ export default function ShowroomPage() {
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
             <MapPinIcon className="h-5 w-5" />
             <span>{t('showroom.address')}: {language === 'ar' && showroom.location_ar ? showroom.location_ar : showroom.location}</span>
-            <span className="text-sm text-gray-500">
-              ({language === 'ar' && showroom.country?.name_ar ? showroom.country.name_ar : showroom.country?.name})
-            </span>
+            {showroom.city && (
+              <span className="text-sm text-gray-500">
+                {language === 'ar' && showroom.city.name_ar ? showroom.city.name_ar : showroom.city.name},
+                {' '}
+                {language === 'ar' && showroom.country?.name_ar ? showroom.country.name_ar : showroom.country?.name}
+              </span>
+            )}
           </div>
           
           {dealerInfo?.phone_number && (

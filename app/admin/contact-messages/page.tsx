@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import AdminNavbar from '@/components/admin/AdminNavbar';
 
 export default function ContactMessagesPage() {
   const { t, dir } = useLanguage();
@@ -168,7 +167,6 @@ export default function ContactMessagesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-gray-800">
-      <AdminNavbar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
           {t('contact.messages.title')}

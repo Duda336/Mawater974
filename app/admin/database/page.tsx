@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
-import AdminNavbar from '../../../components/admin/AdminNavbar';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import DatabaseManager from '../../../components/admin/DatabaseManager';
@@ -158,7 +157,6 @@ export default function AdminDatabasePage() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AdminNavbar />
       <div className="py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="sm:flex sm:items-center">

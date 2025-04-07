@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase';
 import { Country, City } from '@/types/supabase';
 import CountryManager from '@/app/admin/locations/components/CountryManager';
 import CityManager from '@/app/admin/locations/components/CityManager';
-import AdminNavbar from '@/components/admin/AdminNavbar';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function LocationsManagementPage() {
@@ -160,8 +159,6 @@ export default function LocationsManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <AdminNavbar />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">

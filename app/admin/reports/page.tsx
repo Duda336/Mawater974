@@ -7,7 +7,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import AdminNavbar from '@/components/admin/AdminNavbar';
 import { format as formatDate } from 'date-fns';
 import Link from 'next/link';
 import { useCountry } from '@/contexts/CountryContext';
@@ -253,7 +252,6 @@ export default function ReportsManagement() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <AdminNavbar />
       <div className="container mx-auto py-10">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h1 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Manage Car Reports</h1>

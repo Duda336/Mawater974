@@ -16,7 +16,7 @@ export default function AdminNavbar() {
     { name: 'Dashboard', href: '/admin' },
     { name: 'Country Analytics', href: '/admin/country-analytics' },
     { name: 'Cars', href: '/admin/cars' },
-    { name: 'Dealership', href: '/admin/dealership-requests' },
+    { name: 'Dealerships', href: '/admin/dealership-requests' },
     { name: 'Users', href: '/admin/users' },
     { name: 'Database', href: '/admin/database' },
     { name: 'Brands', href: '/admin/brands' },

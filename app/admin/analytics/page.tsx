@@ -6,7 +6,6 @@ import Stats from '../../../components/admin/analytics/Stats';
 import EventsOverTime from '../../../components/admin/analytics/EventsOverTime';
 import EventDistribution from '../../../components/admin/analytics/EventDistribution';
 import { GA_EVENTS } from '../../../lib/analytics/config';
-import AdminNavbar from '../../../components/admin/AdminNavbar';
 
 export default function AnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
@@ -132,7 +131,6 @@ export default function AnalyticsDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <AdminNavbar />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
         <select
