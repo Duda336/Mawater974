@@ -3,22 +3,24 @@
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { useCountry } from '@/contexts/CountryContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 
 export default function MobileCategoryBar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useLanguage();
   const { currentCountry } = useCountry();
 
   const categories = [
-    { label: "Home", href: `/${currentCountry?.code.toLowerCase()}` },
-    { label: "Cars", href: `/${currentCountry?.code.toLowerCase()}/cars` },
-    { label: "Sell", href: `/${currentCountry?.code.toLowerCase()}/sell` },
-    { label: "Rentals", href: `/${currentCountry?.code.toLowerCase()}/rentals` },
-    { label: "Showrooms", href: `/${currentCountry?.code.toLowerCase()}/showrooms` },
-    { label: "Spare Parts", href: `/${currentCountry?.code.toLowerCase()}/spare-parts` },
-    { label: "Photography", href: `/${currentCountry?.code.toLowerCase()}/car-photography` },
+    { name: t('nav.home'), href: `/${currentCountry?.code.toLowerCase()}` },
+    { name: t('nav.browseCars'), href: `/${currentCountry?.code.toLowerCase()}/cars` },
+    { name: t('nav.sellYourCar'), href: `/${currentCountry?.code.toLowerCase()}/sell` },
+    { name: t('nav.showrooms'), href: `/${currentCountry?.code.toLowerCase()}/showrooms` },
+    { name: t('nav.carRental'), href: `/${currentCountry?.code.toLowerCase()}/car-rental` },
+    { name: t('nav.spareParts'), href: `/${currentCountry?.code.toLowerCase()}/spare-parts` },
+    { name: t('nav.carPhotography'), href: `/${currentCountry?.code.toLowerCase()}/car-photography` },
   ];
   return (
     <div className="w-full overflow-x-auto border-b bg-white dark:bg-gray-900 shadow-sm block sm:hidden">
@@ -30,11 +32,11 @@ export default function MobileCategoryBar() {
             className={clsx(
               "px-3 py-1 rounded-full border text-sm transition whitespace-nowrap",
               pathname === cat.href
-                ? "bg-white text-qatar-maroon border-qatar-maroon"
+                ? "bg-qatar-maroon dark:bg-qatar-maroon text-white dark:text-white border-qatar-maroon dark:border-qatar-maroon"
                 : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700"
             )}
           >
-            {cat.label}
+            {cat.name}
           </button>
         ))}
       </div>

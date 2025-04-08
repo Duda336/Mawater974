@@ -92,35 +92,37 @@ export default function HomePage() {
         {/* Content */}
         <div className="relative max-w-7xl mx-auto px-4 py-24">
           <div className="flex flex-col lg:flex-row items-center gap-12">
-                        {/* Text Content */}
-                        <div className={`flex-1 text-center lg:text-${language === 'ar' ? 'right' : 'left'} w-full`}>
-              <div className={`${language === 'ar' ? 'rtl' : 'ltr'}`}>
-                <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col">
-                  <span className={`${dancingScript.className} text-3xl lg:text-5xl text-secondary mb-3`}>Ride in Style</span>
-                  <span className="text-white inline-block">{t('home.hero.title1')}</span>
-                  <span className="text-primary inline-block mt-2">
+           {/* Text Content */}
+            <div className="flex-1 text-center w-full">
+              <div className={language === 'ar' ? 'rtl' : 'ltr'}>
+                <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col items-center">
+                  <span className={`${dancingScript.className} text-3xl lg:text-5xl text-secondary mb-3`}>
+                    Ride in Style
+                  </span>
+                  <span className="text-white">{t('home.hero.title1')}</span>
+                  <span className="text-primary mt-2">
                     {t('home.hero.title2', { 
                       country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
                     })}
                   </span>
                 </h1>
-                <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto lg:mr-0 lg:ml-0">
-                {t('home.hero.description', { 
+                <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+                  {t('home.hero.description', { 
                     country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
                   })}
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href={`/${currentCountry?.code.toLowerCase()}/cars`} className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
-                  <FontAwesomeIcon icon={faCarSide} className="mr-2" />
-                  {t('home.hero.browseCars')}
-                </Link>
-                <Link href={`/${currentCountry?.code.toLowerCase()}/sell`} className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
-                  <FontAwesomeIcon icon={faTag} className="mr-2" />
-                  {t('home.hero.sellYourCar')}
-                </Link>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link href={`/${currentCountry?.code.toLowerCase()}/cars`} className="px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-lg font-semibold">
+                    <FontAwesomeIcon icon={faCarSide} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                    {t('home.hero.browseCars')}
+                  </Link>
+                  <Link href={`/${currentCountry?.code.toLowerCase()}/sell`} className="px-8 py-4 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-lg font-semibold backdrop-blur-sm">
+                    <FontAwesomeIcon icon={faTag} className="mr-2 rtl:ml-2 rtl:mr-0" />
+                    {t('home.hero.sellYourCar')}
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
 
             {/* Stats */}
             <div className="flex-1">

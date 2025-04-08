@@ -112,6 +112,20 @@ const defaultCountries: Country[] = [
     is_active: true,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
+  },
+  {
+    id: 6,
+    code: 'EG',
+    name: 'Egypt',
+    name_ar: 'مصر',
+    currency_code: 'EGP',
+    currency_symbol: 'ج.م',
+    currency_name: 'Egyptian Pound',
+    currency_name_ar: 'جنيه مصري',
+    phone_code: '+20',
+    is_active: true,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()  
   }
 ];
 

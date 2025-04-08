@@ -193,6 +193,7 @@ const translations = {
     'currency.aed': 'AED',
     'currency.kwd': 'KWD',
     'currency.syp': 'SYP',
+    'currency.egp': 'EGP',
     // Car Details Page
     'car.details.back': 'Back to Cars',
     'car.details.cars': 'Cars',
@@ -418,7 +419,7 @@ const translations = {
     'sell.plan.featured.price.ae': '19',
     'sell.plan.featured.price.bh': '1.9',
     'sell.plan.featured.price.om': '1.9',
-    'sell.plan.featured.price.eg': '1900',
+    'sell.plan.featured.price.eg': '250',
     'sell.plan.featured.period': '/listing',
     'sell.plan.featured.select': 'Select Featured',
     'sell.plan.featured.includes': 'What\'s included',
@@ -1146,6 +1147,7 @@ const translations = {
     'common.currency.KWD': 'KWD',
     'common.currency.BHD': 'BHD',
     'common.currency.OMR': 'OMR',
+    'common.currency.EGP': 'EGP',
   },
   ar: {
     // Navigation
@@ -1325,6 +1327,8 @@ const translations = {
     'currency.aed': 'د.إ',
     'currency.kwd': 'د.ك',
     'currency.syp': 'ل.س',
+    'currency.egp': 'ج.م',
+  
     // Car Details Page
     'car.details.back': 'العودة إلى السيارات',
     'car.details.cars': 'السيارات',
@@ -1562,7 +1566,7 @@ const translations = {
     'sell.plan.featured.price.ae': '19',
     'sell.plan.featured.price.bh': '1.9',
     'sell.plan.featured.price.om': '1.9',
-    'sell.plan.featured.price.eg': '1900',
+    'sell.plan.featured.price.eg': '250',
     'sell.plan.featured.period': '/إعلان',
     'sell.plan.featured.select': 'اختر المميز',
     'sell.plan.featured.includes': 'المميزات المتضمنة',
@@ -2226,6 +2230,7 @@ const translations = {
     'common.currency.KWD': 'د.ك',
     'common.currency.BHD': 'د.ب',
     'common.currency.OMR': 'ر.ع',
+    'common.currency.EGP': 'ج.م',
   },
 };
 
