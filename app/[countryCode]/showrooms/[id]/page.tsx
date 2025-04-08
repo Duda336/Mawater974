@@ -125,8 +125,10 @@ export default function ShowroomPage() {
   useEffect(() => {
     const fetchShowroomData = async () => {
       try {
+        setLoading(true);
+        
         // Fetch showroom details from dealerships table
-        const { data: showroom } = await supabase
+        const { data: showroom, error: showroomError } = await supabase
           .from('dealerships')
           .select(`
             *,
@@ -135,15 +137,20 @@ export default function ShowroomPage() {
           `)
           .eq('id', id)
           .single();
-
-        if (!showroom) throw new Error('Showroom not found');
+  
+        if (showroomError || !showroom) {
+          console.error('Error fetching showroom:', showroomError);
+          setLoading(false);
+          return;
+        }
+        
         setShowroom(showroom);
-
+  
         // Check if user is owner
         if (user && showroom) {
           setIsOwner(user.id === showroom.user_id);
         }
-
+  
         // Fetch dealer profile information
         if (showroom?.user_id) {
           const { data: profileData, error: profileError } = await supabase
@@ -151,14 +158,14 @@ export default function ShowroomPage() {
             .select('*')
             .eq('id', showroom.user_id)
             .single();
-
+  
           if (profileError) {
             console.error('Error fetching dealer profile:', profileError);
           } else {
             setDealerInfo(profileData);
           }
         }
-
+  
         // Fetch car listings for this showroom
         const { data: carData, error: carError } = await supabase
           .from('cars')
@@ -175,7 +182,7 @@ export default function ShowroomPage() {
           .eq('user_id', showroom.user_id)
           .eq('status', 'Approved')
           .eq('country_id', showroom.country_id);
-
+  
         if (carError) {
           console.error('Error fetching car listings:', carError);
         } else {
@@ -199,13 +206,14 @@ export default function ShowroomPage() {
           }));
           setCarListings(processedCarData);
         }
-
+  
       } catch (error) {
         console.error('Error:', error);
       } finally {
         setLoading(false);
       }
     };
+    
     const fetchUserFavorites = async () => {
       if (!user) return;
       
@@ -229,6 +237,14 @@ export default function ShowroomPage() {
     }
   }, [id, supabase, user]);
 
+  if (loading) {
+    return (
+      <div className="flex col-span-full items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+  
   if (!showroom) {
     return (
       <div className="container mx-auto px-4 py-20">
@@ -236,17 +252,17 @@ export default function ShowroomPage() {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
             {t('showroom.notFound')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
             {t('showroom.notFoundDesc')}
           </p>
+          <Link 
+            href={`/${currentCountry?.code.toLowerCase()}/showrooms`}
+            className="inline-flex items-center px-6 py-3 bg-qatar-maroon text-white rounded-lg hover:bg-qatar-maroon-dark transition-colors"
+          >
+            <ArrowRightIcon className="h-5 w-5 mr-2 rtl:rotate-180" />
+            {t('showroom.backToShowrooms')}
+          </Link>
         </div>
-      </div>
-    );
-  }
-  if (loading) {
-    return (
-      <div className="flex col-span-full items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <LoadingSpinner />
       </div>
     );
   }

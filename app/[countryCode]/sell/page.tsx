@@ -144,6 +144,7 @@ export default function SellPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
 
+
   const steps = [
     { 
       id: 'plan-selection', 
@@ -1312,14 +1313,7 @@ export default function SellPage() {
 
       setIsSubmitted(true);
       toast.success(t('sell.messages.success'));
-      
-      // Redirect to the listings page after successful submission
-      if (currentCountry) {
-        router.push(`/${currentCountry.code.toLowerCase()}/cars`);
-      } else {
-        router.push(`/${currentCountry?.code.toLowerCase()}/`);
-      }
-    } catch (error: any) {
+      } catch (error: any) {
       console.error('Error in form submission:', error);
       setError(error.message || t('sell.messages.error'));
       toast.error(error.message || t('sell.messages.error'));
@@ -1328,6 +1322,7 @@ export default function SellPage() {
     }
   };
 
+  
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {

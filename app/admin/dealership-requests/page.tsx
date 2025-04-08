@@ -33,7 +33,7 @@ interface DealershipRequest {
     email: string;
     phone_number: string;
   };
-  is_featured: boolean;
+  featured: boolean;
   country_code: string;
 }
 
@@ -83,17 +83,18 @@ export default function DealershipRequestsPage() {
 
       if (error) throw error;
 
-      const requestsWithUserInfo = await Promise.all(
-        data.map(async (request) => {
-          const userInfo = await getUserInfo(request.user_id);
-          return {
-            ...request,
-            userInfo,
-            is_featured: request.is_featured || false,
-            country_code: currentCountry?.code || ''
-          } as DealershipRequest;
-        })
-      );
+    // In fetchRequests, make sure featured is properly set
+    const requestsWithUserInfo = await Promise.all(
+      data.map(async (request) => {
+        const userInfo = await getUserInfo(request.user_id);
+        return {
+          ...request,
+          userInfo,
+          featured: request.featured === true, // Ensure boolean conversion
+          country_code: currentCountry?.code || ''
+        } as DealershipRequest;
+      })
+    );
 
       setRequests(requestsWithUserInfo);
     } catch (error) {
@@ -126,7 +127,7 @@ export default function DealershipRequestsPage() {
                   {
                     ...payload.new,
                     userInfo,
-                    is_featured: payload.new.is_featured || false,
+                    featured: payload.new.featured || false,
                     country_code: payload.new.country_code || ''
                   } as DealershipRequest,
                   ...prev
@@ -140,7 +141,7 @@ export default function DealershipRequestsPage() {
                       ? {
                           ...req,
                           ...payload.new,
-                          is_featured: payload.new.is_featured || req.is_featured,
+                          featured: payload.new.featured || req.featured,
                           country_code: payload.new.country_code || req.country_code
                         } as DealershipRequest
                       : req
@@ -285,28 +286,38 @@ export default function DealershipRequestsPage() {
   };
 
   const handleToggleFeatured = async (request: DealershipRequest) => {
+    if (!request) return;
+    
     try {
       setIsSubmitting(true);
+      
+      // Log the current state for debugging
+      console.log('Current featured status:', request.featured);
+      console.log('Setting to:', !request.featured);
       
       const { error } = await supabase
         .from('dealerships')
         .update({
-          is_featured: !request.is_featured
+          featured: !request.featured
         })
         .eq('id', request.id);
-
+  
       if (error) throw error;
-
+  
       toast.success(
-        request.is_featured 
+        request.featured 
           ? t('admin.dealership.unfeaturedSuccess') 
           : t('admin.dealership.featuredSuccess')
       );
       
+      // Update local state
       setRequests(prev => 
-        prev.map(r => r.id === request.id ? { ...r, is_featured: !r.is_featured } : r)
+        prev.map(r => r.id === request.id ? { ...r, featured: !r.featured } : r)
       );
+      
+      // Reset UI state
       setIsFeaturedModalOpen(false);
+      setSelectedShowroom(null);
     } catch (error) {
       console.error('Error toggling featured status:', error);
       toast.error(t('admin.dealership.featuredError'));
@@ -398,14 +409,17 @@ export default function DealershipRequestsPage() {
                           <TrashIcon className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={() => setIsFeaturedModalOpen(true)}
+                          onClick={() => {
+                            setSelectedShowroom(request);
+                            setIsFeaturedModalOpen(true);
+                          }}
                           className="p-2 text-yellow-500 hover:text-yellow-700 transition-colors"
-                          title={request.is_featured ? t('admin.dealership.unfeature') : t('admin.dealership.feature')}
+                          title={request.featured ? t('admin.dealership.removeFeatured') : t('admin.dealership.setFeatured')}
                         >
-                          {request.is_featured ? (
-                            <StarIcon className="h-5 w-5" />
+                          {request.featured ? (
+                            <StarIcon className="h-5 w-5 fill-yellow-500" /> // Fill the star when featured
                           ) : (
-                            <StarIcon className="h-5 w-5" />
+                            <StarIcon className="h-5 w-5" /> // Outline only when not featured
                           )}
                         </button>
                         <button
@@ -706,31 +720,44 @@ export default function DealershipRequestsPage() {
           </div>
         )}
 
-        {/* Featured Request Modal */}
-        {isFeaturedModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                  {editingRequest?.is_featured ? t('admin.dealership.unfeatureConfirm') : t('admin.dealership.featureConfirm')}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  {editingRequest?.is_featured ? t('admin.dealership.unfeatureConfirmMessage') : t('admin.dealership.featureConfirmMessage')}
-                </p>
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={() => setIsFeaturedModalOpen(false)}
-                    className="px-6 py-2 bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    onClick={() => handleToggleFeatured(editingRequest)}
-                    className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-                  >
-                    {editingRequest?.is_featured ? t('admin.dealership.unfeature') : t('admin.dealership.feature')}
-                  </button>
-                </div>
+        {/* Featured confirmation modal */}
+        {isFeaturedModalOpen && selectedShowroom && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                {selectedShowroom.featured 
+                  ? t('admin.dealership.confirmUnfeature') 
+                  : t('admin.dealership.confirmFeature')}
+              </h3>
+              <p className="mb-6 text-gray-700 dark:text-gray-300">
+                {selectedShowroom.featured 
+                  ? t('admin.dealership.confirmUnfeatureDesc') 
+                  : t('admin.dealership.confirmFeatureDesc')}
+              </p>
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={() => {
+                    setIsFeaturedModalOpen(false);
+                    setSelectedShowroom(null);
+                  }}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  disabled={isSubmitting}
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={() => handleToggleFeatured(selectedShowroom)}
+                  className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <LoadingSpinner size="sm" />
+                  ) : selectedShowroom.featured ? (
+                    t('admin.dealership.removeFeatured')
+                  ) : (
+                    t('admin.dealership.setFeatured')
+                  )}
+                </button>
               </div>
             </div>
           </div>

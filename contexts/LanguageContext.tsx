@@ -770,6 +770,7 @@ const translations = {
     'showroom.notFound': 'Showroom Not Found',
     'showroom.notFoundDesc': 'The showroom you are looking for does not exist or has been removed',
     'showroom.aboutUs': 'About Us',
+    'showroom.backToShowrooms': 'Back to Showrooms',
     'dealership.registration': 'Dealership Registration',
     'dealership.businessName': 'Business Name',
     'dealership.description': 'Description',
@@ -898,6 +899,15 @@ const translations = {
     'admin.dealership.reject': 'Reject',
     'admin.dealership.approve': 'Approve',
     'admin.dealership.requests.title': 'Dealership Requests',
+    // Add these to your English translations
+    'admin.dealership.confirmFeature': 'Set as Featured',
+    'admin.dealership.confirmFeatureDesc': 'Are you sure you want to set this dealership as featured? Featured dealerships will appear prominently on the showrooms page.',
+    'admin.dealership.confirmUnfeature': 'Remove from Featured',
+    'admin.dealership.confirmUnfeatureDesc': 'Are you sure you want to remove this dealership from featured?',
+    'admin.dealership.removeFeatured': 'Remove Featured',
+    'admin.dealership.featuredSuccess': 'Dealership set as featured successfully',
+    'admin.dealership.unfeaturedSuccess': 'Dealership removed from featured successfully',
+    'admin.dealership.featuredError': 'Error changing featured status',
 
     // Privacy Policy
     'privacy.title': 'Privacy Policy',
@@ -1880,6 +1890,7 @@ const translations = {
     'showroom.viewAllCars': 'عرض جميع السيارات',
     'showroom.notFound': 'لا يوجد معرض',
     'showroom.notFoundDesc': 'المعرض الذي تبحث عنه غير موجود أو تم إزالتها.',
+    'showroom.backToShowrooms': 'العودة إلى المعارض',
     'dealership.registration': 'سجل معرضك',
     'dealership.businessName': 'اسم المعرض',
     'dealership.description': 'وصف المعرض',
@@ -2121,7 +2132,16 @@ const translations = {
     'admin.locations.addCity': 'إضافة مدينة',
     'admin.locations.selectCountry': 'اختر الدولة',
     'admin.locations.cityNameAr': 'اسم المدينة (العربية)',
-
+    // Add these to your Arabic translations
+    'admin.dealership.confirmFeature': 'تعيين كمميز',
+    'admin.dealership.confirmFeatureDesc': 'هل أنت متأكد أنك تريد تعيين هذا المعرض كمميز؟ ستظهر المعارض المميزة بشكل بارز في صفحة المعارض.',
+    'admin.dealership.confirmUnfeature': 'إزالة من المميز',
+    'admin.dealership.confirmUnfeatureDesc': 'هل أنت متأكد أنك تريد إزالة هذا المعرض من المميز؟',
+    'admin.dealership.setFeatured': 'تعيين كمميز',
+    'admin.dealership.removeFeatured': 'إزالة من المميز',
+    'admin.dealership.featuredSuccess': 'تم تعيين المعرض كمميز بنجاح',
+    'admin.dealership.unfeaturedSuccess': 'تمت إزالة المعرض من المميز بنجاح',
+    'admin.dealership.featuredError': 'خطأ في تغيير حالة المميز',
     // Footer
     'footer.tagline': 'القيادة بأناقة',
     'footer.quickLinks': 'روابط سريعة',

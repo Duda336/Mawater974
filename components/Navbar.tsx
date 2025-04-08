@@ -24,6 +24,7 @@ import { useCountry } from '../contexts/CountryContext';
 import CountrySelector from './CountrySelector';
 import Image from 'next/image';
 import { supabase } from '../lib/supabase';
+import MobileCategoryBar from './MobileCategoryBar';
 
 export default function Navbar() {
   const [mounted, setMounted] = useState(false);
@@ -497,6 +498,7 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+      <MobileCategoryBar />
     </nav>
   );
 }

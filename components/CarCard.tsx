@@ -129,7 +129,7 @@ export default function CarCard({
 
             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-2 flex-1 truncate">
-                <span dir="ltr">{car.mileage?.toLocaleString() || '0'} {t('car.mileage.unit')}</span>
+                <span>{car.mileage?.toLocaleString('en-US') || '0'} {t('car.mileage.unit')}</span>
                 <span>•</span>
                 <span>{t(`car.fuelType.${car.fuel_type?.toLowerCase()}`) || car.fuel_type}</span>
                 <span>•</span>
