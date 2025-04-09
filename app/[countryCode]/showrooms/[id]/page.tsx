@@ -39,6 +39,8 @@ interface ShowroomRegistration {
   brands?: Array<{ id: number; name: string; name_ar?: string }>;
   country_id: number;
   country: { id: number; name: string; name_ar?: string };
+  opening_hours: string;
+  opening_hours_ar?: string;
 }
 
 interface CarListingData {
@@ -349,52 +351,24 @@ export default function ShowroomPage() {
             </div>
           )}
 
-          {/* Business Type */}
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-            <span className="font-medium">{t('showroom.businessType')}: </span>
-            <span>
-              {showroom.business_type === 'dealership'
-                ? t('showroom.businessTypes.dealership')
-                : showroom.business_type === 'service center'
-                  ? t('showroom.businessTypes.service center')
-                  : showroom.business_type === 'spare parts dealership'
-                    ? t('showroom.businessTypes.spare parts dealership')
-                    : t('showroom.businessTypes.showroom')
-              }
-            </span>
-          </div>
-          
           {/* Dealership Type */}
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
             <span className="font-medium">{t('showroom.dealershipType')}: </span>
             <span>
-              {showroom.dealership_type === 'Private'
-                ? t('showroom.dealershipTypes.private')
-                : t('showroom.dealershipTypes.official')
-              }
+              {t(`showroom.dealershipTypes.${showroom.dealership_type}`)}
             </span>
           </div>
 
-          {/* Brands */}
-          {showroom.brands && showroom.brands.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <span className="font-medium text-gray-600 dark:text-gray-300">{t('showroom.brands')}:</span>
-              <div className="flex flex-wrap gap-2">
-                {showroom.brands.map((brand) => (
-                  <span 
-                    key={`brand-${brand.id}`} 
-                    className="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm text-gray-700 dark:text-gray-300"
-                  >
-                    {language === 'ar' && brand.name_ar ? brand.name_ar : brand.name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Opening Hours */}
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 ">
+            <span className="font-medium">{t('showroom.openingHours')}: </span>
+            <p className="text-gray-700 dark:text-gray-300">
+              {language === 'ar' ? showroom.opening_hours_ar || showroom.opening_hours : showroom.opening_hours}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Car Listings */}
       {showroom.business_type === 'showroom' ? (
         <div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
@@ -408,7 +382,7 @@ export default function ShowroomPage() {
             {carListings.length > 0 ? (
               carListings.map((car) => (
                 <CarCard 
-                  key={car.id} 
+                  key={`car-${car.id}`}
                   car={{
                     ...car,
                     featured: car.is_featured,

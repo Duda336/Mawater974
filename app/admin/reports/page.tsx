@@ -290,6 +290,10 @@ export default function ReportsManagement() {
               <option value="AE">UAE</option>
               <option value="KW">Kuwait</option>
               <option value="SY">Syria</option>
+              <option value="OM">Oman</option>
+              <option value="BH">Bahrain</option>
+              <option value="JO">Jordan</option>
+              <option value="EG">Egypt</option>
             </select>
           </div>
           

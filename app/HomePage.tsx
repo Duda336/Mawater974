@@ -106,7 +106,7 @@ export default function HomePage() {
                     })}
                   </span>
                 </h1>
-                <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+                <p className="text-xl text-center text-white/80 mb-8 max-w-2xl mx-auto">
                   {t('home.hero.description', { 
                     country: currentCountry ? (currentLanguage === 'ar' ? currentCountry.name_ar : currentCountry.name) : (currentLanguage === 'ar' ? 'قطر' : 'Qatar')
                   })}

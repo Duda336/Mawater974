@@ -15,6 +15,24 @@ interface DealershipRegistrationModalProps {
   onClose: () => void;
 }
 
+type DealershipType = 'Private' | 'Official' | '';
+type BusinessType = 'showroom' | 'service_center' | 'spare_parts_dealership' | '';
+
+interface FormData {
+  business_name: string;
+  business_name_ar: string;
+  description: string;
+  description_ar: string;
+  location: string;
+  location_ar: string;
+  dealership_type: DealershipType;
+  business_type: BusinessType;
+  country_id: number | null;
+  city_id: string;
+  opening_hours: string;
+  opening_hours_ar: string;
+}
+
 export default function DealershipRegistrationModal({
   isOpen,
   onClose,
@@ -28,17 +46,19 @@ export default function DealershipRegistrationModal({
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [cities, setCities] = useState<City[]>([]);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     business_name: '',
     business_name_ar: '',
     description: '',
     description_ar: '',
     location: '',
     location_ar: '',
-    dealership_type: '' as 'Official' | 'Private' | '',
-    business_type: '' as 'showroom' | 'service_center' | 'spare_parts_dealership' | '',
+    dealership_type: '',
+    business_type: '',
     country_id: currentCountry?.id || null,
     city_id: '',
+    opening_hours: '',
+    opening_hours_ar: '',
   });
 
   // Load cities based on selected country
@@ -103,6 +123,8 @@ export default function DealershipRegistrationModal({
             business_type: latestRequest.business_type || '',
             country_id: latestRequest.country_id || null,
             city_id: latestRequest.city_id || '',
+            opening_hours: latestRequest.opening_hours || '',
+            opening_hours_ar: latestRequest.opening_hours_ar || '',
           });
         }
       } else if (latestRequest.status === 'approved') {
@@ -209,6 +231,8 @@ export default function DealershipRegistrationModal({
           business_type: formData.business_type,
           country_id: formData.country_id,
           city_id: formData.city_id ? parseInt(formData.city_id) : null,
+          opening_hours: formData.opening_hours,
+          opening_hours_ar: formData.opening_hours_ar,
           logo_url: logoUrl,
           status: 'pending',
           reviewer_id: null,
@@ -242,6 +266,8 @@ export default function DealershipRegistrationModal({
             business_type: formData.business_type,
             country_id: formData.country_id,
             city_id: formData.city_id ? parseInt(formData.city_id) : null,
+            opening_hours: formData.opening_hours,
+            opening_hours_ar: formData.opening_hours_ar,
             logo_url: logoUrl,
             status: 'pending',
           });
@@ -292,6 +318,14 @@ export default function DealershipRegistrationModal({
   const handleRemoveLogo = () => {
     setLogo(null);
     setLogoPreview(null);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -366,60 +400,6 @@ export default function DealershipRegistrationModal({
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 h-24 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   dir="rtl"
                 />
-              </div>
-            </div>
-
-            {/* Logo */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('dealership.logo')}
-              </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
-                {logoPreview ? (
-                  <div className="relative">
-                    <Image
-                      src={logoPreview}
-                      alt="Logo preview"
-                      width={150}
-                      height={150}
-                      className="object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveLogo}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                    >
-                      <XMarkIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-1 text-center">
-                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
-                    <div className="flex text-sm text-gray-600 dark:text-gray-400">
-                      <label
-                        htmlFor="logo-upload"
-                        className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-qatar-maroon hover:text-qatar-maroon-dark focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-qatar-maroon"
-                      >
-                        <span>{t('dealership.uploadLogo')}</span>
-                        <input
-                          id="logo-upload"
-                          name="logo-upload"
-                          type="file"
-                          className="sr-only"
-                          accept="image/*"
-                          onChange={handleLogoChange}
-                        />
-                      </label>
-                      <p className="pl-1">{t('dealership.dragAndDrop')}</p>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('dealership.fileTypes')}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {t('dealership.maxFileSize')}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -504,13 +484,13 @@ export default function DealershipRegistrationModal({
                 <select
                   value={formData.dealership_type}
                   name="dealership_type"
-                  onChange={(e) => setFormData(prev => ({ ...prev, dealership_type: e.target.value as 'Official' | 'Private' | '' }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dealership_type: e.target.value as DealershipType }))}
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 >
                   <option value="">{t('dealership.selectDealershipType')}</option>
-                  <option value="private">{t('showroom.dealershipTypes.private')}</option>
-                  <option value="official">{t('showroom.dealershipTypes.official')}</option>
+                  <option value="Private">{t('showroom.dealershipTypes.private')}</option>
+                  <option value="Official">{t('showroom.dealershipTypes.official')}</option>
                 </select>
               </div>
               <div>
@@ -520,7 +500,7 @@ export default function DealershipRegistrationModal({
                 <select
                   value={formData.business_type}
                   name="business_type"
-                  onChange={(e) => setFormData(prev => ({ ...prev, business_type: e.target.value as 'showroom' | 'service_center' | 'spare_parts_dealership' | '' }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, business_type: e.target.value as BusinessType }))}
                   className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 >
@@ -529,6 +509,93 @@ export default function DealershipRegistrationModal({
                   <option value="service_center">{t('showroom.businessTypes.service center')}</option>
                   <option value="spare_parts_dealership">{t('showroom.businessTypes.spare parts dealership')}</option>
                 </select>
+              </div>
+            </div>
+
+            
+            {/* Opening Hours */}
+            <div className="mb-4">
+              <label htmlFor="opening_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('showroom.openingHours')}
+              </label>
+              <textarea
+                id="opening_hours"
+                name="opening_hours"
+                value={formData.opening_hours}
+                onChange={handleInputChange}
+                rows={3}
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="e.g., Monday-Friday: 9:00 AM - 6:00 PM\nSaturday: 10:00 AM - 2:00 PM\nSunday: Closed"
+              />
+            </div>
+
+            {/* Opening Hours (Arabic) */}
+            <div className="mb-4">
+              <label htmlFor="opening_hours_ar" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('showroom.openingHoursAr')}
+              </label>
+              <textarea
+                id="opening_hours_ar"
+                name="opening_hours_ar"
+                value={formData.opening_hours_ar}
+                onChange={handleInputChange}
+                rows={3}
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="مثلاً: الأحد-الخميس: 9:00 صباحاً - 6:00 مساءً\الجمعة: 10:00 صباحاً - 2:00 مساءً\السبت: مغلق"
+              />
+            </div>
+
+            {/* Logo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('dealership.logo')}
+              </label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                {logoPreview ? (
+                  <div className="relative">
+                    <Image
+                      src={logoPreview}
+                      alt="Logo preview"
+                      width={150}
+                      height={150}
+                      className="object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveLogo}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                    >
+                      <XMarkIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1 text-center">
+                    <PhotoIcon className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                      <label
+                        htmlFor="logo-upload"
+                        className="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-qatar-maroon hover:text-qatar-maroon-dark focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-qatar-maroon"
+                      >
+                        <span>{t('dealership.uploadLogo')}</span>
+                        <input
+                          id="logo-upload"
+                          name="logo-upload"
+                          type="file"
+                          className="sr-only"
+                          accept="image/*"
+                          onChange={handleLogoChange}
+                        />
+                      </label>
+                      <p className="pl-1">{t('dealership.dragAndDrop')}</p>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('dealership.fileTypes')}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('dealership.maxFileSize')}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

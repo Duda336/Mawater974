@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { Showroom } from '@/types/showroom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { MapPinIcon } from '@heroicons/react/24/solid';
+import { SparklesIcon } from '@heroicons/react/24/solid';
 import { useCountry } from '@/contexts/CountryContext';
+import { useSupabase } from '@/contexts/SupabaseContext';
 
 interface ShowroomCardProps {
   showroom: Showroom;
@@ -13,62 +15,62 @@ interface ShowroomCardProps {
 export default function ShowroomCard({ showroom }: ShowroomCardProps) {
   const { t, language } = useLanguage();
   const { currentCountry } = useCountry();
+  const { supabase } = useSupabase();
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:scale-105 transition-all duration-300 ${showroom.featured ? 'ring-2 ring-qatar-maroon' : ''}`}>
-      <div className="relative h-48">
-        {showroom.logo ? (
-          <Image
-            src={showroom.logo}
-            alt={language === 'ar' ? showroom.name_ar || showroom.name : showroom.name}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <span className="text-gray-400 dark:text-gray-500">
-              {t('showroom.noImage')}
-            </span>
-          </div>
-        )}
-        {showroom.featured && (
-          <div className="absolute top-2 right-2 bg-qatar-maroon text-white px-2 py-1 rounded-md text-xs font-semibold">
-            {t('showroom.featured')}
-          </div>
-        )}
-      </div>
-
-      <div className="p-4">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-          {language === 'ar' ? showroom.name_ar || showroom.name : showroom.name}
-        </h3>
-        
-        <div className="flex items-center mb-2">
-          <MapPinIcon className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-1" />
-          <span className="text-sm text-gray-600 dark:text-gray-300">
-            {t('showroom.location')} {language === 'ar' && showroom.location_ar ? showroom.location_ar : showroom.location}
-          </span>
+    <Link href={`/${currentCountry.code.toLowerCase()}/showrooms/${showroom.id}`} className="block">
+      <div className={`group relative bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-all duration-300 ${showroom.featured ? 'ring-2 ring-qatar-maroon' : ''}`}>
+        <div className="relative h-48">
+          {showroom.logo ? (
+            <Image
+              src={showroom.logo}
+              alt={language === 'ar' ? showroom.name_ar || showroom.name : showroom.name}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+              <div className="text-gray-400 dark:text-gray-500">
+                <MapPinIcon className="h-12 w-12 mb-2" />
+                <span className="text-sm">{t('showroom.noImage')}</span>
+              </div>
+            </div>
+          )}
+          {showroom.featured && (
+            <div className="absolute top-3 right-3 bg-qatar-maroon text-white px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
+              <span className="flex items-center">
+                <SparklesIcon className="h-4 w-4 mr-1" />
+                {t('showroom.featured')}
+              </span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center">
-            <span className="text-sm text-gray-600 dark:text-gray-300 capitalize">
-              {showroom.businessType && `${t(`showroom.businessTypes.${showroom.businessType.toLowerCase()}`)} • `}
-              {t(showroom.dealershipType === 'Official' ? 'showroom.dealershipTypes.official' : 'showroom.dealershipTypes.private')}
+        <div className="p-4">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2.5">
+            {language === 'ar' ? showroom.name_ar || showroom.name : showroom.name}
+          </h3>
+          
+          <div className="flex items-center mb-2.5">
+            <MapPinIcon className="h-5 w-5 text-qatar-maroon mr-2" />
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              {language === 'ar' ? showroom.location_ar || showroom.location : showroom.location}
             </span>
           </div>
+
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <span className="text-sm text-gray-600 dark:text-gray-300 capitalize">
+                {t(`showroom.dealershipTypes.${showroom.dealershipType}`)}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+            {language === 'ar' ? showroom.description_ar || showroom.description : showroom.description}
+          </p>
         </div>
-        
-        <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2 mb-4">
-          {language === 'ar' ? showroom.description_ar || showroom.description : showroom.description}
-        </p>
-        
-        <Link href={`/${currentCountry.code.toLowerCase()}/showrooms/${showroom.id}`} className="block w-full">
-          <button className="w-full bg-qatar-maroon text-white py-2 rounded-lg hover:bg-qatar-maroon/90 transition-colors">
-            {t('showroom.viewShowroom')}
-          </button>
-        </Link>
       </div>
-    </div>
+    </Link>
   );
 }

@@ -781,10 +781,10 @@ export default function CarsPage() {
                   {/* Compare Button */}
                   <button
                     onClick={handleCompareClick}
-                    className={`px-3 sm:px-6 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                    className={`px-3 sm:px-6 py-2 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 border border-gray-200 dark:border-gray-700/50 ${
                       compareMode
-                        ? 'bg-qatar-maroon text-white hover:bg-qatar-maroon/90 transform hover:scale-105'
-                        : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                        ? 'bg-qatar-maroon text-white hover:bg-qatar-maroon/90 transform '
+                        : 'bg-white dark:bg-gray-800/90 text-gray-900 dark:text-white hover:bg-gray-50 hover:border-qatar-maroon dark:hover:bg-gray-700/50'
                     }`}
                   >
                     <AdjustmentsHorizontalIcon className="h-5 w-5" />

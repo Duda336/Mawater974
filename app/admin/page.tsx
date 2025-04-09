@@ -127,7 +127,11 @@ export default function AdminDashboard() {
     { code: 'sa', name: 'Saudi Arabia' },
     { code: 'ae', name: 'UAE' },
     { code: 'kw', name: 'Kuwait' },
-    { code: 'sy', name: 'Syria' }
+    { code: 'sy', name: 'Syria' },
+    { code: 'om', name: 'Oman' },
+    { code: 'bh', name: 'Bahrain' },
+    { code: 'jo', name: 'Jordan' },
+    { code: 'eg', name: 'Egypt' }
   ]);
 
   const handleUpdateBrand = async (brand: any) => {
