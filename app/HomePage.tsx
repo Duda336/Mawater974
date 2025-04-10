@@ -1,24 +1,60 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
+import { createClient } from '@/utils/supabase/client';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
-import { useCountry } from '@/contexts/CountryContext';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCarSide, faTag } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faCarSide, faTag } from '@fortawesome/free-solid-svg-icons';
 import SearchBar from '@/components/SearchBar';
-import { Dancing_Script } from 'next/font/google';
+import { Poppins } from 'next/font/google';
 import LoginPopup from '@/components/LoginPopup';
+import { incrementHomePageView } from '@/lib/analytics/homepage-views';
 
-const dancingScript = Dancing_Script({ subsets: ['latin'] });
+const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
+  const supabase = createClient();
   const { signOutMessage, setSignOutMessage } = useAuth();
   const { t, language, currentLanguage } = useLanguage();
   const { currentCountry } = useCountry();
+
+  useEffect(() => {
+    const trackPageView = async () => {
+      if (currentCountry?.code) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          const response = await fetch('/api/analytics/homepage-view', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              countryCode: currentCountry.code,
+              userId: user?.id
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to track page view:', error);
+          } else {
+            const result = await response.json();
+            console.debug('View tracked:', result);
+          }
+        } catch (error) {
+          console.error('Failed to track page view:', error);
+        }
+      }
+    };
+
+    trackPageView();
+  }, [currentCountry?.code]);
 
   useEffect(() => {
     // Clear sign-out message after it's been shown
@@ -96,7 +132,7 @@ export default function HomePage() {
             <div className="flex-1 text-center w-full">
               <div className={language === 'ar' ? 'rtl' : 'ltr'}>
                 <h1 className="text-5xl lg:text-7xl font-bold mb-6 flex flex-col items-center">
-                  <span className={`${dancingScript.className} text-3xl lg:text-5xl text-secondary mb-3`}>
+                  <span className={`${poppins.className} text-3xl lg:text-5xl text-secondary mb-3`}>
                     Ride in Style
                   </span>
                   <span className="text-white">{t('home.hero.title1')}</span>

@@ -5,9 +5,17 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountry } from '@/contexts/CountryContext';
+import { useRouter } from 'next/navigation';
+import { GlobeAltIcon, ArrowRightOnRectangleIcon as LoginIcon } from '@heroicons/react/24/outline';
 
 interface LoginPopupProps {
   delay?: number; // Delay in milliseconds before showing popup
+}
+
+interface Country {
+  id: number;
+  name: string;
+  code: string;
 }
 
 export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
@@ -16,6 +24,16 @@ export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
   const { t } = useLanguage();
   const { currentCountry } = useCountry();
   const countryPrefix = currentCountry ? `/${currentCountry.code.toLowerCase()}` : '';
+  const router = useRouter();
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const countries = [
+    { id: 1, name: 'Qatar', code: 'QA' },
+    { id: 2, name: 'Saudi Arabia', code: 'SA' },
+    { id: 3, name: 'United Arab Emirates', code: 'AE' },
+    { id: 4, name: 'Kuwait', code: 'KW' },
+    { id: 5, name: 'Syria', code: 'SY' },
+    { id: 6, name: 'Egypt', code: 'EG' },
+  ];
 
   useEffect(() => {
     // Show popup after specified delay if user is not logged in
@@ -27,6 +45,18 @@ export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
 
     return () => clearTimeout(timer);
   }, [user, delay]);
+
+  // Handle country selection change
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const country = countries.find(c => c.id === parseInt(e.target.value));
+    if (country) {
+      setSelectedCountry(country);
+      // Redirect to homepage with country code
+      router.push(`/${country.code.toLowerCase()}`);
+      // Close the popup
+      setIsOpen(false);
+    }
+  };
 
   if (!isOpen || user) return null;
 
@@ -49,19 +79,43 @@ export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             {t('auth.popup.description')}
           </p>
-          <div className="flex flex-col space-y-4">
+          <div className="flex flex-col space-y-4 mb-6">
             <Link
-              href="/login"
+              href={`${countryPrefix}/login`}
               className="bg-qatar-maroon text-white px-6 py-3 rounded-lg font-semibold hover:bg-qatar-maroon-dark transition-colors"
             >
               {t('auth.login')}
             </Link>
             <Link
-              href="/signup"
+              href={`${countryPrefix}/signup`}
               className="bg-white text-qatar-maroon border-2 border-qatar-maroon px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
             >
               {t('auth.signup')}
             </Link>
+          </div>
+          
+          <div className="space-y-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="relative">
+              <select
+                value={selectedCountry?.id || ''}
+                onChange={handleCountryChange}
+                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-3 pr-10 appearance-none"
+              >
+                <option value="">{t('auth.selectCountry')}</option>
+                {countries.map((country) => (
+                  <option key={country.id} value={country.id}>
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {selectedCountry ? (
+                  <span className="text-sm">{selectedCountry.code}</span>
+                ) : (
+                  <GlobeAltIcon className="w-5 h-5 text-gray-400" />
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
