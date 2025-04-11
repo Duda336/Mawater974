@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
 
 export default function ResetPassword() {
   const { t, dir } = useLanguage();
