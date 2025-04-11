@@ -5,11 +5,14 @@ import { useParams } from 'next/navigation';
 import { useCountry } from '@/contexts/CountryContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LoginPopup from '@/components/LoginPopup';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 export default function CountrySpecificCarPhotographyPage() {
   const params = useParams();
-  const { countries, setCurrentCountry } = useCountry();
+  const { countries, setCurrentCountry, currentCountry } = useCountry();
   const { t } = useLanguage();
+  const { user } = useAuth();
   const countryCode = params.countryCode as string;
 
   useEffect(() => {
@@ -20,6 +23,35 @@ export default function CountrySpecificCarPhotographyPage() {
       }
     }
   }, [countryCode, countries, setCurrentCountry]);
+
+  useEffect(() => {
+    if (currentCountry?.code) {
+      const trackPageView = async () => {
+        try {
+          const response = await fetch('/api/analytics/page-view', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              countryCode: currentCountry.code,
+              userId: user?.id,
+              pageType: 'car-photography' // Change this to your page type
+            })
+          });
+  
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to track page view:', error);
+          }
+        } catch (error) {
+          console.error('Failed to track page view:', error);
+        }
+      };
+  
+      trackPageView();
+    }
+  }, [currentCountry?.code, user?.id]);
 
   return (
     <div className="min-h-screen">

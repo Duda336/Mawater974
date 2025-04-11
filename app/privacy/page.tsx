@@ -12,9 +12,12 @@ import {
   CogIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 export default function PrivacyPolicyPage() {
   const { t, dir } = useLanguage();
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<number | null>(null);
 
   const toggleSection = (index: number) => {
@@ -86,6 +89,33 @@ export default function PrivacyPolicyPage() {
       ]
     }
   ];
+
+  // Track page view
+   useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: '--', // Default to Qatar since this is a global page
+            userId: user?.id,
+            pageType: 'privacy'
+          })
+        });
+  
+        if (!response.ok) {
+          console.error('Failed to track page view:', await response.json());
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+  
+    trackPageView();
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen" dir={dir}>

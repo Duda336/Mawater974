@@ -29,20 +29,37 @@ export async function POST(request: Request) {
         }
 
         // First try direct insert into page_views
-        const { error: insertError } = await supabase
-            .from('page_views')
-            .upsert({
-                country_code: countryCode.toLowerCase(),
-                page_type: pageType,
-                view_count: 1,
-                last_viewed_at: new Date().toISOString()
-            }, {
-                onConflict: 'country_code,page_type',
-                ignoreDuplicates: false
-            });
+        try {
+            const { error: insertError } = await supabase
+                .from('page_views')
+                .upsert({
+                    country_code: countryCode.toLowerCase(),
+                    page_type: pageType,
+                    last_viewed_at: new Date().toISOString()
+                }, {
+                    onConflict: 'country_code,page_type',
+                    ignoreDuplicates: false
+                });
 
-        if (insertError) {
-            console.error('Error inserting view:', insertError);
+            if (insertError) {
+                console.error('Error inserting view:', insertError);
+            }
+
+            // Increment view count using SQL increment
+            const { error: updateError } = await supabase
+                .from('page_views')
+                .update({
+                    view_count: { sql: 'view_count + 1' },
+                    last_viewed_at: new Date().toISOString()
+                })
+                .eq('country_code', countryCode.toLowerCase())
+                .eq('page_type', pageType);
+
+            if (updateError) {
+                console.error('Error updating view count:', updateError);
+            }
+        } catch (error) {
+            console.error('Error in page view tracking:', error);
         }
 
         // Then record the detailed user view

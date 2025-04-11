@@ -3,9 +3,39 @@
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LoginPopup from '@/components/LoginPopup';
+import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
 
 export default function SpareParts() {
   const { t } = useLanguage();
+  const { user } = useAuth();
+
+  // Track page view
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: '--', // Default to Qatar since this is a global page
+            userId: user?.id,
+            pageType: 'spareParts'
+          })
+        });
+  
+        if (!response.ok) {
+          console.error('Failed to track page view:', await response.json());
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+  
+    trackPageView();
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen">

@@ -318,6 +318,36 @@ export default function SellPage() {
     setStep('details');
   };
 
+  // Add this useEffect after your data fetching effects
+useEffect(() => {
+  if (currentCountry?.code) {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: currentCountry.code,
+            userId: user?.id,
+            pageType: 'sell' // Change this to your page type
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Failed to track page view:', error);
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+
+    trackPageView();
+  }
+}, [currentCountry?.code, user?.id]);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">

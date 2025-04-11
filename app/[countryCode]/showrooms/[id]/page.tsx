@@ -31,6 +31,7 @@ interface ShowroomRegistration {
   location: string;
   location_ar?: string;
   city_id: number;
+  city?: { id: number; name: string; name_ar?: string };
   status: string;
   user_id: string;
   featured: boolean;
@@ -76,7 +77,7 @@ export default function ShowroomPage() {
   const [isOwner, setIsOwner] = useState(false);
   const [dealerInfo, setDealerInfo] = useState<any>(null);
   const { currentCountry } = useCountry();
-  const [featured, setFeatured] = useState<CarWithLocation[]>([]);
+  const [featured, setFeatured] = useState<CarListingData[]>([]);
   const handleFavoriteToggle = async (carId: number) => {
     if (!user) {
       toast.error(t('car.favorite.login'));
@@ -233,11 +234,44 @@ export default function ShowroomPage() {
       }
     };
   
-    if (id) {
+    if (currentCountry) {
       fetchShowroomData();
-      fetchUserFavorites();
+      if (user) {
+        fetchUserFavorites();
+      }
     }
-  }, [id, supabase, user]);
+  }, [currentCountry]);
+
+  // Track page view when component mounts
+  useEffect(() => {
+    if (currentCountry?.code && showroom) {
+      const trackPageView = async () => {
+        try {
+          const response = await fetch('/api/analytics/page-view', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              countryCode: currentCountry.code,
+              userId: user?.id,
+              pageType: 'showroom-detail',
+              entityId: showroom.id.toString()
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to track page view:', error);
+          }
+        } catch (error) {
+          console.error('Failed to track page view:', error);
+        }
+      };
+
+      trackPageView();
+    }
+  }, [currentCountry?.code, showroom, user?.id]);
 
   if (loading) {
     return (

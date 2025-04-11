@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { Database } from '../../types/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { Database } from '@/types/supabase';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
@@ -106,6 +106,32 @@ export default function ProfilePage() {
     }
   };
 
+  // Track page view
+ useEffect(() => {
+  const trackPageView = async () => {
+    try {
+      const response = await fetch('/api/analytics/page-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          countryCode: '--', // Default to Qatar since this is a global page
+          userId: user?.id,
+          pageType: 'profile'
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to track page view:', await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to track page view:', error);
+    }
+  };
+
+  trackPageView();
+}, [user?.id]);
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">

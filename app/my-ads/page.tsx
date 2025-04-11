@@ -301,7 +301,32 @@ export default function MyAdsPage() {
       console.error('Error marking notification as read:', error);
     }
   };
+// Track page view
+useEffect(() => {
+  const trackPageView = async () => {
+    try {
+      const response = await fetch('/api/analytics/page-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          countryCode: '--', // Default to Qatar since this is a global page
+          userId: user?.id,
+          pageType: 'my-ads'
+        })
+      });
 
+      if (!response.ok) {
+        console.error('Failed to track page view:', await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to track page view:', error);
+    }
+  };
+
+  trackPageView();
+}, [user?.id]);
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">

@@ -110,6 +110,7 @@ export default function DealerDashboard() {
     return formatter.format(price);
   }
 
+
   useEffect(() => {
     // Wait for both auth and country to be initialized
     if (authLoading || countryLoading) return;
@@ -300,6 +301,33 @@ export default function DealerDashboard() {
       
     }
   };
+
+  // Track page view
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: '--', // Default to Qatar since this is a global page
+            userId: user?.id,
+            pageType: 'dealer-dashboard'
+          })
+        });
+
+        if (!response.ok) {
+          console.error('Failed to track page view:', await response.json());
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+
+    trackPageView();
+  }, [user?.id]);
 
   const filteredListings = selectedStatus === 'all' 
     ? carListings 

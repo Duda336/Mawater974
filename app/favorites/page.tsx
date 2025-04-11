@@ -19,7 +19,6 @@ export default function FavoritesPage() {
   const { currentCountry } = useCountry();
   const [favorites, setFavorites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
   const { t } = useLanguage();
   const countryCode = params.countryCode as string;
 
@@ -99,6 +98,34 @@ export default function FavoritesPage() {
       toast.error(t('favorites.error.remove'));
     }
   };
+
+ // Track page view
+ useEffect(() => {
+  const trackPageView = async () => {
+    try {
+      const response = await fetch('/api/analytics/page-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          countryCode: '--', // Default to Qatar since this is a global page
+          userId: user?.id,
+          pageType: 'favorites'
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to track page view:', await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to track page view:', error);
+    }
+  };
+
+  trackPageView();
+}, [user?.id]);
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">

@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { signOutMessage, setSignOutMessage } = useAuth();
   const router = useRouter();
+  const { user } = useAuth();
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -132,6 +133,33 @@ export default function LoginPage() {
       setRememberMe(true);
     }
   }, []);
+
+  // Track page view
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: '--', // Default to Qatar since this is a global page
+            userId: user?.id,
+            pageType: 'login'
+          })
+        });
+  
+        if (!response.ok) {
+          console.error('Failed to track page view:', await response.json());
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+  
+    trackPageView();
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

@@ -11,9 +11,11 @@ import PhoneInput from '../../components/PhoneInput';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useCountry } from '../../contexts/CountryContext';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignUp() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -165,6 +167,33 @@ export default function SignUp() {
       setLoading(false);
     }
   };
+
+  // Track page view
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: '--', // Default to Qatar since this is a global page
+            userId: user?.id,
+            pageType: 'signup'
+          })
+        });
+  
+        if (!response.ok) {
+          console.error('Failed to track page view:', await response.json());
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+  
+    trackPageView();
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
@@ -8,9 +8,12 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { EnvelopeIcon, PhoneIcon, MapPinIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ContactPage() {
   const { t, dir } = useLanguage();
+  const { user } = useAuth();
+
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -63,6 +66,33 @@ export default function ContactPage() {
       setLoading(false);
     }
   };
+  
+ // Track page view
+ useEffect(() => {
+  const trackPageView = async () => {
+    try {
+      const response = await fetch('/api/analytics/page-view', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          countryCode: '--', // Default to Qatar since this is a global page
+          userId: user?.id,
+          pageType: 'contact'
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to track page view:', await response.json());
+      }
+    } catch (error) {
+      console.error('Failed to track page view:', error);
+    }
+  };
+
+  trackPageView();
+}, [user?.id]);
   
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8" dir={dir}>

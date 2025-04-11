@@ -94,6 +94,42 @@ export default function ShowroomsPage() {
 
   useEffect(() => {
     if (currentCountry) {
+      fetchShowrooms();
+    }
+  }, [currentCountry]);
+
+  // Track page view when component mounts
+  useEffect(() => {
+    if (currentCountry?.code) {
+      const trackPageView = async () => {
+        try {
+          const response = await fetch('/api/analytics/page-view', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              countryCode: currentCountry.code,
+              userId: user?.id,
+              pageType: 'showrooms'
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to track page view:', error);
+          }
+        } catch (error) {
+          console.error('Failed to track page view:', error);
+        }
+      };
+
+      trackPageView();
+    }
+  }, [currentCountry?.code, user?.id]);
+
+  useEffect(() => {
+    if (currentCountry) {
       setShowrooms([]); // Clear existing showrooms
       setSelectedLocation(''); // Reset location filter
       fetchShowrooms();
@@ -107,6 +143,36 @@ export default function ShowroomsPage() {
       setCities(countryCities);
     }
   }, [currentCountry, getCitiesByCountry]);
+
+  // Track page view when component mounts
+  useEffect(() => {
+    if (currentCountry?.code) {
+      const trackPageView = async () => {
+        try {
+          const response = await fetch('/api/analytics/page-view', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              countryCode: currentCountry.code,
+              userId: user?.id,
+              pageType: 'showrooms'
+            })
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to track page view:', error);
+          }
+        } catch (error) {
+          console.error('Failed to track page view:', error);
+        }
+      };
+
+      trackPageView();
+    }
+  }, [currentCountry?.code, user?.id]);
 
   const filteredShowrooms = showrooms.filter(showroom => {
     const searchText = searchQuery.toLowerCase();

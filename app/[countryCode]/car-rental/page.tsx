@@ -1,16 +1,19 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useEffect } from 'react';
 import { useCountry } from '@/contexts/CountryContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LoginPopup from '@/components/LoginPopup';
+import { useAuth } from '@/contexts/AuthContext';
+import { useParams } from 'next/navigation';
 
 export default function CountrySpecificCarRentalPage() {
-  const params = useParams();
-  const { countries, setCurrentCountry } = useCountry();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const { currentCountry, setCurrentCountry } = useCountry();
+  const params = useParams();
   const countryCode = params.countryCode as string;
+  const { countries } = useCountry();
 
   useEffect(() => {
     if (countryCode && countries.length > 0) {
@@ -20,6 +23,35 @@ export default function CountrySpecificCarRentalPage() {
       }
     }
   }, [countryCode, countries, setCurrentCountry]);
+
+  useEffect(() => {
+    if (currentCountry?.code) {
+      const trackPageView = async () => {
+        try {
+          const response = await fetch('/api/analytics/page-view', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              countryCode: currentCountry.code,
+              userId: user?.id,
+              pageType: 'car-rental' // Change this to your page type
+            })
+          });
+  
+          if (!response.ok) {
+            const error = await response.json();
+            console.error('Failed to track page view:', error);
+          }
+        } catch (error) {
+          console.error('Failed to track page view:', error);
+        }
+      };
+  
+      trackPageView();
+    }
+  }, [currentCountry?.code, user?.id]);
 
   return (
     <div className="min-h-screen">

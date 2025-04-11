@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   ArrowLeftIcon, 
   ChevronDownIcon, 
@@ -11,8 +13,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function TermsAndConditionsPage() {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState<number | null>(null);
-
   const toggleSection = (index: number) => {
     setActiveSection(activeSection === index ? null : index);
   };
@@ -67,6 +69,33 @@ export default function TermsAndConditionsPage() {
     'All disputes are governed by the laws of Qatar and shall be resolved through appropriate legal channels.',
     'Mawater974 reserves the right to suspend or terminate user accounts for violations of these terms.'
   ];
+
+  // Track page view
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: '--', // Default to Qatar since this is a global page
+            userId: user?.id,
+            pageType: 'terms'
+          })
+        });
+  
+        if (!response.ok) {
+          console.error('Failed to track page view:', await response.json());
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+  
+    trackPageView();
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen">
