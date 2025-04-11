@@ -225,13 +225,13 @@ export default function Navbar() {
 
               {/* Theme Toggle */}
               <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 className="p-2 text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon"
               >
-                {theme === 'dark' ? (
-                  <SunIcon className="h-5 w-5" />
-                ) : (
+                {theme === 'light' ? (
                   <MoonIcon className="h-5 w-5" />
+                ) : (
+                  <SunIcon className="h-5 w-5" />
                 )}
               </button>
 

@@ -364,6 +364,41 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
   }, [carId]);
   
 
+  useEffect(() => {
+    if (car) {
+      setLoading(false);
+    }
+  }, [car]);
+
+  // Track page view when component mounts
+  useEffect(() => {
+    const trackPageView = async () => {
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: params.countryCode,
+            userId: user?.id,
+            pageType: 'car-detail',
+            entityId: params.id
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Failed to track page view:', error);
+        }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
+      }
+    };
+
+    trackPageView();
+  }, [params.countryCode, params.id, user?.id]);
+
   // Check if car is in favorites when component mounts or user changes
   useEffect(() => {
     const checkFavoriteStatus = async () => {
@@ -826,9 +861,8 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                 <div className="mt-2 flex items-center space-x-4 rtl:space-x-reverse mb-4">
                   <p className="text-2xl font-bold text-qatar-maroon" 
                   dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
-                    {car.price.toLocaleString('en-US')}
-                    {' '}
-                    {t(`common.currency.${carCountry?.currency_code || 'QAR'}`)}
+                    {car.price.toLocaleString('en-US')} {t(`common.currency.${car.country?.currency_code || 'QAR'}`)}
+
                   </p>
                 </div>
               </div>
@@ -1295,9 +1329,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                           {currentLanguage === 'ar' && similarCar.brand?.name_ar ? similarCar.brand.name_ar : similarCar.brand.name} {currentLanguage === 'ar' && similarCar.model?.name_ar ? similarCar.model.name_ar : similarCar.model.name} {similarCar.year}
                         </h3>
                         <p className="text-qatar-maroon font-bold mt-1">
-                          {similarCar.price.toLocaleString('en-US')}
-                          {' '}
-                          {t(`common.currency.${similarCar.country?.currency_code || 'QAR'}`)}
+                          {similarCar.price.toLocaleString('en-US')} {t(`common.currency.${similarCar.country?.currency_code || 'QAR'}`)}
                         </p>
                         <button
                           onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/cars/${similarCar.id}`)}
@@ -1337,9 +1369,7 @@ export default function CarDetailsPage({ params: propParams }: { params?: { id: 
                           {currentLanguage === 'ar' && similarCar.brand?.name_ar ? similarCar.brand.name_ar : similarCar.brand.name} {currentLanguage === 'ar' && similarCar.model?.name_ar ? similarCar.model.name_ar : similarCar.model.name} {similarCar.year}
                         </h3>
                         <p className="text-qatar-maroon font-bold mt-1">
-                          {similarCar.price.toLocaleString('en-US')}
-                          {' '}
-                          {t(`common.currency.${similarCar.country?.currency_code || 'QAR'}`)}
+                          {similarCar.price.toLocaleString('en -US')} {t(`common.currency.${similarCar.country?.currency_code || 'QAR'}`)}
                         </p>
                         <button
                           onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/cars/${similarCar.id}`)}

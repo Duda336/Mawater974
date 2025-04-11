@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
-import { createClient } from '@/utils/supabase/client';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -19,37 +18,31 @@ const poppins = Poppins({ subsets: ['latin'], weight: ['400', '500', '600', '700
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-  const { signOutMessage, setSignOutMessage } = useAuth();
+  const { signOutMessage, setSignOutMessage, user } = useAuth();
   const { t, language, currentLanguage } = useLanguage();
   const { currentCountry } = useCountry();
 
   useEffect(() => {
     const trackPageView = async () => {
-      if (currentCountry?.code) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          const response = await fetch('/api/analytics/homepage-view', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              countryCode: currentCountry.code,
-              userId: user?.id
-            })
-          });
+      try {
+        const response = await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: currentCountry?.code,
+            userId: user?.id,
+            pageType: 'home'
+          })
+        });
 
-          if (!response.ok) {
-            const error = await response.json();
-            console.error('Failed to track page view:', error);
-          } else {
-            const result = await response.json();
-            console.debug('View tracked:', result);
-          }
-        } catch (error) {
+        if (!response.ok) {
+          const error = await response.json();
           console.error('Failed to track page view:', error);
         }
+      } catch (error) {
+        console.error('Failed to track page view:', error);
       }
     };
 
