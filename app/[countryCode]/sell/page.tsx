@@ -357,7 +357,7 @@ useEffect(() => {
   }
 
   const renderBasicInfo = () => (
-    <div className="space-y-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-xl rounded-xl p-6 md:p-10">
+    <div>
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
           {t('sell.basic.title')}
@@ -516,7 +516,7 @@ useEffect(() => {
   );
 
   const renderCarDetails = () => (
-    <div className="space-y-6 bg-white dark:bg-gray-800 shadow-lg dark:shadow-xl rounded-xl p-6 md:p-10">
+    <div>
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
           {t('sell.details.title')}
@@ -805,12 +805,12 @@ useEffect(() => {
     };
 
     return (
-      <div className="space-y-6 bg-[#1e2530] rounded-xl p-6 md:p-10">
+      <div className="space-y-6">
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             {t('sell.images.title')}
           </h2>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             {t('sell.images.subtitle')}
           </p>
         </div>
@@ -1021,7 +1021,7 @@ useEffect(() => {
     ];
 
     return (
-      <div className="space-y-8 bg-white dark:bg-gray-800 shadow-lg dark:shadow-xl rounded-xl p-6 md:p-10">
+      <div>
         {/* Preview Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -1807,7 +1807,7 @@ useEffect(() => {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl overflow-hidden">
             <form onSubmit={handleSubmit} className="p-8">
               {/* Form Content */}
               <div className="space-y-8">
