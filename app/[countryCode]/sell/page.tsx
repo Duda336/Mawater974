@@ -411,9 +411,9 @@ useEffect(() => {
               onChange={(e) => handleInputChange(e)}
               required
               disabled={!formData.brand}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out 
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none 
                          disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">{t('sell.basic.model.select')}</option>
@@ -768,9 +768,9 @@ useEffect(() => {
               value={formData.description}
               onChange={(e) => handleInputChange(e)}
               placeholder={t('sell.details.description.placeholder')}
-              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out"
             />
           </div>
         </div>
