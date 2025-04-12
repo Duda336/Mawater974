@@ -383,9 +383,9 @@ useEffect(() => {
               value={formData.brand}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.basic.brand.select')}</option>
               {brands.map(brand => (
@@ -441,9 +441,9 @@ useEffect(() => {
               value={formData.exact_model}
               onChange={(e) => handleInputChange(e)}
               placeholder={t('sell.basic.exactModel.placeholder') || 'Specify exact model (e.g., 320i, Camry SE)'}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             />
           </div>
 
@@ -461,9 +461,9 @@ useEffect(() => {
               value={formData.year}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.basic.year.select')}</option>
               {years.map(year => (
@@ -546,9 +546,9 @@ useEffect(() => {
               min="0"
               max="9999999"
               placeholder={t('sell.details.mileage.placeholder')}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             />
           </div>
 
@@ -566,9 +566,9 @@ useEffect(() => {
               value={formData.fuel_type}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.details.fuelType.select')}</option>
               {fuelTypes.map(type => (
@@ -593,9 +593,9 @@ useEffect(() => {
               value={formData.gearbox_type}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.details.gearboxType.select')}</option>
               {gearboxTypes.map(type => (
@@ -620,9 +620,9 @@ useEffect(() => {
               value={formData.body_type}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.details.bodyType.select')}</option>
               {bodyTypes.map(type => (
@@ -647,9 +647,9 @@ useEffect(() => {
               value={formData.condition}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.details.condition.select')}</option>
               {conditions.map(condition => (
@@ -674,9 +674,9 @@ useEffect(() => {
               value={formData.color}
               onChange={(e) => handleInputChange(e)}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.details.color.select')}</option>
               {colors.map(color => (
@@ -700,9 +700,9 @@ useEffect(() => {
               name="cylinders"
               value={formData.cylinders}
               onChange={(e) => handleInputChange(e)}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('sell.details.cylinders.select')}</option>
               {cylinderOptions.map(cyl => (
@@ -740,9 +740,9 @@ useEffect(() => {
                 }
               }}
               required
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             >
               <option value="">{t('common.location.select')}</option>
               {cities.map(city => (
@@ -768,9 +768,9 @@ useEffect(() => {
               value={formData.description}
               onChange={(e) => handleInputChange(e)}
               placeholder={t('sell.details.description.placeholder')}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
+              className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
-                         focus:border-qatar-maroon transition duration-200 ease-in-out"
+                         focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             />
           </div>
         </div>
