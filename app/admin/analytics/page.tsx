@@ -54,6 +54,70 @@ function detectDevice(userAgent: string | undefined): string {
   return 'desktop';
 }
 
+function exportToCSV(data: any[], filename: string) {
+  // Convert data to CSV format
+  const headers = Object.keys(data[0]);
+  const csvContent = [
+    headers.join(','), // Header row
+    ...data.map(row => 
+      headers.map(header => {
+        const cell = row[header];
+        // Handle cells that might contain commas or quotes
+        if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+          return `"${cell.replace(/"/g, '""')}"`;
+        }
+        return cell;
+      }).join(',')
+    )
+  ].join('\n');
+
+  // Create blob and download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function exportPageViews() {
+  const { data: pageViews, error } = await supabase
+    .from('page_views')
+    .select('*')
+    .order('last_viewed_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching page views:', error);
+    return;
+  }
+
+  if (pageViews) {
+    exportToCSV(pageViews, 'page-views.csv');
+  }
+}
+
+async function exportUserPageViews() {
+  const { data: userPageViews, error } = await supabase
+    .from('user_page_views')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching user page views:', error);
+    return;
+  }
+
+  if (userPageViews) {
+    exportToCSV(userPageViews, 'user-page-views.csv');
+  }
+}
+
 function calculateRetention(views: UserPageView[], now: Date) {
   const msPerDay = 24 * 60 * 60 * 1000;
   const sessions = views.reduce((acc, view) => {
@@ -583,6 +647,20 @@ export default function AnalyticsDashboard() {
       {/* Recent Activity */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
         <h3 className="text-lg font-semibold mb-4 dark:text-white">{t('admin.analytics.recentActivity')}</h3>
+        <div className="flex justify-end mb-4 space-x-4">
+          <button
+            onClick={() => exportPageViews()}
+            className="px-4 py-2 text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon-dark rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+          >
+            {t('admin.analytics.exportPageViews')}
+          </button>
+          <button
+            onClick={() => exportUserPageViews()}
+            className="px-4 py-2 text-sm font-medium text-white bg-qatar-maroon hover:bg-qatar-maroon-dark rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon"
+          >
+            {t('admin.analytics.exportUserPageViews')}
+          </button>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>

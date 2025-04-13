@@ -37,9 +37,13 @@ export default function CountrySelector() {
         <div className="relative">
           <Listbox.Button className="relative w-full cursor-pointer rounded-md bg-white dark:bg-gray-800 py-2 pl-3 pr-10 text-left shadow-sm border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-gray-900 dark:text-white">
             <div className="flex items-center">
-              <span className="block truncate font-medium">
-                {language === 'ar' ? currentCountry.name_ar : currentCountry.name}
-              </span>
+              <Image
+                src={`/flags/${currentCountry.code.toLowerCase()}.svg`}
+                alt={`${currentCountry.name} flag`}
+                width={24}
+                height={16}
+                className="rounded-sm"
+              />
             </div>
             <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronDownIcon
@@ -54,7 +58,7 @@ export default function CountrySelector() {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-34 overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-48 overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
               {countries.map((country) => (
                 <Listbox.Option
                   key={country.id}
@@ -67,7 +71,14 @@ export default function CountrySelector() {
                 >
                   {({ selected }) => (
                     <>
-                      <div className="flex items-center">
+                      <div className="flex items-center gap-2">
+                        <Image
+                          src={`/flags/${country.code.toLowerCase()}.svg`}
+                          alt={`${country.name} flag`}
+                          width={24}
+                          height={16}
+                          className="rounded-sm"
+                        />
                         <span
                           className={`block truncate ${
                             selected ? 'font-medium' : 'font-normal'

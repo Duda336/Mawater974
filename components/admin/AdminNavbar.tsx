@@ -14,6 +14,7 @@ export default function AdminNavbar() {
 
   const navItems = [
     { name: 'Dashboard', href: '/admin' },
+    { name: 'Analytics', href: '/admin/analytics' },
     { name: 'Country Analytics', href: '/admin/country-analytics' },
     { name: 'Cars', href: '/admin/cars' },
     { name: 'Dealerships', href: '/admin/dealership-requests' },

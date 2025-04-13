@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountry } from '@/contexts/CountryContext';
 import { useRouter } from 'next/navigation';
-import { GlobeAltIcon, ArrowRightOnRectangleIcon as LoginIcon } from '@heroicons/react/24/outline';
+import { GlobeAltIcon } from '@heroicons/react/24/outline';
+import { Listbox } from '@headlessui/react';
+import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import { Fragment } from 'react';
+import { Transition } from '@headlessui/react';
 
 interface LoginPopupProps {
   delay?: number; // Delay in milliseconds before showing popup
@@ -15,24 +20,26 @@ interface LoginPopupProps {
 interface Country {
   id: number;
   name: string;
+  name_ar: string;
   code: string;
+  flag: string;
 }
 
 export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { currentCountry } = useCountry();
   const countryPrefix = currentCountry ? `/${currentCountry.code.toLowerCase()}` : '';
   const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const countries = [
-    { id: 1, name: 'Qatar', code: 'QA' },
-    { id: 2, name: 'Saudi Arabia', code: 'SA' },
-    { id: 3, name: 'United Arab Emirates', code: 'AE' },
-    { id: 4, name: 'Kuwait', code: 'KW' },
-    { id: 5, name: 'Syria', code: 'SY' },
-    { id: 6, name: 'Egypt', code: 'EG' },
+    { id: 1, name: 'Kuwait', name_ar: 'الكويت', code: 'KW', flag: '/flags/kw.svg' },
+    { id: 2, name: 'Qatar', name_ar: 'قطر', code: 'QA', flag: '/flags/qa.svg' },
+    { id: 3, name: 'United Arab Emirates', name_ar: 'الإمارات العربية المتحدة', code: 'AE', flag: '/flags/ae.svg' },
+    { id: 4, name: 'Saudi Arabia', name_ar: 'المملكة العربية السعودية', code: 'SA', flag: '/flags/sa.svg' },
+    { id: 5, name: 'Syria', name_ar: 'سوريا', code: 'SY', flag: '/flags/sy.svg' },
+    { id: 6, name: 'Egypt', name_ar: 'مصر', code: 'EG', flag: '/flags/eg.svg' },
   ];
 
   useEffect(() => {
@@ -47,15 +54,12 @@ export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
   }, [user, delay]);
 
   // Handle country selection change
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const country = countries.find(c => c.id === parseInt(e.target.value));
-    if (country) {
-      setSelectedCountry(country);
-      // Redirect to homepage with country code
-      router.push(`/${country.code.toLowerCase()}`);
-      // Close the popup
-      setIsOpen(false);
-    }
+  const handleCountryChange = (country: Country) => {
+    setSelectedCountry(country);
+    // Redirect to homepage with country code
+    router.push(`/${country.code.toLowerCase()}`);
+    // Close the popup
+    setIsOpen(false);
   };
 
   if (!isOpen || user) return null;
@@ -95,27 +99,60 @@ export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
           </div>
           
           <div className="space-y-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <div className="relative">
-              <select
-                value={selectedCountry?.id || ''}
-                onChange={handleCountryChange}
-                className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white p-3 pr-10 appearance-none"
-              >
-                <option value="">{t('auth.selectCountry')}</option>
-                {countries.map((country) => (
-                  <option key={country.id} value={country.id}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                {selectedCountry ? (
-                  <span className="text-sm">{selectedCountry.code}</span>
-                ) : (
-                  <GlobeAltIcon className="w-5 h-5 text-gray-400" />
-                )}
-              </div>
-            </div>
+            <Listbox value={selectedCountry} onChange={handleCountryChange}>
+              {({ open }) => (
+                <>
+                  <Listbox.Button className="relative w-full cursor-default rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 pl-3 pr-10 text-left focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                    <span className="block truncate">
+                      {selectedCountry ? selectedCountry.name : t('auth.selectCountry')}
+                    </span>
+                    <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                      <ChevronDownIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" aria-hidden="true" />
+                    </span>
+                  </Listbox.Button>
+                  <Transition
+                    show={open}
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <Listbox.Options className="absolute z-2 mt-1 max-h-40 w-60 overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                      {countries.map((country) => (
+                        <Listbox.Option
+                          key={country.id}
+                          className={({ active }) =>
+                            `relative cursor-pointer select-none py-2 pl-2 pr-2 ${
+                              active ? 'bg-primary/10 text-primary dark:bg-primary/20' : 'text-gray-900 dark:text-white'
+                            }`
+                          }
+                          value={country}
+                        >
+                          {({ selected }) => (
+                            <div className="flex items-center gap-2">
+                              <Image
+                                src={country.flag}
+                                alt={`${country.name} flag`}
+                                width={24}
+                                height={16}
+                                className="rounded-sm"
+                              />
+                              <span
+                                className={`block truncate ${
+                                  selected ? 'font-medium' : 'font-normal'
+                                }`}
+                              >
+                                {language === 'ar' ? country.name_ar : country.name}
+                              </span>
+                            </div>
+                          )}
+                        </Listbox.Option>
+                      ))}
+                    </Listbox.Options>
+                  </Transition>
+                </>
+              )}
+            </Listbox>
           </div>
         </div>
       </div>
