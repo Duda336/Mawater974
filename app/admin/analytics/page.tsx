@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UAParser } from 'ua-parser-js';
 
 interface PageView {
   view_count: number;
@@ -44,9 +43,15 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'
 
 function detectDevice(userAgent: string | undefined): string {
   if (!userAgent) return 'unknown';
-  const parser = new UAParser(userAgent);
-  const device = parser.getDevice().type || 'desktop';
-  return device.toLowerCase();
+  
+  // Simple device detection using user agent
+  if (/mobile|android|iphone|ipad/i.test(userAgent)) {
+    return 'mobile';
+  }
+  if (/tablet/i.test(userAgent)) {
+    return 'tablet';
+  }
+  return 'desktop';
 }
 
 function calculateRetention(views: UserPageView[], now: Date) {
