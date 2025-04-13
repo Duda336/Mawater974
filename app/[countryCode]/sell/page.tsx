@@ -126,6 +126,8 @@ export default function SellPage() {
     fuel_type: '',
     gearbox_type: '',
     body_type: '',
+    cylinders: '',
+    location: '',
     condition: '',
     color: '',
   });
@@ -281,6 +283,8 @@ export default function SellPage() {
         fuel_type: data.fuel_type,
         gearbox_type: data.gearbox_type,
         body_type: data.body_type,
+        cylinders: data.cylinders,
+        location: data.location,
         condition: data.condition,
         color: data.color,
       });
@@ -483,11 +487,6 @@ useEffect(() => {
               {t('sell.basic.price')} ({currentCountry?.currency_code || 'QAR'}) *
             </label>
             <div className="relative">
-              {currentLanguage === 'en' && (
-                <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400">
-                  {t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}
-                </span>
-              )}
               <input
                 type="text"
                 id="price"
@@ -503,31 +502,9 @@ useEffect(() => {
                            shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 focus:border-qatar-maroon 
                            transition duration-200 ease-in-out`}
               />
-              {currentLanguage === 'ar' && (
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 dark:text-gray-400">
-                  {t(`common.currency.${currentCountry?.currency_code || 'QAR'}`)}
-                </span>
-              )}
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  );
 
-  const renderCarDetails = () => (
-    <div>
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-          {t('sell.details.title')}
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          {t('sell.details.subtitle')}
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Mileage */}
           <div>
             <label 
@@ -551,7 +528,24 @@ useEffect(() => {
                          focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
             />
           </div>
+        </div>
+      </div>
+    </div>
+  );
 
+  const renderCarDetails = () => (
+    <div>
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          {t('sell.details.title')}
+        </h2>
+        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          {t('sell.details.subtitle')}
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Fuel Type */}
           <div>
             <label 
@@ -699,6 +693,7 @@ useEffect(() => {
               id="cylinders"
               name="cylinders"
               value={formData.cylinders}
+              required
               onChange={(e) => handleInputChange(e)}
               className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
@@ -727,19 +722,36 @@ useEffect(() => {
               id="location"
               name="location"
               value={formData.city_id?.toString() || ''}
+              required
               onChange={(e) => {
                 const cityId = parseInt(e.target.value);
                 const selectedCity = cities.find(city => city.id === cityId);
                 if (selectedCity) {
-                  setFormData({
-                    ...formData,
-                    location: selectedCity.name,
-                    city_id: selectedCity.id,
-                    country_id: currentCountry?.id || null
-                  });
+                  setFormData(prev => ({
+                    ...prev,
+                    city_id: cityId,
+                    location: selectedCity.name
+                  }));
+                  
+                  // Remove error styling when a city is selected
+                  const field = e.target;
+                  field.classList.remove('border-red-500', 'dark:border-red-500', 'focus:ring-red-500', 'dark:ring-red-500');
+                  const errorMessage = field.parentElement?.querySelector('.text-red-500');
+                  if (errorMessage) {
+                    errorMessage.remove();
+                  }
+                } else {
+                  // Add error styling when no city is selected
+                  const field = e.target;
+                  field.classList.add('border-red-500', 'dark:border-red-500', 'focus:ring-red-500', 'dark:ring-red-500');
+                  if (!field.parentElement?.querySelector('.text-red-500')) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'text-red-500 text-sm mt-1';
+                    errorDiv.textContent = t('common.required') || 'This field is required';
+                    field.parentElement?.appendChild(errorDiv);
+                  }
                 }
               }}
-              required
               className="w-full h-[42px] px-3 sm:px-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
                          text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-qatar-maroon/50 
                          focus:border-qatar-maroon transition duration-200 ease-in-out text-sm sm:text-base appearance-none"
@@ -766,6 +778,7 @@ useEffect(() => {
               name="description"
               rows={4}
               value={formData.description}
+              required
               onChange={(e) => handleInputChange(e)}
               placeholder={t('sell.details.description.placeholder')}
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 
@@ -1099,7 +1112,7 @@ useEffect(() => {
         </div>
 
         {/* Confirmation Checkbox */}
-        <div className="mt-6">
+        <div className="mt-6 mb-4">
           <div className="flex items-start">
             <div className="flex items-center h-5">
               <input
@@ -1149,14 +1162,16 @@ useEffect(() => {
       case 'plan-selection':
         return selectedPlan !== null;
       case 'step1':
-        return formData.brand && formData.model && formData.year && formData.price;
+        return formData.brand && formData.model && formData.year && formData.price && formData.mileage;
       case 'step2':
         return (
-          formData.mileage &&
           formData.fuel_type &&
           formData.gearbox_type &&
           formData.body_type &&
           formData.condition &&
+          formData.color &&
+          formData.cylinders &&
+          formData.description &&
           formData.location
         );
       case 'step3':
@@ -1169,7 +1184,68 @@ useEffect(() => {
     }
   };
 
+  // Function to show validation errors
+  const showValidationErrors = () => {
+    const currentForm = document.querySelector('form');
+    if (currentForm) {
+      const requiredFields = currentForm.querySelectorAll('[required]');
+      let hasEmptyFields = false;
+      let firstEmptyField: HTMLElement | null = null;
+
+      requiredFields.forEach((field: Element) => {
+        if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement) {
+          if (!field.value) {
+            hasEmptyFields = true;
+            field.classList.add('border-red-500', 'dark:border-red-500', 'focus:ring-red-500', 'dark:ring-red-500');
+            if (!firstEmptyField) firstEmptyField = field;
+
+            // Remove any existing error message
+            const existingError = field.parentElement?.querySelector('.text-red-500');
+            if (existingError) {
+              existingError.remove();
+            }
+
+            // Add error message below the field
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'text-red-500 text-sm mt-1';
+            errorDiv.textContent = t('common.required') || 'This field is required';
+            field.parentElement?.appendChild(errorDiv);
+          } else {
+            // Remove error styling and message if field is filled
+            field.classList.remove('border-red-500', 'dark:border-red-500', 'focus:ring-red-500', 'dark:ring-red-500');
+            const errorMessage = field.parentElement?.querySelector('.text-red-500');
+            if (errorMessage) {
+              errorMessage.remove();
+            }
+          }
+        }
+      });
+
+      return { hasEmptyFields, firstEmptyField };
+    }
+    return { hasEmptyFields: false, firstEmptyField: null };
+  };
+
+  // Update error messages when language changes
+  useEffect(() => {
+    const currentForm = document.querySelector('form');
+    if (currentForm) {
+      const errorMessages = currentForm.querySelectorAll('.text-red-500');
+      errorMessages.forEach(message => {
+        if (message instanceof HTMLElement) {
+          message.textContent = t('common.required') || 'This field is required';
+        }
+      });
+    }
+  }, [currentLanguage, t]);
+
   const handleNext = async () => {
+    const { hasEmptyFields, firstEmptyField } = showValidationErrors();
+    if (hasEmptyFields) {
+      firstEmptyField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     if (validateStep()) {
       if (currentStep === 'plan-selection') {
         setCurrentStep('step1');
@@ -1357,6 +1433,30 @@ useEffect(() => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    const field = e.target;
+    
+    // Handle real-time validation
+    if (field.hasAttribute('required')) {
+      if (value) {
+        // Field is filled - remove error styling
+        field.classList.remove('border-red-500', 'dark:border-red-500', 'focus:ring-red-500', 'dark:ring-red-500');
+        const errorMessage = field.parentElement?.querySelector('.text-red-500');
+        if (errorMessage) {
+          errorMessage.remove();
+        }
+      } else {
+        // Field is empty - add error styling
+        field.classList.add('border-red-500', 'dark:border-red-500', 'focus:ring-red-500', 'dark:ring-red-500');
+        
+        // Only add error message if it doesn't exist
+        if (!field.parentElement?.querySelector('.text-red-500')) {
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'text-red-500 text-sm mt-1';
+          errorDiv.textContent = t('common.required') || 'This field is required';
+          field.parentElement?.appendChild(errorDiv);
+        }
+      }
+    }
     
     setFormData(prev => {
       const updatedData = { ...prev, [name]: value };
