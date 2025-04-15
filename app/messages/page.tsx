@@ -26,25 +26,33 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [expandedMessage, setExpandedMessage] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const countryCode = params.countryCode as string;
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    fetchNotifications();
-  }, [user, countryCode]);
+    const loadNotifications = async () => {
+      // Wait for authentication to complete
+      if (isAuthLoading) return;
+      
+      // Redirect to login if no user
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      await fetchNotifications();
+    };
+    loadNotifications();
+  }, [user, countryCode, isAuthLoading]);
 
   const fetchNotifications = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push('/auth/login');
+        router.push('/login');
         return;
       }
 
@@ -230,43 +238,41 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
-          <div className="p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 py-4 sm:py-12">
+      <div className="container mx-auto px-2 sm:px-4">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <div className="p-3 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {t('messages.title')}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {t(`messages.total${notifications.length === 1 ? '' : '_plural'}`, { count: notifications.length })}
-                </p>
+              <div className="w-full sm:w-auto">
+                <div className="flex items-center justify-between sm:block">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                    {t('messages.title')}
+                  </h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 sm:mt-1">
+                    {t(`messages.total${notifications.length === 1 ? '' : '_plural'}`, { count: notifications.length })}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3 sm:items-center">
                 <select
                   value={filter}
-                  onChange={(e) => {
-                    setFilter(e.target.value as 'all' | 'unread' | 'read');
-                    fetchNotifications();
-                  }}
-                  className="rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-qatar-maroon focus:ring-qatar-maroon"
+                  onChange={(e) => setFilter(e.target.value as 'all' | 'unread' | 'read')}
+                  className="w-full sm:w-auto rounded-md border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm focus:ring-qatar-maroon focus:border-qatar-maroon dark:bg-gray-700 py-2 px-3"
                 >
-                  <option value="all">{t('messages.filter.all')}</option>
-                  <option value="unread">{t('messages.filter.unread')}</option>
-                  <option value="read">{t('messages.filter.read')}</option>
+                  <option value="all">{t('messages.filters.all')}</option>
+                  <option value="unread">{t('messages.filters.unread')}</option>
+                  <option value="read">{t('messages.filters.read')}</option>
                 </select>
                 {notifications.some(n => !n.is_read) && (
                   <button
                     onClick={markAllAsRead}
-                    className="px-4 py-2 bg-qatar-maroon text-white text-sm rounded-md hover:bg-qatar-maroon/90 transition-colors"
+                    className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-qatar-maroon rounded-md hover:bg-qatar-maroon/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-qatar-maroon transition-colors"
                   >
                     {t('messages.markAllRead')}
                   </button>
                 )}
               </div>
             </div>
-
             {loading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-qatar-maroon"></div>
@@ -275,87 +281,63 @@ export default function MessagesPage() {
               <div className="text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400">
                   {filter !== 'all' 
-                    ? t('messages.noMessagesFiltered', { filter: t(`messages.filter.${filter}`) })
+                    ? t('messages.noMessagesFiltered', { filter: t(`messages.filters.${filter}`) })
                     : t('messages.noMessages')}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-4 rounded-lg border transition-all hover:shadow-sm ${
-                      notification.is_read
-                        ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                        : 'bg-qatar-maroon/5 border-qatar-maroon'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <span className="text-2xl flex-shrink-0">
-                          {getNotificationIcon(notification.type)}
-                        </span>
-                        <div>
-                          {notification.isNotification ? (
-                            <>
-                              <h3 className="font-semibold text-gray-900 dark:text-white">
-                                {notification.title}
-                              </h3>
-                              <p className="text-gray-600 dark:text-gray-300 mt-1">
-                                {notification.message}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <div className="flex justify-between items-start">
-                                <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
-                                  {expandedMessage === notification.id 
-                                    ? notification.message 
-                                    : getMessagePreview(notification.message)
-                                  }
-                                </p>
-                                <button
-                                  onClick={() => setExpandedMessage(
-                                    expandedMessage === notification.id ? null : notification.id
-                                  )}
-                                  className="ml-4 text-sm text-qatar-maroon hover:text-qatar-maroon-dark"
-                                >
-                                  {expandedMessage === notification.id
-                                    ? t('contact.messages.actions.colapse')
-                                    : t('contact.messages.actions.expand')
-                                  }
-                                </button>
-                              </div>
-                              {expandedMessage === notification.id && notification.replies && notification.replies.length > 0 && (
-                                <div className="mt-4">
-                                  <h4 className="text-sm font-medium mb-2 text-gray-900 dark:text-white">
-                                    {t('contact.messages.replies')}
-                                  </h4>
-                                  {renderReplies(notification.replies)}
-                                </div>
-                              )}
-                            </>
+                  <div key={notification.id} className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border overflow-hidden ${!notification.is_read ? 'border-qatar-maroon' : 'border-gray-200 dark:border-gray-700'}`}>
+                    <div className="p-3 sm:p-2">
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex-1">
+                            {notification.title}
+                          </h3>
+                          {!notification.is_read && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-qatar-maroon text-white flex-shrink-0">
+                              {t('messages.new')}
+                            </span>
                           )}
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        </div>
+
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <div
+                            className={`text-gray-600 dark:text-gray-300 text-sm sm:text-base ${expandedMessage === notification.id ? '' : 'line-clamp-2'}`}
+                            dangerouslySetInnerHTML={{ __html: notification.message }}
+                          />
+                          {notification.message.length > 150 && (
+                            <button
+                              onClick={() => toggleExpand(notification.id)}
+                              className="text-qatar-maroon hover:text-qatar-maroon/80 text-sm mt-2 py-1"
+                            >
+                              {expandedMessage === notification.id ? t('messages.showLess') : t('messages.readMore')}
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1">
                             {format(new Date(notification.created_at), 'PPp')}
                           </p>
+                          <div className="flex items-center gap-3 order-1 sm:order-2">
+                            {!notification.is_read && (
+                              <button
+                                onClick={() => markAsRead(notification.id)}
+                                className="text-sm text-qatar-maroon hover:text-qatar-maroon/80 whitespace-nowrap py-1"
+                              >
+                                {t('messages.markAsRead')}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteNotification(notification.id)}
+                              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 py-1"
+                            >
+                              {t('messages.delete')}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex flex-col space-y-2 items-end ml-4">
-                        {!notification.is_read && (
-                          <button
-                            onClick={() => markAsRead(notification.id)}
-                            className="text-sm text-qatar-maroon hover:text-qatar-maroon/80 whitespace-nowrap"
-                          >
-                            {t('messages.markAsRead')}
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                        >
-                          {t('messages.delete')}
-                        </button>
                       </div>
                     </div>
                   </div>

@@ -190,7 +190,7 @@ export default function Navbar() {
             </Link>
 
             {/* Navigation Links */}
-            <div className={`hidden md:flex items-center ${language === 'ar' ? 'space-x-reverse space-x-8' : 'space-x-8'}`}>
+            <div className={`hidden lg:flex items-center ${language === 'ar' ? 'space-x-reverse space-x-4 xl:space-x-10' : 'space-x-4 xl:space-x-8 2xl:space-x-10'}`}>
               <Link
                 href={`/${currentCountry?.code.toLowerCase()}`}
                 className="text-gray-700 dark:text-gray-200 hover:text-qatar-maroon dark:hover:text-qatar-maroon text-sm font-medium whitespace-nowrap"

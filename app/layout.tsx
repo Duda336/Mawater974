@@ -108,7 +108,7 @@ import Footer from '@/components/Footer'
                     <AnalyticsProvider>
                       <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
                         <Navbar />
-                        <main className="flex-grow pt-28 sm:pt-28 md:pt-16 lg:pt-16">
+                        <main className="flex-grow pt-28 sm:pt-28 md:pt-28 lg:pt-16">
                           {children}
                         </main>
                         <AIChatButton />

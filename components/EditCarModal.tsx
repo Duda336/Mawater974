@@ -363,59 +363,64 @@ export default function EditCarModal({ isOpen, onClose, car, onUpdate, onEditCom
     setLoading(true);
 
     try {
-      // Update car data
-      const { error } = await supabase
+      const { data: carData, error: updateError } = await supabase
         .from('cars')
         .update({
-          brand_id: formData.brand_id,
-          model_id: formData.model_id,
-          year: formData.year,
-          mileage: formData.mileage,
-          price: formData.price,
-          color: formData.color,
-          description: formData.description,
-          fuel_type: formData.fuel_type,
-          gearbox_type: formData.gearbox_type,
-          body_type: formData.body_type,
-          condition: formData.condition,
-          cylinders: formData.cylinders,
-          exact_model: formData.exact_model,
-          city_id: formData.city_id,
-          is_featured: formData.is_featured
+          ...formData,
+          status: 'Pending',
+          updated_at: new Date().toISOString()
         })
-        .eq('id', car.id);
+        .eq('id', car.id)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       // Handle image updates
       if (images.length > 0) {
-        // Delete existing images
+        // First, delete old images that are not in the new list
+        const oldImages = car.images || [];
+        const newImageUrls = images.map((img) => img.url);
+        
+        const imagesToDelete = oldImages.filter((oldImg: any) => 
+          !newImageUrls.includes(oldImg.url)
+        );
+
+        if (imagesToDelete.length > 0) {
+          await supabase
+            .from('car_images')
+            .delete()
+            .in('url', imagesToDelete.map((img: any) => img.url));
+        }
+
+        // Then, update all images for this car
         await supabase
           .from('car_images')
-          .delete()
+          .update(images.map(img => ({
+            is_main: img.is_main ? true : false,
+            url: img.url
+          })))
           .eq('car_id', car.id);
 
-        // Insert new images
-        const { error: imageError } = await supabase
-          .from('car_images')
-          .insert(
-            images.map(image => ({
-              car_id: car.id,
-              url: image.url,
-              is_main: image.is_main
-            }))
-          );
-
-        if (imageError) throw imageError;
+        // If there's a main image, ensure only one is marked as main
+        const mainImage = images.find(img => img.is_main);
+        if (mainImage) {
+          // Update all other images to not be main
+          await supabase
+            .from('car_images')
+            .update({ is_main: false })
+            .eq('car_id', car.id)
+            .neq('url', mainImage.url);
+        }
       }
 
-      toast.success(t('myAds.edit.success'));
+      toast.success(t('cars.updateSuccess'));
       onUpdate();
-      onEditComplete(); // Call the passed function
+      onEditComplete();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating car:', error);
-      toast.error(t('myAds.edit.error'));
+      toast.error(error.message || t('cars.updateError'));
     } finally {
       setLoading(false);
     }
@@ -744,38 +749,41 @@ export default function EditCarModal({ isOpen, onClose, car, onUpdate, onEditCom
                     </h3>
                     {images.length > 0 ? (
                       <>
-                        <ImageCarousel images={images} alt="Car" />
                         <div className="rounded-md mt-4 grid grid-cols-4 gap-4">
-                          {images.map((image) => (
+                          {images.map((image, index) => (
                             <div key={image.url} className="relative group">
-                              <img
-                                src={image.url}
-                                alt="Car"
-                                className={`w-full h-24 object-cover rounded-lg ${
-                                  image.is_main ? 'ring-2 ring-primary-500' : ''
-                                }`}
-                              />
-                              <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                                {!image.is_main && (
+                              <div className="relative aspect-[4/3] w-full rounded-lg overflow-hidden">
+                                <Image
+                                  src={image.url}
+                                  alt="Car"
+                                  width={128}
+                                  height={160}
+                                  className={`w-full h-full object-cover ${
+                                    image.is_main ? 'ring-2 ring-qatar-maroon' : ''
+                                  }`}
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+                                  {!image.is_main && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSetMainImage(image.url)}
+                                      className="p-1 bg-white rounded-full hover:bg-qatar-maroon hover:text-white transition-colors"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                      </svg>
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
-                                    onClick={() => handleSetMainImage(image.url)}
-                                    className="p-1 bg-white rounded-full hover:bg-primary-500 hover:text-white transition-colors"
+                                    onClick={() => handleDeleteImage(image.url)}
+                                    className="p-1 bg-white rounded-full hover:bg-red-500 hover:text-white transition-colors"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                                     </svg>
                                   </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteImage(image.url)}
-                                  className="p-1 bg-white rounded-full hover:bg-red-500 hover:text-white transition-colors"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
+                                </div>
                               </div>
                             </div>
                           ))}

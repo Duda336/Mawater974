@@ -13,7 +13,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 
 export default function FavoritesPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const { currentCountry } = useCountry();
@@ -22,12 +22,23 @@ export default function FavoritesPage() {
   const { t } = useLanguage();
   const countryCode = params.countryCode as string;
 
+  // Fetch favorites when user, country, or countryCode changes
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-    fetchFavorites();
-  }, [user, countryCode]);
+    const loadFavorites = async () => {
+      // Wait for authentication to complete
+      if (isAuthLoading) return;
+      
+      // Redirect to login if no user
+      if (!user) {
+        router.push(`/${countryCode}/login?redirect=/favorites`);
+        return;
+      }
+
+      await fetchFavorites();
+    };
+
+    loadFavorites();
+  }, [user, isAuthLoading, currentCountry?.id, countryCode]);
 
   const fetchFavorites = async () => {
     try {
@@ -43,7 +54,7 @@ export default function FavoritesPage() {
 
       if (favData.length === 0) {
         setFavorites([]);
-        setLoading(true);
+        setLoading(false); // Fix: Set loading to false when there are no favorites
         return;
       }
 
@@ -57,13 +68,15 @@ export default function FavoritesPage() {
           model:models(id, name, name_ar),
           user:profiles(id, full_name),
           city:cities(id, name, name_ar),
+          country:countries(id, name, name_ar, code, currency_code),
           images:car_images(url, is_main)
         `)
         .in('id', carIds)
-        .eq('country_id', currentCountry?.id);
+        .order('created_at', { ascending: false }); // Add sorting by creation date
 
       if (carsError) throw carsError;
 
+      // Show all favorited cars regardless of country
       setFavorites(cars);
     } catch (error) {
       console.error('Error fetching favorites:', error);

@@ -137,9 +137,14 @@ export default function CarCard({
               </div>
             </div>
 
-            {(car.city || car.location) && (
+            {(car.city || car.location || car.country) && (
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 truncate">
                 <MapPinIcon className="h-4 w-4 mr-1 flex-shrink-0" />
+                {car.country && currentCountry && car.country.id !== currentCountry.id && (
+                  <span className="font-medium text-gray-500 dark:text-gray-400 mr-1">
+                    {currentLanguage === 'ar' ? car.country.name_ar : car.country.name} •
+                  </span>
+                )}
                 <span className="truncate">
                   {car.city 
                     ? (language === 'ar' ? car.city.name_ar : car.city.name)

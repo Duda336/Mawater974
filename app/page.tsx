@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function RootPage() {
   const router = useRouter();
   const { user, profile } = useAuth();
+  const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function RootPage() {
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <LoadingSpinner />
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Redirecting to your country...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">{t('auth.loading.redirect')}</p>
       </div>
     </div>
   );

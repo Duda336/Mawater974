@@ -135,7 +135,8 @@ export default function LoginPopup({ delay = 5000 }: LoginPopupProps) {
                                 alt={`${country.name} flag`}
                                 width={24}
                                 height={16}
-                                className="rounded-sm"
+                                style={{ height: 'auto' }}
+                                className="rounded-sm w-6"
                               />
                               <span
                                 className={`block truncate ${

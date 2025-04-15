@@ -10,7 +10,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 export default function CountrySelector() {
   const { countries, currentCountry, isLoading, changeCountry } = useCountry();
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -24,7 +24,7 @@ export default function CountrySelector() {
     return (
       <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
         <GlobeAltIcon className="h-5 w-5" />
-        <span>Loading...</span>
+        <span>{t('auth.loading')}</span>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function CountrySelector() {
     <div className="relative">
       <Listbox value={currentCountry} onChange={handleCountryChange}>
         <div className="relative">
-          <Listbox.Button className="relative w-full cursor-pointer rounded-md bg-white dark:bg-gray-800 py-2 pl-3 pr-10 text-left shadow-sm border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-gray-900 dark:text-white">
+          <Listbox.Button className="relative w-full cursor-pointer rounded-md bg-white dark:bg-gray-800 py-2 pl-2 pr-7 text-left shadow-sm border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-gray-900 dark:text-white">
             <div className="flex items-center">
               <Image
                 src={`/flags/${currentCountry.code.toLowerCase()}.svg`}
@@ -84,7 +84,7 @@ export default function CountrySelector() {
                             selected ? 'font-medium' : 'font-normal'
                           }`}
                         >
-                          {language === 'ar' ? country.name_ar : country.name}
+                          {t('nav.country') === 'ar' ? country.name_ar : country.name}
                         </span>
                       </div>
                       {selected ? (

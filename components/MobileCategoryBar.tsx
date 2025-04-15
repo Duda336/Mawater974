@@ -23,8 +23,8 @@ export default function MobileCategoryBar() {
     { name: t('nav.carPhotography'), href: `/${currentCountry?.code.toLowerCase()}/car-photography` },
   ];
   return (
-    <div className="w-full overflow-x-auto border-b bg-white dark:bg-gray-900 shadow-sm block sm:hidden">
-      <div className="flex space-x-4 px-4 py-2 whitespace-nowrap">
+    <div className="w-full overflow-x-auto border-b bg-white dark:bg-gray-900 shadow-sm block lg:hidden pl-4 pr-4">
+      <div className="flex gap-x-4 py-2 whitespace-nowrap">
         {categories.map((cat) => (
           <button
             key={cat.href}
