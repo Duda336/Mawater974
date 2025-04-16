@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { getCountryFromIP, isValidCountryCode } from '@/utils/geoLocation';
 
 export default function RootPage() {
   const router = useRouter();
@@ -47,8 +48,12 @@ export default function RootPage() {
           }
         }
         
-        // Default to Qatar if no country is found
-        router.push('/qa');
+        // Try to get country from IP
+        const ipCountry = await getCountryFromIP();
+        const isValid = await isValidCountryCode(ipCountry, supabase);
+        
+        // Use the detected country if valid, otherwise default to Qatar
+        router.push(`/${isValid ? ipCountry : 'qa'}`);
       } catch (error) {
         console.error('Error redirecting to country:', error);
         // Default to Qatar if there's an error
