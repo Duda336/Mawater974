@@ -1,4 +1,5 @@
 import { Country } from '@/types/supabase';
+import { User } from '@supabase/supabase-js';
 
 // Function to get country from IP using a third-party service
 export async function getCountryFromIP(): Promise<string> {
@@ -8,54 +9,56 @@ export async function getCountryFromIP(): Promise<string> {
     const data = await response.json();
     
     if (data && data.country_code) {
-      return data.country_code;
+      return data.country_code.toLowerCase();
     }
     
     throw new Error('Could not determine country from IP');
   } catch (error) {
     console.error('Error getting country from IP:', error);
     // Default to Qatar if there's an error
-    return 'QA';
+    return 'qa';
   }
 }
 
-// Function to get the user's country from localStorage or IP
-export async function getUserCountry(countries: Country[]): Promise<Country | null> {
-  // First check localStorage
-  const savedCountryId = localStorage.getItem('selectedCountryId');
-  
-  if (savedCountryId) {
-    const country = countries.find(c => c.id === parseInt(savedCountryId));
-    if (country) return country;
-  }
-  
-  // If no saved country or not found, use IP
+// Function to get country code from user profile
+export async function getCountryFromUser(user: User | null, supabase: any): Promise<string | null> {
+  if (!user) return null;
+
   try {
-    const countryCode = await getCountryFromIP();
-    const country = countries.find(c => c.code === countryCode);
-    
-    if (country) {
-      // Save to localStorage for future use
-      localStorage.setItem('selectedCountryId', country.id.toString());
-      return country;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('country_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.country_id) {
+      const { data: country } = await supabase
+        .from('countries')
+        .select('code')
+        .eq('id', profile.country_id)
+        .single();
+
+      return country?.code?.toLowerCase() || null;
     }
-    
-    // If country not supported, default to Qatar
-    const defaultCountry = countries.find(c => c.code === 'QA');
-    if (defaultCountry) {
-      localStorage.setItem('selectedCountryId', defaultCountry.id.toString());
-      return defaultCountry;
-    }
-    
     return null;
   } catch (error) {
-    console.error('Error in getUserCountry:', error);
-    // Default to Qatar if there's an error
-    const defaultCountry = countries.find(c => c.code === 'QA');
-    if (defaultCountry) {
-      localStorage.setItem('selectedCountryId', defaultCountry.id.toString());
-      return defaultCountry;
-    }
+    console.error('Error getting country from user profile:', error);
     return null;
   }
 }
+
+// Function to validate if a country code exists in our database
+export async function isValidCountryCode(countryCode: string, supabase: any): Promise<boolean> {
+  try {
+    const { data: countryList } = await supabase
+      .from('countries')
+      .select('code')
+      .eq('code', countryCode.toUpperCase());
+
+    return countryList && countryList.length > 0;
+  } catch (error) {
+    console.error('Error validating country code:', error);
+    return false;
+  }
+}
+
