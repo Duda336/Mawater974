@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: Request) {
     try {
-        const { countryCode, userId } = await request.json();
+        const { countryCode, countryName, userId, isRedirect } = await request.json();
         const userAgent = request.headers.get('user-agent') || '';
         
         if (!countryCode) {
@@ -48,7 +48,9 @@ export async function POST(request: Request) {
                 user_id: userId || null,
                 session_id: sessionId,
                 country_code: countryCode.toLowerCase(),
-                page_path: '/',
+                real_country_name: countryName,
+                page_path: isRedirect ? `/${countryCode.toLowerCase()}` : '/',
+                page_type: 'home',
                 user_agent: userAgent,
                 is_authenticated: !!userId
             });

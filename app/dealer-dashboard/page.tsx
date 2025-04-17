@@ -454,7 +454,7 @@ export default function DealerDashboard() {
               <div className="w-full">
                 <Tab.Group>
                   <Tab.List className="flex space-x-2 rounded-xl bg-qatar-maroon/20 p-1">
-                    {['all', 'approved', 'pending', 'rejected', 'sold'].map((status) => (
+                    {['all', 'approved', 'pending', 'rejected', 'sold', 'expired'].map((status) => (
                       <Tab
                         key={status}
                         onClick={() => setSelectedStatus(status)}
@@ -517,7 +517,7 @@ export default function DealerDashboard() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <button
-                            onClick={() => setSelectedCar(car)}
+                            onClick={() => router.push(`/${currentCountry?.code.toLowerCase()}/cars/${car.id}`)}
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                             title={t('dashboard.view')}
                           >

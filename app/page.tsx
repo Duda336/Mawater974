@@ -17,25 +17,13 @@ export default function RootPage() {
   useEffect(() => {
     const redirectToCountry = async () => {
       try {
-        // Check if we have a saved country in localStorage
-        const savedCountryId = typeof window !== 'undefined' ? localStorage.getItem('selectedCountryId') : null;
+        // Always get the real location from IP first
+        const geoInfo = await getCountryFromIP();
+        let redirectCountry = 'qa'; // Default to Qatar
         
-        if (savedCountryId) {
-          // Get country code from the saved country ID
-          const { data: countryData, error: countryError } = await supabase
-            .from('countries')
-            .select('code')
-            .eq('id', savedCountryId)
-            .single();
-            
-          if (!countryError && countryData) {
-            router.push(`/${countryData.code.toLowerCase()}`);
-            return;
-          }
-        }
-        
-        // If user is logged in, check their profile for country
+        // Determine redirect country
         if (user && profile?.country_id) {
+          // Use user's profile country
           const { data: countryData, error: countryError } = await supabase
             .from('countries')
             .select('code')
@@ -43,17 +31,47 @@ export default function RootPage() {
             .single();
             
           if (!countryError && countryData) {
-            router.push(`/${countryData.code.toLowerCase()}`);
-            return;
+            redirectCountry = countryData.code.toLowerCase();
+          }
+        } else {
+          // Check local storage first
+          const savedCountryId = typeof window !== 'undefined' ? localStorage.getItem('selectedCountryId') : null;
+          
+          if (savedCountryId) {
+            const { data: countryData, error: countryError } = await supabase
+              .from('countries')
+              .select('code')
+              .eq('id', savedCountryId)
+              .single();
+              
+            if (!countryError && countryData) {
+              redirectCountry = countryData.code.toLowerCase();
+            }
+          } else {
+            // Use IP location if valid, otherwise default to Qatar
+            const isValid = await isValidCountryCode(geoInfo.code, supabase);
+            redirectCountry = isValid ? geoInfo.code.toLowerCase() : 'qa';
           }
         }
         
-        // Try to get country from IP
-        const ipCountry = await getCountryFromIP();
-        const isValid = await isValidCountryCode(ipCountry, supabase);
-        
-        // Use the detected country if valid, otherwise default to Qatar
-        router.push(`/${isValid ? ipCountry : 'qa'}`);
+        // Track only the initial root visit with both real and redirect country
+        await fetch('/api/analytics/page-view', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            countryCode: geoInfo?.code ? geoInfo.code.toLowerCase() : '--', // Default to -- if no geo
+            countryName: geoInfo?.name || '--', // Default to -- if no geo
+            userId: user?.id,
+            pageType: 'root', // Explicitly mark as root page visit
+            page_path: '/', // Record as root visit
+            redirect_to: `/${redirectCountry}` // Store where they were redirected
+          })
+        });
+
+        // Redirect to the country-specific page
+        router.push(`/${redirectCountry}`);
       } catch (error) {
         console.error('Error redirecting to country:', error);
         // Default to Qatar if there's an error

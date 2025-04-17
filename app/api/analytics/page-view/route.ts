@@ -5,7 +5,7 @@ import { PageType } from '@/lib/analytics/page-views';
 
 export async function POST(request: Request) {
     try {
-        const { countryCode, userId, pageType, entityId } = await request.json();
+        const { countryCode, countryName, userId, pageType, entityId } = await request.json();
         const userAgent = request.headers.get('user-agent') || '';
         
         if (!countryCode || !pageType) {
@@ -69,6 +69,7 @@ export async function POST(request: Request) {
                 user_id: userId || null,
                 session_id: sessionId,
                 country_code: countryCode.toLowerCase(),
+                real_country_name: countryName,
                 page_type: pageType,
                 entity_id: entityId,
                 page_path: entityId ? `/${pageType}/${entityId}` : `/${pageType}`,

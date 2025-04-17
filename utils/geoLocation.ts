@@ -1,22 +1,55 @@
 import { Country } from '@/types/supabase';
 import { User } from '@supabase/supabase-js';
 
+interface GeolocationResponse {
+  country_code: string;
+  country_name: string;
+}
+
+interface CountryInfo {
+  code: string;
+  name: string;
+}
+
 // Function to get country from IP using a third-party service
-export async function getCountryFromIP(): Promise<string> {
+export async function getCountryFromIP(): Promise<CountryInfo> {
   try {
     // Using ipapi.co for IP geolocation (free tier has limitations)
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
     
-    if (data && data.country_code) {
-      return data.country_code.toLowerCase();
+    if (data && data.country_code && data.country_name) {
+      return {
+        code: data.country_code.toLowerCase(),
+        name: data.country_name
+      };
     }
     
     throw new Error('Could not determine country from IP');
   } catch (error) {
     console.error('Error getting country from IP:', error);
     // Default to Qatar if there's an error
-    return 'qa';
+    return {
+      code: '--',
+      name: '--'
+    };
+  }
+}
+
+// Function to validate if a country code exists in our database
+export async function isValidCountryCode(countryCode: string, supabase: any): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('countries')
+      .select('code')
+      .eq('code', countryCode.toUpperCase())
+      .single();
+
+    if (error) throw error;
+    return !!data;
+  } catch (error) {
+    console.error('Error validating country code:', error);
+    return false;
   }
 }
 
@@ -47,18 +80,5 @@ export async function getCountryFromUser(user: User | null, supabase: any): Prom
   }
 }
 
-// Function to validate if a country code exists in our database
-export async function isValidCountryCode(countryCode: string, supabase: any): Promise<boolean> {
-  try {
-    const { data: countryList } = await supabase
-      .from('countries')
-      .select('code')
-      .eq('code', countryCode.toUpperCase());
 
-    return countryList && countryList.length > 0;
-  } catch (error) {
-    console.error('Error validating country code:', error);
-    return false;
-  }
-}
 
