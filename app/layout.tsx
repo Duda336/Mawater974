@@ -80,9 +80,9 @@ import Footer from '@/components/Footer'
     title: 'Mawater974',
     description: 'Your premier destination for cars in Qatar',
     icons: {
-      icon: '/logo.png',
-      shortcut: '/logo.png',
-      apple: '/logo.png',
+      icon: '/public/Mawater974 Logo.png',
+      shortcut: '/public/Mawater974 Logo.png',
+      apple: '/public/Mawater974 Logo.png',
     },
   }
 
